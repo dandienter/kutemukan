@@ -86,14 +86,61 @@ jobs:
           dart run flutter_launcher_icons
           dart run flutter_native_splash:create
 
+      - name: Pasang keystore rilis tetap
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > android/app/kutemukan.jks
+          cat > android/key.properties <<EOF
+          storePassword=$KEYSTORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=kutemukan.jks
+          EOF
+          python3 - <<'PYEOF'
+          p = 'android/app/build.gradle.kts'
+          s = open(p).read()
+          if 'keystoreProperties' not in s:
+              muat = '''
+          import java.util.Properties
+          import java.io.FileInputStream
+
+          val keystoreProperties = Properties()
+          val keystorePropertiesFile = rootProject.file("key.properties")
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+          }
+          '''
+              s = s.replace('android {', muat + '\nandroid {', 1)
+              configs = '''
+              signingConfigs {
+                  create("release") {
+                      keyAlias = keystoreProperties["keyAlias"] as String?
+                      keyPassword = keystoreProperties["keyPassword"] as String?
+                      storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+                      storePassword = keystoreProperties["storePassword"] as String?
+                  }
+              }
+          '''
+              s = s.replace('buildTypes {', configs + '    buildTypes {', 1)
+              s = s.replace('signingConfig = signingConfigs.getByName("debug")',
+                            'signingConfig = signingConfigs.getByName("release")')
+              open(p, 'w').write(s)
+          print('signing rilis terpasang')
+          PYEOF
+
       - name: Build APK release (arm64)
         run: |
           flutter pub get
           flutter build apk --release --target-platform android-arm64
+          cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/KutemuKan.apk
 
       - name: Terbitkan Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
           name: KutemuKan build ${{ github.run_number }}
-          files: build/app/outputs/flutter-apk/app-release.apk
+          files: build/app/outputs/flutter-apk/KutemuKan.apk

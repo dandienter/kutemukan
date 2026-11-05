@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
@@ -363,13 +364,8 @@ class _LayarSplashState extends State<LayarSplash>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/maskot.png', height: 190),
-                const SizedBox(height: 14),
-                const Text('KutemuKan',
-                    style: TextStyle(
-                        fontSize: 34,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white)),
+                Image.asset('assets/maskot.png', height: 210),
+                const SizedBox(height: 10),
                 const Text('Lost and Found Kampus Unindra',
                     style: TextStyle(fontSize: 15, color: Colors.white70)),
               ],
@@ -920,7 +916,7 @@ class _LayarUtamaState extends State<LayarUtama> {
     ];
     if (_tab >= halaman.length) _tab = 0;
     return Scaffold(
-      body: halaman[_tab],
+      body: IndexedStack(index: _tab, children: halaman),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
         onDestinationSelected: (i) {
@@ -1102,15 +1098,27 @@ class _LayarBerandaState extends State<LayarBeranda> {
   int _segmen = 0; // 0 Semua, 1 Saya
   String _jenis = 'semua';
   String _rentang = 'semua';
+  String _urut = 'baru';
+  DateTimeRange? _rentangCustom;
   String _cari = '';
   int _baru = 0;
   RealtimeChannel? _kanal;
   final ScrollController _gulir = ScrollController();
   final Set<String> _upHariIni = {};
+  late Future<List<Map<String, dynamic>>> _fSemua;
+  late Future<List<Map<String, dynamic>>> _fSaya;
+
+  void _segarkan() {
+    _fSemua = _ambilSemua();
+    _fSaya = _ambilSaya();
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
+    _fSemua = _ambilSemua();
+    _fSaya = _ambilSaya();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cekUpdate(context);
     });
@@ -1200,7 +1208,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
         !(p['judul'] ?? '').toString().toLowerCase().contains(_cari)) {
       return false;
     }
-    if (_rentang != 'semua') {
+    if (_rentangCustom != null) {
+      final t = DateTime.tryParse((p['created_at'] ?? '').toString());
+      if (t == null) return false;
+      final lokal = t.toLocal();
+      final c = _rentangCustom!;
+      final mulai = DateTime(c.start.year, c.start.month, c.start.day);
+      final akhir = DateTime(c.end.year, c.end.month, c.end.day, 23, 59, 59);
+      if (lokal.isBefore(mulai) || lokal.isAfter(akhir)) return false;
+    } else if (_rentang != 'semua') {
       final t = DateTime.tryParse((p['created_at'] ?? '').toString());
       if (t == null) return false;
       final kini = DateTime.now();
@@ -1227,7 +1243,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
     } else if (aksi == 'hapus') {
       await sb.from('lf_posts').delete().eq('id', p['id']);
     }
-    setState(() {});
+    _segarkan();
   }
 
   @override
@@ -1282,52 +1298,117 @@ class _LayarBerandaState extends State<LayarBeranda> {
               children: [
                 for (final j in ['semua', 'hilang', 'temuan'])
                   Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(j == 'semua'
+                    padding: const EdgeInsets.only(right: 6),
+                    child: IconButton(
+                      tooltip: j == 'semua'
                           ? 'Semua'
-                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan')),
-                      selected: _jenis == j,
-                      onSelected: (_) => setState(() => _jenis = j),
+                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan'),
+                      icon: Icon(j == 'semua'
+                          ? Icons.grid_view_outlined
+                          : (j == 'hilang'
+                              ? Icons.search_off
+                              : Icons.find_in_page_outlined)),
+                      style: IconButton.styleFrom(
+                        backgroundColor: _jenis == j
+                            ? kTeal
+                            : Colors.grey.shade200,
+                        foregroundColor:
+                            _jenis == j ? Colors.white : Colors.black54,
+                      ),
+                      onPressed: () => setState(() => _jenis = j),
                     ),
                   ),
                 const Spacer(),
-                DropdownButton<String>(
-                  value: _rentang,
-                  underline: const SizedBox.shrink(),
-                  items: const [
-                    DropdownMenuItem(
-                        value: 'semua', child: Text('Semua waktu')),
-                    DropdownMenuItem(
-                        value: 'hari_ini', child: Text('Hari ini')),
-                    DropdownMenuItem(
-                        value: '7_hari', child: Text('7 hari terakhir')),
-                    DropdownMenuItem(
-                        value: '30_hari', child: Text('30 hari terakhir')),
+                PopupMenuButton<String>(
+                  tooltip: 'Urutkan dan saring waktu',
+                  icon: const Icon(Icons.calendar_month_outlined),
+                  onSelected: (v) async {
+                    if (v == 'r_kalender') {
+                      final pilih = await showDateRangePicker(
+                        context: context,
+                        firstDate: DateTime(2025, 1, 1),
+                        lastDate: DateTime.now(),
+                        initialDateRange: _rentangCustom,
+                      );
+                      if (pilih != null) {
+                        setState(() => _rentangCustom = pilih);
+                      }
+                    } else if (v.startsWith('u_')) {
+                      setState(() => _urut = v.substring(2));
+                    } else if (v.startsWith('r_')) {
+                      setState(() {
+                        _rentangCustom = null;
+                        _rentang = v.substring(2);
+                      });
+                    }
+                  },
+                  itemBuilder: (_) => [
+                    CheckedPopupMenuItem(
+                      value: 'u_baru',
+                      checked: _urut == 'baru',
+                      child: const Text('Terbaru'),
+                    ),
+                    CheckedPopupMenuItem(
+                      value: 'u_lama',
+                      checked: _urut == 'lama',
+                      child: const Text('Terlama'),
+                    ),
+                    const PopupMenuDivider(),
+                    CheckedPopupMenuItem(
+                      value: 'r_semua',
+                      checked:
+                          _rentangCustom == null && _rentang == 'semua',
+                      child: const Text('Semua waktu'),
+                    ),
+                    CheckedPopupMenuItem(
+                      value: 'r_hari_ini',
+                      checked:
+                          _rentangCustom == null && _rentang == 'hari_ini',
+                      child: const Text('Hari ini'),
+                    ),
+                    CheckedPopupMenuItem(
+                      value: 'r_7_hari',
+                      checked:
+                          _rentangCustom == null && _rentang == '7_hari',
+                      child: const Text('7 hari terakhir'),
+                    ),
+                    CheckedPopupMenuItem(
+                      value: 'r_30_hari',
+                      checked:
+                          _rentangCustom == null && _rentang == '30_hari',
+                      child: const Text('30 hari terakhir'),
+                    ),
+                    CheckedPopupMenuItem(
+                      value: 'r_kalender',
+                      checked: _rentangCustom != null,
+                      child: const Text('Pilih dari kalender...'),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _rentang = v ?? 'semua'),
                 ),
               ],
             ),
           ),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: saya ? _ambilSaya() : _ambilSemua(),
+              future: saya ? _fSaya : _fSemua,
               builder: (context, snap) {
-                if (snap.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snap.hasError) {
+                if (snap.hasError && snap.data == null) {
                   return Center(child: Text('Gagal memuat: ${snap.error}'));
                 }
+                if (snap.data == null) {
+                  return const Center(child: CircularProgressIndicator());
+                }
                 final data = (snap.data ?? []).where(_lolos).toList();
-                if (!saya) {
+                DateTime dibuat(Map<String, dynamic> p) =>
+                    DateTime.tryParse((p['created_at'] ?? '').toString()) ??
+                    DateTime.fromMillisecondsSinceEpoch(0);
+                if (_urut == 'lama') {
+                  data.sort((x, y) => dibuat(x).compareTo(dibuat(y)));
+                } else if (!saya) {
                   DateTime kunci(Map<String, dynamic> p) {
                     final a =
                         DateTime.tryParse((p['last_up_at'] ?? '').toString());
-                    final b = DateTime.tryParse(
-                            (p['created_at'] ?? '').toString()) ??
-                        DateTime.fromMillisecondsSinceEpoch(0);
+                    final b = dibuat(p);
                     return (a != null && a.isAfter(b)) ? a : b;
                   }
 
@@ -1350,7 +1431,10 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 return Stack(
                   children: [
                     RefreshIndicator(
-                      onRefresh: () async => setState(() {}),
+                      onRefresh: () async {
+                        _segarkan();
+                        await (saya ? _fSaya : _fSemua);
+                      },
                       child: ListView.builder(
                         controller: _gulir,
                         itemCount: data.length,
@@ -1371,7 +1455,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                               .push(MaterialPageRoute(
                                   builder: (_) =>
                                       LayarDetail(post: data[i])))
-                              .then((_) => setState(() {})),
+                              .then((_) => _segarkan()),
                         ),
                       ),
                     ),
@@ -1384,6 +1468,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                           child: FilledButton.icon(
                             onPressed: () {
                               setState(() => _baru = 0);
+                              _segarkan();
                               if (_gulir.hasClients) {
                                 _gulir.animateTo(0,
                                     duration:
@@ -2175,141 +2260,201 @@ class _LayarBuatState extends State<LayarBuat> {
     if (mounted) setState(() => _sibuk = false);
   }
 
+  InputDecoration _rapat(String label, {String? hint}) => InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: const OutlineInputBorder(),
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Buat Postingan')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Column(
         children: [
-          SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'hilang', label: Text('Saya Kehilangan')),
-              ButtonSegment(value: 'temuan', label: Text('Saya Menemukan')),
-            ],
-            selected: {_jenis},
-            onSelectionChanged: (s) => setState(() => _jenis = s.first),
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _judul,
-            decoration: const InputDecoration(
-                labelText: 'Judul (mis. Dompet hitam berisi KTM)',
-                border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: _kategori,
-            items: kKategori
-                .map((k) => DropdownMenuItem(value: k, child: Text(k)))
-                .toList(),
-            onChanged: (v) => setState(() => _kategori = v!),
-            decoration: const InputDecoration(
-                labelText: 'Kategori', border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _lokasi,
-            decoration: const InputDecoration(
-                labelText: 'Lokasi (hilang / ditemukan)',
-                border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Waktu kejadian'),
-            subtitle: Text(fmtTanggal(_waktu.toIso8601String())),
-            trailing: const Icon(Icons.edit_calendar_outlined),
-            onTap: () async {
-              final tgl = await showDatePicker(
-                context: context,
-                initialDate: _waktu,
-                firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                lastDate: DateTime.now(),
-              );
-              if (tgl != null && mounted) {
-                setState(() => _waktu = DateTime(
-                    tgl.year, tgl.month, tgl.day, _waktu.hour, _waktu.minute));
-              }
-            },
-          ),
-          if (_jenis == 'temuan')
-            TextField(
-              controller: _penitipan,
-              decoration: const InputDecoration(
-                  labelText: 'Barang dititipkan di (mis. pos satpam)',
-                  border: OutlineInputBorder()),
-            ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _deskripsi,
-            maxLines: 4,
-            decoration: const InputDecoration(
-                labelText: 'Deskripsi dan ciri-ciri (tampil publik)',
-                border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _rahasia,
-            maxLines: 3,
-            decoration: const InputDecoration(
-                labelText: 'Ciri khusus rahasia (tidak tampil publik)',
-                hintText:
-                    'Hanya untuk mencocokkan klaim, mis. isi barang atau tanda uniknya',
-                border: OutlineInputBorder()),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _foto.length >= 5 ? null : _pilihFoto,
-            icon: const Icon(Icons.photo_library_outlined),
-            label: Text('Tambah Foto (${_foto.length}/5)'),
-          ),
-          if (_foto.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 10),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (var i = 0; i < _foto.length; i++)
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: Image.file(_foto[i],
-                              width: 96, height: 96, fit: BoxFit.cover),
-                        ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: IconButton(
-                            icon: const Icon(Icons.cancel,
-                                color: Colors.red, size: 20),
-                            onPressed: () =>
-                                setState(() => _foto.removeAt(i)),
-                          ),
-                        ),
-                        if (i == 0)
-                          const Positioned(
-                            left: 4,
-                            bottom: 4,
-                            child: Chip(
-                              label: Text('Sampul',
-                                  style: TextStyle(
-                                      fontSize: 9, color: Colors.white)),
-                              backgroundColor: kTeal,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                          ),
-                      ],
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
+              children: [
+                SegmentedButton<String>(
+                  segments: const [
+                    ButtonSegment(
+                        value: 'hilang', label: Text('Saya Kehilangan')),
+                    ButtonSegment(
+                        value: 'temuan', label: Text('Saya Menemukan')),
+                  ],
+                  selected: {_jenis},
+                  onSelectionChanged: (s) =>
+                      setState(() => _jenis = s.first),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _judul,
+                  decoration: _rapat('Judul (mis. Dompet hitam berisi KTM)'),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: DropdownButtonFormField<String>(
+                        value: _kategori,
+                        items: kKategori
+                            .map((k) =>
+                                DropdownMenuItem(value: k, child: Text(k)))
+                            .toList(),
+                        onChanged: (v) => setState(() => _kategori = v!),
+                        decoration: _rapat('Kategori'),
+                      ),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 2,
+                      child: InkWell(
+                        onTap: () async {
+                          final tgl = await showDatePicker(
+                            context: context,
+                            initialDate: _waktu,
+                            firstDate: DateTime.now()
+                                .subtract(const Duration(days: 365)),
+                            lastDate: DateTime.now(),
+                          );
+                          if (tgl != null && mounted) {
+                            setState(() => _waktu = DateTime(tgl.year,
+                                tgl.month, tgl.day, _waktu.hour, _waktu.minute));
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: _rapat('Waktu'),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                  child: Text(
+                                      fmtBulan(_waktu.toIso8601String()))),
+                              const Icon(Icons.edit_calendar_outlined,
+                                  size: 18, color: Colors.grey),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _lokasi,
+                  decoration: _rapat('Lokasi (hilang / ditemukan)'),
+                ),
+                if (_jenis == 'temuan') ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _penitipan,
+                    decoration:
+                        _rapat('Barang dititipkan di (mis. pos satpam)'),
+                  ),
                 ],
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _deskripsi,
+                  maxLines: 2,
+                  decoration:
+                      _rapat('Deskripsi dan ciri-ciri (tampil publik)'),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _rahasia,
+                  maxLines: 2,
+                  decoration: _rapat('Ciri khusus rahasia',
+                      hint: 'Tidak tampil publik, untuk verifikasi klaim'),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 78,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      for (var i = 0; i < _foto.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(_foto[i],
+                                    width: 78, height: 78, fit: BoxFit.cover),
+                              ),
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _foto.removeAt(i)),
+                                  child: const CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor: Colors.red,
+                                    child: Icon(Icons.close,
+                                        size: 12, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                              if (i == 0)
+                                const Positioned(
+                                  left: 4,
+                                  bottom: 4,
+                                  child: Chip(
+                                    label: Text('Sampul',
+                                        style: TextStyle(
+                                            fontSize: 9,
+                                            color: Colors.white)),
+                                    backgroundColor: kTeal,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      InkWell(
+                        onTap: _foto.length >= 5 ? null : _pilihFoto,
+                        child: Container(
+                          width: 78,
+                          height: 78,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade400),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.add_a_photo_outlined,
+                                  color: Colors.grey),
+                              const SizedBox(height: 2),
+                              Text('Foto ${_foto.length}/5',
+                                  style: const TextStyle(
+                                      fontSize: 11, color: Colors.grey)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 4, 14, 14),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _sibuk ? null : _kirim,
+                child:
+                    Text(_sibuk ? 'Mengirim...' : 'Kirim untuk Moderasi'),
               ),
             ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: _sibuk ? null : _kirim,
-            child: Text(_sibuk ? 'Mengirim...' : 'Kirim untuk Moderasi'),
           ),
         ],
       ),
@@ -3046,16 +3191,14 @@ class LayarAkun extends StatelessWidget {
                                 color: Colors.grey, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: 6),
+                      BarisBadge(
+                          userId: (profil['id'] ?? '').toString()),
                     ],
                   ),
                 ),
-                const Icon(Icons.qr_code_2_outlined, color: Colors.grey),
               ],
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
-            child: BarisBadge(userId: (profil['id'] ?? '').toString()),
           ),
           const Divider(),
           ListTile(
@@ -3458,6 +3601,19 @@ class LayarNotif extends StatefulWidget {
 }
 
 class _LayarNotifState extends State<LayarNotif> {
+  late Future<List<Map<String, dynamic>>> _fNotif;
+
+  @override
+  void initState() {
+    super.initState();
+    _fNotif = _ambil();
+  }
+
+  void _segarkanNotif() {
+    _fNotif = _ambil();
+    if (mounted) setState(() {});
+  }
+
   Future<List<Map<String, dynamic>>> _ambil() async {
     final rows = await sb
         .from('lf_notif')
@@ -3506,7 +3662,7 @@ class _LayarNotifState extends State<LayarNotif> {
             builder: (_) => LayarDetail(post: rows.first)));
       }
     }
-    setState(() {});
+    _segarkanNotif();
   }
 
   @override
@@ -3514,20 +3670,23 @@ class _LayarNotifState extends State<LayarNotif> {
     return Scaffold(
       appBar: AppBar(title: const Text('Notifikasi')),
       body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _ambil(),
+        future: _fNotif,
         builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snap.hasError) {
+          if (snap.hasError && snap.data == null) {
             return Center(child: Text('Gagal memuat: ${snap.error}'));
+          }
+          if (snap.data == null) {
+            return const Center(child: CircularProgressIndicator());
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
             return const Center(child: Text('Belum ada notifikasi.'));
           }
           return RefreshIndicator(
-            onRefresh: () async => setState(() {}),
+            onRefresh: () async {
+              _segarkanNotif();
+              await _fNotif;
+            },
             child: ListView.builder(
               itemCount: data.length,
               itemBuilder: (_, i) {
@@ -3584,6 +3743,30 @@ KutemuKan adalah aplikasi komunitas independen untuk mahasiswa UNINDRA dan bukan
 
 class LayarInfo extends StatelessWidget {
   const LayarInfo({super.key});
+
+  static const List<String> _langkah = [
+    'Buat laporan kehilangan atau pengumuman temuan, lengkap dengan foto dan ciri khusus rahasia.',
+    'Admin memeriksa postingan sebelum menampilkannya di papan.',
+    'Sistem mencocokkan kategori dan mengabari lewat notifikasi dan push.',
+    'Pemilik mengajukan klaim dengan menyebut ciri khususnya.',
+    'Sesudah klaim disetujui, kedua pihak terhubung ke WhatsApp dan barang ditandai selesai saat sudah kembali.',
+  ];
+
+  Widget _tombolSosial(IconData ikon, String url, String nama) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton.outlined(
+          onPressed: () => launchUrl(Uri.parse(url),
+              mode: LaunchMode.externalApplication),
+          icon: FaIcon(ikon, size: 20),
+        ),
+        const SizedBox(height: 2),
+        Text(nama, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -3594,57 +3777,111 @@ class LayarInfo extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                Image.asset('assets/maskot.png', height: 120),
-                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Image.asset('assets/icon.png', height: 96),
+                ),
+                const SizedBox(height: 14),
                 const Text('KutemuKan',
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const Text('Lost and Found Kampus Unindra'),
-                const SizedBox(height: 2),
-                const Text('Versi 1.3.1',
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
-                const SizedBox(height: 14),
+                const Text('Lost and Found Kampus Unindra',
+                    style: TextStyle(color: Colors.black54)),
+                const SizedBox(height: 8),
+                const Chip(
+                  label: Text('Versi 1.3.2', style: TextStyle(fontSize: 11)),
+                  visualDensity: VisualDensity.compact,
+                ),
+                const SizedBox(height: 16),
                 const Text(
-                  'Papan lost and found kampus Unindra: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin, dan setiap klaim harus disetujui dulu oleh yang memposting, jadi nomor WhatsApp tidak pernah terbuka sembarangan.',
+                  'Papan lost and found untuk civitas kampus Unindra. Laporkan barang hilang, umumkan barang temuan, dan terima kabar otomatis saat ada yang cocok. Setiap postingan melewati moderasi admin dan setiap klaim harus disetujui pemilik postingan, jadi nomor WhatsApp tidak pernah terbuka sembarangan.',
                   textAlign: TextAlign.center,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 24),
-          const Divider(),
-          const ListTile(
-            leading: Icon(Icons.route_outlined),
-            title: Text('Cara Kerja'),
-            subtitle: Text(
-                '1. Buat laporan kehilangan atau pengumuman temuan, lengkap dengan foto (maksimal 5) dan ciri khusus rahasia\n2. Admin memeriksa dan menampilkan postinganmu di papan\n3. Sistem mencocokkan kategori dan mengabari lewat notif dan push\n4. Yang merasa pemilik mengajukan klaim dengan menyebut ciri khususnya\n5. Sesudah klaim disetujui, kalian terhubung ke WhatsApp dan barang ditandai selesai saat sudah kembali'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.code_outlined),
-            title: const Text('Teknologi'),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final t in [
-                    'Flutter',
-                    'Supabase PostgreSQL',
-                    'Supabase Auth',
-                    'Row Level Security',
-                    'Cloudflare R2',
-                    'Firebase Cloud Messaging',
-                  ])
-                    Chip(
-                      label: Text(t, style: const TextStyle(fontSize: 11)),
-                      visualDensity: VisualDensity.compact,
+                  const Row(
+                    children: [
+                      Icon(Icons.route_outlined, color: kTeal),
+                      SizedBox(width: 8),
+                      Text('Cara Kerja',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  for (var i = 0; i < _langkah.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 10,
+                            backgroundColor: kTeal,
+                            child: Text('${i + 1}',
+                                style: const TextStyle(
+                                    fontSize: 10, color: Colors.white)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(_langkah[i])),
+                        ],
+                      ),
                     ),
                 ],
               ),
             ),
           ),
+          const SizedBox(height: 16),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  const CircleAvatar(
+                    radius: 26,
+                    backgroundColor: kTeal,
+                    child: Icon(Icons.person, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text('Ahmad Dandi Subhani',
+                      style: TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text('Pengembang KutemuKan',
+                      style: TextStyle(color: Colors.black54)),
+                  const Text('Mahasiswa Teknik Informatika, Universitas Indraprasta PGRI',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black54, fontSize: 12)),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _tombolSosial(FontAwesomeIcons.instagram,
+                          'https://instagram.com/dandisubhani_', 'Instagram'),
+                      const SizedBox(width: 18),
+                      _tombolSosial(FontAwesomeIcons.whatsapp,
+                          'https://wa.me/628563000126', 'WhatsApp'),
+                      const SizedBox(width: 18),
+                      _tombolSosial(FontAwesomeIcons.github,
+                          'https://github.com/dandienter', 'GitHub'),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           ListTile(
+            contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.privacy_tip_outlined),
             title: const Text('Kebijakan Privasi'),
             subtitle: const Text('Cara data kamu dikelola di KutemuKan'),
@@ -3653,7 +3890,7 @@ class LayarInfo extends StatelessWidget {
                 builder: (_) => const LayarPrivasi())),
           ),
           const Divider(),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           const Center(
             child: Text(
               'KutemuKan adalah aplikasi komunitas independen dan bukan aplikasi resmi Universitas Indraprasta PGRI.',
@@ -3661,19 +3898,10 @@ class LayarInfo extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 6),
           const Center(
-              child:
-                  Text('Author', style: TextStyle(color: Colors.grey))),
-          const SizedBox(height: 8),
-          Center(
-            child: OutlinedButton.icon(
-              onPressed: () => launchUrl(
-                  Uri.parse('https://instagram.com/dandisubhani_'),
-                  mode: LaunchMode.externalApplication),
-              icon: const Icon(Icons.camera_alt_outlined),
-              label: const Text('@dandisubhani_'),
-            ),
+            child: Text('© 2026 KutemuKan',
+                style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
         ],
       ),
