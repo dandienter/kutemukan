@@ -135,7 +135,7 @@ class _LayarLoginState extends State<LayarLogin> {
               const Text('KutemuKan',
                   style:
                       TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
-              const Text('Lost and Found Kampus - Unindrabase',
+              const Text('Lost and Found Kampus',
                   textAlign: TextAlign.center),
               const SizedBox(height: 28),
               TextField(
@@ -1026,11 +1026,6 @@ class LayarInfo extends StatelessWidget {
           ),
           const SizedBox(height: 26),
           const Divider(),
-          const ListTile(
-            leading: Icon(Icons.people_outline),
-            title: Text('Komunitas'),
-            subtitle: Text('Unindrabase - Universitas Indraprasta PGRI'),
-          ),
           const ListTile(
             leading: Icon(Icons.code_outlined),
             title: Text('Teknologi'),
