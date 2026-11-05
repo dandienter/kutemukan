@@ -1,0 +1,51 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.9"
+          channel: stable
+
+      - name: Scaffold Android lalu timpa sumber aplikasi
+        run: |
+          mkdir -p /tmp/scaffold
+          cd /tmp/scaffold
+          flutter create --org id.kutemukan --project-name kutemukan scaffoldapp
+          cd $GITHUB_WORKSPACE
+          cp -r /tmp/scaffold/scaffoldapp/android ./android
+          mkdir -p assets/icon
+          if [ -f assets/icon/icon.png ]; then
+            cp assets/icon/icon.png /tmp/icon.png
+          fi
+
+      - name: Patch manifest (label + izin internet)
+        run: |
+          MANIFEST=android/app/src/main/AndroidManifest.xml
+          sed -i 's/android:label="kutemukan"/android:label="KutemuKan"/' $MANIFEST
+          grep -q 'android.permission.INTERNET' $MANIFEST || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' $MANIFEST
+          cat $MANIFEST
+
+      - name: Build APK release (arm64)
+        run: |
+          flutter pub get
+          flutter build apk --release --target-platform android-arm64
+
+      - name: Terbitkan Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: KutemuKan build ${{ github.run_number }}
+          files: build/app/outputs/flutter-apk/app-release.apk
