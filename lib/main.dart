@@ -419,6 +419,14 @@ class _LayarProfilState extends State<LayarProfil> {
     if (x != null) setState(() => _fotoBaru = File(x.path));
   }
 
+  ImageProvider? _fotoProfilTampil() {
+    if (_fotoBaru != null) return FileImage(_fotoBaru!);
+    if (_fotoUrl != null && _fotoUrl!.isNotEmpty) {
+      return NetworkImage(_fotoUrl!);
+    }
+    return null;
+  }
+
   Future<void> _simpan() async {
     final nama = _nama.text.trim();
     var wa = _wa.text.replaceAll(RegExp(r'[^0-9]'), '');
@@ -469,11 +477,7 @@ class _LayarProfilState extends State<LayarProfil> {
               onTap: _pilihFoto,
               child: CircleAvatar(
                 radius: 46,
-                backgroundImage: _fotoBaru != null
-                    ? FileImage(_fotoBaru!)
-                    : (_fotoUrl != null && _fotoUrl!.isNotEmpty)
-                        ? NetworkImage(_fotoUrl!)
-                        : null,
+                backgroundImage: _fotoProfilTampil(),
                 child: (_fotoBaru == null &&
                         (_fotoUrl == null || _fotoUrl!.isEmpty))
                     ? const Icon(Icons.add_a_photo_outlined, size: 30)
