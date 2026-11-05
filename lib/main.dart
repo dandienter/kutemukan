@@ -2,9 +2,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -12,8 +15,37 @@ import 'config.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id', null);
   await Supabase.initialize(url: kSupabaseUrl, anonKey: kSupabaseAnonKey);
   runApp(const KutemuKanApp());
+}
+
+/// Kompres foto apa pun menjadi WebP ringan sebelum diunggah.
+Future<File> kompresKeWebp(File asal) async {
+  final tujuan =
+      '${asal.parent.path}/webp_${DateTime.now().millisecondsSinceEpoch}.webp';
+  final hasil = await FlutterImageCompress.compressAndGetFile(
+    asal.absolute.path,
+    tujuan,
+    quality: 78,
+    minWidth: 1280,
+    minHeight: 1280,
+    format: CompressFormat.webp,
+  );
+  if (hasil == null) return asal;
+  return File(hasil.path);
+}
+
+/// Unggah satu berkas ke endpoint foto VPS, kembalikan URL publiknya.
+Future<String> unggahBerkas(File f) async {
+  final req = http.MultipartRequest('POST', Uri.parse(kUploadUrl));
+  req.headers['X-Upload-Key'] = kUploadKey;
+  req.files.add(await http.MultipartFile.fromPath('foto', f.path));
+  final res = await req.send();
+  final body = await res.stream.bytesToString();
+  if (res.statusCode != 200) throw 'Unggah foto gagal: $body';
+  final data = jsonDecode(body) as Map<String, dynamic>;
+  return data['url'] as String;
 }
 
 SupabaseClient get sb => Supabase.instance.client;
@@ -41,7 +73,139 @@ class KutemuKanApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: kTeal),
         useMaterial3: true,
       ),
-      home: const Gerbang(),
+      home: const Pembuka(),
+    );
+  }
+}
+
+/// Layar pertama: tampilkan panduan sekali, sesudah itu langsung Gerbang.
+class Pembuka extends StatelessWidget {
+  const Pembuka({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: SharedPreferences.getInstance()
+          .then((p) => p.getBool('panduan_v1') ?? false),
+      builder: (context, snap) {
+        if (!snap.hasData) {
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+        if (snap.data == false) return const LayarPanduan();
+        return const Gerbang();
+      },
+    );
+  }
+}
+
+class LayarPanduan extends StatefulWidget {
+  const LayarPanduan({super.key});
+  @override
+  State<LayarPanduan> createState() => _LayarPanduanState();
+}
+
+class _LayarPanduanState extends State<LayarPanduan> {
+  final _ctrl = PageController();
+  int _hal = 0;
+
+  static const _slides = [
+    (
+      'Barangmu hilang?',
+      'Buat laporan kehilangan lengkap dengan foto, lokasi, dan ciri-cirinya. Makin jelas, makin besar peluang ketemu.'
+    ),
+    (
+      'Menemukan barang?',
+      'Umumkan sebagai temuan. Setiap postingan melewati moderasi admin dulu agar papan tetap bersih dan bisa dipercaya.'
+    ),
+    (
+      'Dikabari saat cocok',
+      'Kalau ada temuan yang kategorinya sama dengan kehilanganmu, kamu langsung dapat notif. Tinggal tekan Hubungi dan lanjut ke WhatsApp pemiliknya.'
+    ),
+  ];
+
+  Future<void> _selesai() async {
+    final p = await SharedPreferences.getInstance();
+    await p.setBool('panduan_v1', true);
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const Gerbang()));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                  onPressed: _selesai, child: const Text('Lewati')),
+            ),
+            Expanded(
+              child: PageView.builder(
+                controller: _ctrl,
+                itemCount: _slides.length,
+                onPageChanged: (i) => setState(() => _hal = i),
+                itemBuilder: (_, i) => Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.asset('assets/maskot.jpg', height: 210),
+                      ),
+                      const SizedBox(height: 26),
+                      Text(_slides[i].$1,
+                          style: const TextStyle(
+                              fontSize: 24, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center),
+                      const SizedBox(height: 10),
+                      Text(_slides[i].$2, textAlign: TextAlign.center),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                _slides.length,
+                (i) => Container(
+                  margin: const EdgeInsets.all(4),
+                  width: _hal == i ? 22 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _hal == i ? kTeal : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () {
+                    if (_hal < _slides.length - 1) {
+                      _ctrl.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeOut);
+                    } else {
+                      _selesai();
+                    }
+                  },
+                  child:
+                      Text(_hal < _slides.length - 1 ? 'Lanjut' : 'Mulai'),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -216,7 +380,8 @@ class _LayarLoginState extends State<LayarLogin> {
 }
 
 class LayarProfil extends StatefulWidget {
-  const LayarProfil({super.key});
+  final Map<String, dynamic>? profilAwal;
+  const LayarProfil({super.key, this.profilAwal});
   @override
   State<LayarProfil> createState() => _LayarProfilState();
 }
@@ -225,6 +390,34 @@ class _LayarProfilState extends State<LayarProfil> {
   final _nama = TextEditingController();
   final _wa = TextEditingController();
   bool _sibuk = false;
+  String? _fotoUrl;
+  File? _fotoBaru;
+
+  bool get _modeEdit => widget.profilAwal != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final awal = widget.profilAwal;
+    if (awal != null) {
+      _nama.text = awal['nama'] ?? '';
+      _wa.text = awal['wa'] ?? '';
+      _fotoUrl = awal['foto_url'] as String?;
+    } else {
+      // Nama dari akun Google terisi otomatis, tinggal dilengkapi.
+      final meta = sb.auth.currentUser?.userMetadata;
+      final namaGoogle = meta?['full_name'] ?? meta?['name'];
+      if (namaGoogle is String && namaGoogle.isNotEmpty) {
+        _nama.text = namaGoogle;
+      }
+    }
+  }
+
+  Future<void> _pilihFoto() async {
+    final x = await ImagePicker()
+        .pickImage(source: ImageSource.gallery, imageQuality: 85);
+    if (x != null) setState(() => _fotoBaru = File(x.path));
+  }
 
   Future<void> _simpan() async {
     final nama = _nama.text.trim();
@@ -236,25 +429,61 @@ class _LayarProfilState extends State<LayarProfil> {
     }
     if (wa.startsWith('0')) wa = '62${wa.substring(1)}';
     setState(() => _sibuk = true);
-    await sb.from('lf_profiles').insert({
-      'id': sb.auth.currentUser!.id,
-      'nama': nama,
-      'wa': wa,
-    });
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const Gerbang()));
+    try {
+      var fotoUrl = _fotoUrl;
+      if (_fotoBaru != null) {
+        fotoUrl = await unggahBerkas(await kompresKeWebp(_fotoBaru!));
+      }
+      final id = sb.auth.currentUser!.id;
+      if (_modeEdit) {
+        await sb.from('lf_profiles').update(
+            {'nama': nama, 'wa': wa, 'foto_url': fotoUrl}).eq('id', id);
+        if (mounted) Navigator.of(context).pop(true);
+      } else {
+        await sb.from('lf_profiles').insert(
+            {'id': id, 'nama': nama, 'wa': wa, 'foto_url': fotoUrl});
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const Gerbang()));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+      }
     }
+    if (mounted) setState(() => _sibuk = false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lengkapi Profil')),
-      body: Padding(
+      appBar:
+          AppBar(title: Text(_modeEdit ? 'Edit Profil' : 'Lengkapi Profil')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
+            GestureDetector(
+              onTap: _pilihFoto,
+              child: CircleAvatar(
+                radius: 46,
+                backgroundImage: _fotoBaru != null
+                    ? FileImage(_fotoBaru!)
+                    : (_fotoUrl != null && _fotoUrl!.isNotEmpty)
+                        ? NetworkImage(_fotoUrl!)
+                        : null,
+                child: (_fotoBaru == null &&
+                        (_fotoUrl == null || _fotoUrl!.isEmpty))
+                    ? const Icon(Icons.add_a_photo_outlined, size: 30)
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text('Ketuk untuk pasang foto profil',
+                style: TextStyle(color: Colors.grey, fontSize: 12)),
+            const SizedBox(height: 18),
             const Text(
                 'Nomor WhatsApp hanya dipakai saat ada yang perlu menghubungi soal barang. Nomor tidak tampil terbuka di papan.'),
             const SizedBox(height: 20),
@@ -276,7 +505,9 @@ class _LayarProfilState extends State<LayarProfil> {
               width: double.infinity,
               child: FilledButton(
                 onPressed: _sibuk ? null : _simpan,
-                child: Text(_sibuk ? 'Menyimpan...' : 'Simpan dan Masuk'),
+                child: Text(_sibuk
+                    ? 'Menyimpan...'
+                    : (_modeEdit ? 'Simpan Perubahan' : 'Simpan dan Masuk')),
               ),
             ),
           ],
@@ -295,32 +526,35 @@ class LayarUtama extends StatefulWidget {
 
 class _LayarUtamaState extends State<LayarUtama> {
   int _tab = 0;
+  late Map<String, dynamic> _profil = widget.profil;
+
+  Future<void> _segarkanProfil() async {
+    final id = sb.auth.currentUser?.id;
+    if (id == null) return;
+    final rows = await sb.from('lf_profiles').select().eq('id', id);
+    if (rows.isNotEmpty && mounted) {
+      setState(() => _profil = rows.first);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final admin = widget.profil['peran'] == 'admin';
     final halaman = <Widget>[
       const LayarBeranda(),
-      LayarBuat(profil: widget.profil),
-      LayarPostinganku(profil: widget.profil),
+      LayarBuat(profil: _profil),
+      LayarPostinganku(profil: _profil),
       const LayarNotif(),
-      if (admin) const LayarModerasi(),
-      LayarAkun(profil: widget.profil),
+      LayarAkun(profil: _profil, onProfilDiubah: _segarkanProfil),
     ];
-    final tujuan = <NavigationDestination>[
-      const NavigationDestination(
-          icon: Icon(Icons.home_outlined), label: 'Beranda'),
-      const NavigationDestination(
+    const tujuan = <NavigationDestination>[
+      NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Beranda'),
+      NavigationDestination(
           icon: Icon(Icons.add_circle_outline), label: 'Buat'),
-      const NavigationDestination(
-          icon: Icon(Icons.list_alt_outlined), label: 'Postinganku'),
-      const NavigationDestination(
+      NavigationDestination(
+          icon: Icon(Icons.list_alt_outlined), label: 'Postingan'),
+      NavigationDestination(
           icon: Icon(Icons.notifications_outlined), label: 'Notif'),
-      if (admin)
-        const NavigationDestination(
-            icon: Icon(Icons.shield_outlined), label: 'Moderasi'),
-      const NavigationDestination(
-          icon: Icon(Icons.person_outline), label: 'Akun'),
+      NavigationDestination(icon: Icon(Icons.person_outline), label: 'Akun'),
     ];
     if (_tab >= halaman.length) _tab = 0;
     return Scaffold(
@@ -594,14 +828,8 @@ class _LayarBuatState extends State<LayarBuat> {
 
   Future<String?> _unggahFoto() async {
     if (_foto == null) return null;
-    final req = http.MultipartRequest('POST', Uri.parse(kUploadUrl));
-    req.headers['X-Upload-Key'] = kUploadKey;
-    req.files.add(await http.MultipartFile.fromPath('foto', _foto!.path));
-    final res = await req.send();
-    final body = await res.stream.bytesToString();
-    if (res.statusCode != 200) throw 'Unggah foto gagal: $body';
-    final data = jsonDecode(body) as Map<String, dynamic>;
-    return data['url'] as String?;
+    final kecil = await kompresKeWebp(_foto!);
+    return unggahBerkas(kecil);
   }
 
   Future<void> _kirim() async {
@@ -900,21 +1128,52 @@ class _LayarModerasiState extends State<LayarModerasi> {
 
 class LayarAkun extends StatelessWidget {
   final Map<String, dynamic> profil;
-  const LayarAkun({super.key, required this.profil});
+  final Future<void> Function()? onProfilDiubah;
+  const LayarAkun({super.key, required this.profil, this.onProfilDiubah});
   @override
   Widget build(BuildContext context) {
+    final foto = profil['foto_url'] as String?;
+    final admin = profil['peran'] == 'admin';
     return Scaffold(
       appBar: AppBar(title: const Text('Akun')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           ListTile(
-            leading: const CircleAvatar(child: Icon(Icons.person)),
+            leading: CircleAvatar(
+              backgroundImage:
+                  (foto != null && foto.isNotEmpty) ? NetworkImage(foto) : null,
+              child: (foto == null || foto.isEmpty)
+                  ? const Icon(Icons.person)
+                  : null,
+            ),
             title: Text(profil['nama'] ?? ''),
             subtitle: Text(
-                'WA: ${profil['wa']}\nPeran: ${profil['peran']}'),
+                'WA: ${profil['wa']}\nPeran: ${admin ? 'Admin' : 'Pengguna'}'),
           ),
           const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.manage_accounts_outlined),
+            title: const Text('Edit Profil'),
+            subtitle: const Text('Nama, nomor WhatsApp, dan foto profil'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final berubah = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                      builder: (_) => LayarProfil(profilAwal: profil)));
+              if (berubah == true) await onProfilDiubah?.call();
+            },
+          ),
+          if (admin)
+            ListTile(
+              leading: const Icon(Icons.shield_outlined),
+              title: const Text('Moderasi Postingan'),
+              subtitle:
+                  const Text('Setujui atau tolak postingan yang menunggu'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const LayarModerasi())),
+            ),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('Info Aplikasi'),
@@ -1064,7 +1323,7 @@ class LayarInfo extends StatelessWidget {
                 const Text('KutemuKan',
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const Text('Versi 1.1.0'),
+                const Text('Versi 1.2.0'),
                 SizedBox(height: 14),
                 Text(
                   'Papan lost and found kampus Unindra: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin agar papan tetap bersih.',
@@ -1076,24 +1335,41 @@ class LayarInfo extends StatelessWidget {
           const SizedBox(height: 26),
           const Divider(),
           const ListTile(
+            leading: Icon(Icons.route_outlined),
+            title: Text('Cara Kerja'),
+            subtitle: Text(
+                '1. Buat laporan kehilangan atau pengumuman temuan, lengkap dengan foto dan lokasi\n2. Admin memeriksa dan menampilkan postinganmu di papan\n3. Sistem mencocokkan kategori dan mengabari pemiliknya lewat notif\n4. Tekan tombol Hubungi untuk lanjut ke WhatsApp dan atur pengembalian barangnya'),
+          ),
+          const ListTile(
             leading: Icon(Icons.code_outlined),
             title: Text('Teknologi'),
-            subtitle:
-                Text('Flutter, Supabase (PostgreSQL dan Auth), Cloudflare R2'),
+            subtitle: Text(
+                'Flutter (Android dan Web)\nSupabase: PostgreSQL, Auth, dan Row Level Security\nCloudflare R2 untuk penyimpanan foto\nFirebase untuk proyek pendamping aplikasi'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Kebijakan Privasi'),
+            subtitle: const Text('Cara data kamu dikelola di KutemuKan'),
+            trailing: const Icon(Icons.open_in_new, size: 18),
+            onTap: () => launchUrl(
+                Uri.parse(
+                    'https://temubalik.43-130-228-96.sslip.io/privasi.html'),
+                mode: LaunchMode.externalApplication),
           ),
           const Divider(),
           const SizedBox(height: 6),
           const Center(
-              child: Text('Dibuat oleh',
-                  style: TextStyle(color: Colors.grey))),
-          const Center(
-            child: Text('Ahmad Dandi Subhani',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+            child: Text(
+              'KutemuKan adalah aplikasi komunitas independen dan bukan aplikasi resmi Universitas Indraprasta PGRI.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
           ),
+          const SizedBox(height: 16),
           const Center(
-              child: Text('Teknik Informatika - UNINDRA',
+              child: Text('Author',
                   style: TextStyle(color: Colors.grey))),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Center(
             child: OutlinedButton.icon(
               onPressed: () => launchUrl(
