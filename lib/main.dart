@@ -306,7 +306,7 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
     }
   } catch (_) {
     if (manual && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(tr('Tidak bisa memeriksa pembaruan saat ini.'))));
     }
   }
@@ -675,10 +675,10 @@ class _LayarLoginState extends State<LayarLogin> {
                     : tr('Belum punya akun? Daftar')),
               ),
               const SizedBox(height: 8),
-              const Row(children: [
-                Expanded(child: Divider()),
+              Row(children: [
+                const Expanded(child: Divider()),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Text(tr('atau')),
                 ),
                 Expanded(child: Divider()),
@@ -765,7 +765,7 @@ class _LayarProfilState extends State<LayarProfil> {
     final nama = _nama.text.trim();
     var wa = _wa.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (nama.isEmpty || wa.length < 9) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(tr('Isi nama dan nomor WhatsApp yang benar.'))));
       return;
     }
@@ -1073,10 +1073,10 @@ class KartuPostingan extends StatelessWidget {
                     onSelected: onAksi,
                     itemBuilder: (_) => [
                       if (post['status'] == 'tampil')
-                        const PopupMenuItem(
+                        PopupMenuItem(
                             value: 'kembali',
                             child: Text(tr('Tandai sudah selesai'))),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                           value: 'hapus', child: Text(tr('Hapus'))),
                     ],
                   ),
@@ -1220,16 +1220,16 @@ class _LayarBerandaState extends State<LayarBeranda> {
           p['up_count'] = sesudah;
           _upHariIni.add((p['id'] ?? '').toString());
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Terima kasih sudah bantu UP.'))));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
                 Text(tr('Kamu sudah bantu UP postingan ini hari ini.'))));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Bantu UP gagal, coba lagi sebentar.'))));
       }
     }
@@ -1305,7 +1305,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: SegmentedButton<int>(
-              segments: const [
+              segments: [
                 ButtonSegment(value: 0, label: Text(tr('Semua'))),
                 ButtonSegment(value: 1, label: Text(tr('Saya'))),
               ],
@@ -1634,17 +1634,17 @@ class _LayarDetailState extends State<LayarDetail> {
           _post['up_count'] = sesudah;
           _sudahUp = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Terima kasih sudah bantu UP.'))));
       } else {
         setState(() => _sudahUp = true);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
                 Text(tr('Kamu sudah bantu UP postingan ini hari ini.'))));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Bantu UP gagal, coba lagi sebentar.'))));
       }
     }
@@ -1708,7 +1708,7 @@ class _LayarDetailState extends State<LayarDetail> {
         'alasan': alasan.text.trim(),
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
                 Text(tr('Laporan terkirim. Admin akan memeriksanya.'))));
       }
@@ -2254,7 +2254,7 @@ class _LayarBuatState extends State<LayarBuat> {
 
   Future<void> _kirim() async {
     if (_judul.text.trim().isEmpty || _lokasi.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(tr('Judul dan lokasi wajib diisi.'))));
       return;
     }
@@ -2279,7 +2279,7 @@ class _LayarBuatState extends State<LayarBuat> {
         'penitipan': _jenis == 'temuan' ? _penitipan.text.trim() : null,
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(
                 'Postingan terkirim. Menunggu moderasi admin sebelum tampil.')));
         _judul.clear();
@@ -2318,7 +2318,7 @@ class _LayarBuatState extends State<LayarBuat> {
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
               children: [
                 SegmentedButton<String>(
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                         value: 'hilang', label: Text(tr('Saya Kehilangan'))),
                     ButtonSegment(
@@ -2440,7 +2440,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                 ),
                               ),
                               if (i == 0)
-                                const Positioned(
+                                Positioned(
                                   left: 4,
                                   bottom: 4,
                                   child: Chip(
@@ -2769,7 +2769,7 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
       });
       _isi.clear();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Terima kasih, ulasanmu terkirim.'))));
       }
     } catch (e) {
@@ -2979,7 +2979,7 @@ class _LayarModerasiState extends State<LayarModerasi> {
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return const Center(
+            return Center(
                 child: Text(tr('Tidak ada postingan menunggu moderasi.')));
           }
           return ListView.builder(
@@ -3420,7 +3420,7 @@ class _LayarUbahSandiState extends State<LayarUbahSandi> {
   Future<void> _simpan() async {
     final b = _baru.text;
     if (b.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text(tr('Kata sandi minimal 6 karakter.'))));
       return;
     }
@@ -3930,9 +3930,9 @@ class LayarInfo extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.route_outlined, color: kTeal),
+                      const Icon(Icons.route_outlined, color: kTeal),
                       SizedBox(width: 8),
                       Text(tr('Cara Kerja'),
                           style: TextStyle(
