@@ -20,7 +20,8 @@ dependencies:
   firebase_messaging: ^15.1.3
   package_info_plus: ^8.0.0
   share_plus: ^10.1.4
-  font_awesome_flutter: ^10.8.0
+  flutter_localizations:
+    sdk: flutter
 
 dev_dependencies:
   flutter_lints: ^3.0.0
@@ -33,6 +34,9 @@ flutter:
     - assets/maskot.png
     - assets/splash.png
     - assets/icon.png
+    - assets/icons/instagram.png
+    - assets/icons/whatsapp.png
+    - assets/icons/github.png
 
 flutter_launcher_icons:
   android: true

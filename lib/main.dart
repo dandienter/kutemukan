@@ -7,7 +7,7 @@ import 'dart:ui' as ui;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:http/http.dart' as http;
@@ -21,6 +21,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
+import 'i18n.dart';
 
 @pragma('vm:entry-point')
 Future<void> _fcmLatar(RemoteMessage pesan) async {
@@ -30,6 +31,7 @@ Future<void> _fcmLatar(RemoteMessage pesan) async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id', null);
+  await muatPreferensi();
   await Supabase.initialize(url: kSupabaseUrl, anonKey: kSupabaseAnonKey);
   try {
     await Firebase.initializeApp();
@@ -127,7 +129,14 @@ String fmtTanggal(dynamic v) {
   if (v == null) return '-';
   final d = DateTime.tryParse(v.toString());
   if (d == null) return '-';
-  return DateFormat('d MMM yyyy, HH:mm', 'id').format(d.toLocal());
+  return DateFormat('d MMM yyyy, HH:mm', kBahasa.value).format(d.toLocal());
+}
+
+String fmtBulan(dynamic v) {
+  if (v == null) return '-';
+  final d = DateTime.tryParse(v.toString());
+  if (d == null) return '-';
+  return DateFormat('d MMM yyyy', kBahasa.value).format(d.toLocal());
 }
 
 /// Ambil nama dan foto publik sekelompok pengguna dari view aman
@@ -164,9 +173,9 @@ Future<void> pasangNama(List<Map<String, dynamic>> rows) async {
 }
 
 String _tingkatBadge(int n, List<int> ambang) {
-  if (n >= ambang[2]) return 'Emas';
-  if (n >= ambang[1]) return 'Perak';
-  if (n >= ambang[0]) return 'Perunggu';
+  if (n >= ambang[2]) return tr('Emas');
+  if (n >= ambang[1]) return tr('Perak');
+  if (n >= ambang[0]) return tr('Perunggu');
   return '';
 }
 
@@ -235,8 +244,8 @@ class BarisBadge extends StatelessWidget {
                     size: 15, color: _warna(b['tingkat'] ?? '')),
                 label: Text(
                     (b['tingkat'] ?? '').isEmpty
-                        ? (b['nama'] ?? '')
-                        : '${b['nama']} ${b['tingkat']}',
+                        ? tr((b['nama'] ?? '').toString())
+                        : '${tr((b['nama'] ?? '').toString())} ${b['tingkat']}',
                     style: const TextStyle(fontSize: 11)),
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -269,12 +278,14 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
       await showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
-          title: Text('Versi ${data['versi']} tersedia'),
+          title: Text(kBahasa.value == 'en'
+              ? 'Version ${data['versi']} is available'
+              : 'Versi ${data['versi']} tersedia'),
           content: Text((data['catatan'] ?? '').toString()),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Nanti saja'),
+              child: Text(tr('Nanti saja')),
             ),
             FilledButton(
               onPressed: () {
@@ -282,20 +293,21 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
                 launchUrl(Uri.parse((data['url'] ?? '').toString()),
                     mode: LaunchMode.externalApplication);
               },
-              child: const Text('Unduh Sekarang'),
+              child: Text(tr('Unduh Sekarang')),
             ),
           ],
         ),
       );
     } else if (manual) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Aplikasimu sudah versi terbaru (${info.version}).')));
+          content: Text(kBahasa.value == 'en'
+              ? 'Your app is already up to date (${info.version}).'
+              : 'Aplikasimu sudah versi terbaru (${info.version}).')));
     }
   } catch (_) {
     if (manual && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Tidak bisa memeriksa pembaruan saat ini.')));
+          content: Text(tr('Tidak bisa memeriksa pembaruan saat ini.'))));
     }
   }
 }
@@ -304,14 +316,33 @@ class KutemuKanApp extends StatelessWidget {
   const KutemuKanApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KutemuKan',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: kTeal),
-        useMaterial3: true,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: kTemaMode,
+      builder: (_, mode, __) => ValueListenableBuilder<String>(
+        valueListenable: kBahasa,
+        builder: (_, bahasa, __) => MaterialApp(
+          title: 'KutemuKan',
+          debugShowCheckedModeBanner: false,
+          themeMode: mode,
+          locale: Locale(bahasa),
+          supportedLocales: const [Locale('id'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: kTeal),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: kTeal, brightness: Brightness.dark),
+            useMaterial3: true,
+          ),
+          home: const LayarSplash(),
+        ),
       ),
-      home: const LayarSplash(),
     );
   }
 }
@@ -366,7 +397,7 @@ class _LayarSplashState extends State<LayarSplash>
               children: [
                 Image.asset('assets/maskot.png', height: 210),
                 const SizedBox(height: 10),
-                const Text('Lost and Found Kampus Unindra',
+                Text(tr('Lost and Found Kampus Unindra'),
                     style: TextStyle(fontSize: 15, color: Colors.white70)),
               ],
             ),
@@ -440,7 +471,7 @@ class _LayarPanduanState extends State<LayarPanduan> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                  onPressed: _selesai, child: const Text('Lewati')),
+                  onPressed: _selesai, child: Text(tr('Lewati'))),
             ),
             Expanded(
               child: PageView.builder(
@@ -454,12 +485,12 @@ class _LayarPanduanState extends State<LayarPanduan> {
                     children: [
                       Image.asset('assets/maskot.png', height: 210),
                       const SizedBox(height: 26),
-                      Text(_slides[i].$1,
+                      Text(tr(_slides[i].$1),
                           style: const TextStyle(
                               fontSize: 24, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center),
                       const SizedBox(height: 10),
-                      Text(_slides[i].$2, textAlign: TextAlign.center),
+                      Text(tr(_slides[i].$2), textAlign: TextAlign.center),
                     ],
                   ),
                 ),
@@ -606,21 +637,21 @@ class _LayarLoginState extends State<LayarLogin> {
               const Text('KutemuKan',
                   style:
                       TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
-              const Text('Lost and Found Kampus Unindra',
+              Text(tr('Lost and Found Kampus Unindra'),
                   textAlign: TextAlign.center),
               const SizedBox(height: 28),
               TextField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                     labelText: 'Email', border: OutlineInputBorder()),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: _sandi,
                 obscureText: true,
-                decoration: const InputDecoration(
-                    labelText: 'Kata sandi', border: OutlineInputBorder()),
+                decoration: InputDecoration(
+                    labelText: tr('Kata sandi'), border: OutlineInputBorder()),
               ),
               if (_galat != null) ...[
                 const SizedBox(height: 12),
@@ -632,23 +663,23 @@ class _LayarLoginState extends State<LayarLogin> {
                 child: FilledButton(
                   onPressed: _sibuk ? null : _kirim,
                   child: Text(_sibuk
-                      ? 'Memproses...'
-                      : (_modeDaftar ? 'Daftar' : 'Masuk')),
+                      ? tr('Memproses...')
+                      : (_modeDaftar ? tr('Daftar') : tr('Masuk'))),
                 ),
               ),
               TextButton(
                 onPressed: () =>
                     setState(() => _modeDaftar = !_modeDaftar),
                 child: Text(_modeDaftar
-                    ? 'Sudah punya akun? Masuk'
-                    : 'Belum punya akun? Daftar'),
+                    ? tr('Sudah punya akun? Masuk')
+                    : tr('Belum punya akun? Daftar')),
               ),
               const SizedBox(height: 8),
               const Row(children: [
                 Expanded(child: Divider()),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text('atau'),
+                  child: Text(tr('atau')),
                 ),
                 Expanded(child: Divider()),
               ]),
@@ -668,12 +699,12 @@ class _LayarLoginState extends State<LayarLogin> {
                   } catch (e) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Login Google gagal: $e')));
+                          content: Text('${tr('Login Google gagal')}: $e')));
                     }
                   }
                 },
                 icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text('Masuk dengan Google'),
+                label: Text(tr('Masuk dengan Google')),
               ),
             ],
           ),
@@ -735,7 +766,7 @@ class _LayarProfilState extends State<LayarProfil> {
     var wa = _wa.text.replaceAll(RegExp(r'[^0-9]'), '');
     if (nama.isEmpty || wa.length < 9) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Isi nama dan nomor WhatsApp yang benar.')));
+          content: Text(tr('Isi nama dan nomor WhatsApp yang benar.'))));
       return;
     }
     if (wa.startsWith('0')) wa = '62${wa.substring(1)}';
@@ -761,7 +792,7 @@ class _LayarProfilState extends State<LayarProfil> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+            .showSnackBar(SnackBar(content: Text('${tr('Gagal menyimpan')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -788,23 +819,23 @@ class _LayarProfilState extends State<LayarProfil> {
               ),
             ),
             const SizedBox(height: 6),
-            const Text('Ketuk untuk pasang foto profil',
+            Text(tr('Ketuk untuk pasang foto profil'),
                 style: TextStyle(color: Colors.grey, fontSize: 12)),
             const SizedBox(height: 18),
-            const Text(
-                'Nomor WhatsApp hanya dipakai saat ada yang perlu menghubungi soal barang. Nomor tidak tampil terbuka di papan.'),
+            Text(tr(
+                'Nomor WhatsApp hanya dipakai saat ada yang perlu menghubungi soal barang. Nomor tidak tampil terbuka di papan.')),
             const SizedBox(height: 20),
             TextField(
               controller: _nama,
-              decoration: const InputDecoration(
-                  labelText: 'Nama lengkap', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                  labelText: tr('Nama lengkap'), border: OutlineInputBorder()),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _wa,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                  labelText: 'Nomor WhatsApp (08xx)',
+              decoration: InputDecoration(
+                  labelText: tr('Nomor WhatsApp (08xx)'),
                   border: OutlineInputBorder()),
             ),
             const SizedBox(height: 20),
@@ -813,8 +844,10 @@ class _LayarProfilState extends State<LayarProfil> {
               child: FilledButton(
                 onPressed: _sibuk ? null : _simpan,
                 child: Text(_sibuk
-                    ? 'Menyimpan...'
-                    : (_modeEdit ? 'Simpan Perubahan' : 'Simpan dan Masuk')),
+                    ? tr('Menyimpan...')
+                    : (_modeEdit
+                        ? tr('Simpan Perubahan')
+                        : tr('Simpan dan Masuk'))),
               ),
             ),
           ],
@@ -899,20 +932,20 @@ class _LayarUtamaState extends State<LayarUtama> {
       LayarAkun(profil: _profil, onProfilDiubah: _segarkanProfil),
     ];
     final tujuan = <NavigationDestination>[
-      const NavigationDestination(
-          icon: Icon(Icons.home_outlined), label: 'Beranda'),
-      const NavigationDestination(
-          icon: Icon(Icons.add_circle_outline), label: 'Buat'),
+      NavigationDestination(
+          icon: const Icon(Icons.home_outlined), label: tr('Beranda')),
+      NavigationDestination(
+          icon: const Icon(Icons.add_circle_outline), label: tr('Buat')),
       NavigationDestination(
         icon: Badge(
           isLabelVisible: _belumDibaca > 0,
           label: Text('$_belumDibaca'),
           child: const Icon(Icons.notifications_outlined),
         ),
-        label: 'Notif',
+        label: tr('Notif'),
       ),
-      const NavigationDestination(
-          icon: Icon(Icons.person_outline), label: 'Akun'),
+      NavigationDestination(
+          icon: const Icon(Icons.person_outline), label: tr('Akun')),
     ];
     if (_tab >= halaman.length) _tab = 0;
     return Scaffold(
@@ -950,13 +983,13 @@ Color warnaStatus(String s) {
 String labelStatus(String s) {
   switch (s) {
     case 'tampil':
-      return 'Tampil';
+      return tr('Tampil');
     case 'menunggu':
-      return 'Menunggu moderasi';
+      return tr('Menunggu moderasi');
     case 'kembali':
-      return 'Sudah kembali';
+      return tr('Sudah kembali');
     case 'ditolak':
-      return 'Ditolak';
+      return tr('Ditolak');
     default:
       return s;
   }
@@ -1042,9 +1075,9 @@ class KartuPostingan extends StatelessWidget {
                       if (post['status'] == 'tampil')
                         const PopupMenuItem(
                             value: 'kembali',
-                            child: Text('Tandai sudah selesai')),
+                            child: Text(tr('Tandai sudah selesai'))),
                       const PopupMenuItem(
-                          value: 'hapus', child: Text('Hapus')),
+                          value: 'hapus', child: Text(tr('Hapus'))),
                     ],
                   ),
               ],
@@ -1188,16 +1221,16 @@ class _LayarBerandaState extends State<LayarBeranda> {
           _upHariIni.add((p['id'] ?? '').toString());
         });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Terima kasih sudah bantu UP.')));
+            content: Text(tr('Terima kasih sudah bantu UP.'))));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content:
-                Text('Kamu sudah bantu UP postingan ini hari ini.')));
+                Text(tr('Kamu sudah bantu UP postingan ini hari ini.'))));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Bantu UP gagal, coba lagi sebentar.')));
+            content: Text(tr('Bantu UP gagal, coba lagi sebentar.'))));
       }
     }
   }
@@ -1255,13 +1288,13 @@ class _LayarBerandaState extends State<LayarBeranda> {
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: 'Pantau Kategori',
+            tooltip: tr('Pantau Kategori'),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarPantau())),
           ),
           IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
-            tooltip: 'Papan Pahlawan',
+            tooltip: tr('Papan Pahlawan'),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarPahlawan())),
           ),
@@ -1273,8 +1306,8 @@ class _LayarBerandaState extends State<LayarBeranda> {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: SegmentedButton<int>(
               segments: const [
-                ButtonSegment(value: 0, label: Text('Semua')),
-                ButtonSegment(value: 1, label: Text('Saya')),
+                ButtonSegment(value: 0, label: Text(tr('Semua'))),
+                ButtonSegment(value: 1, label: Text(tr('Saya'))),
               ],
               selected: {_segmen},
               onSelectionChanged: (s) => setState(() => _segmen = s.first),
@@ -1284,8 +1317,8 @@ class _LayarBerandaState extends State<LayarBeranda> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: TextField(
               onChanged: (v) => setState(() => _cari = v.trim().toLowerCase()),
-              decoration: const InputDecoration(
-                hintText: 'Cari barang...',
+              decoration: InputDecoration(
+                hintText: tr('Cari barang...'),
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -1300,9 +1333,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
                     child: IconButton(
-                      tooltip: j == 'semua'
+                      tooltip: tr(j == 'semua'
                           ? 'Semua'
-                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan'),
+                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan')),
                       icon: Icon(j == 'semua'
                           ? Icons.grid_view_outlined
                           : (j == 'hilang'
@@ -1320,7 +1353,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                   ),
                 const Spacer(),
                 PopupMenuButton<String>(
-                  tooltip: 'Urutkan dan saring waktu',
+                  tooltip: tr('Urutkan dan saring waktu'),
                   icon: const Icon(Icons.calendar_month_outlined),
                   onSelected: (v) async {
                     if (v == 'r_kalender') {
@@ -1346,42 +1379,42 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     CheckedPopupMenuItem(
                       value: 'u_baru',
                       checked: _urut == 'baru',
-                      child: const Text('Terbaru'),
+                      child: Text(tr('Terbaru')),
                     ),
                     CheckedPopupMenuItem(
                       value: 'u_lama',
                       checked: _urut == 'lama',
-                      child: const Text('Terlama'),
+                      child: Text(tr('Terlama')),
                     ),
                     const PopupMenuDivider(),
                     CheckedPopupMenuItem(
                       value: 'r_semua',
                       checked:
                           _rentangCustom == null && _rentang == 'semua',
-                      child: const Text('Semua waktu'),
+                      child: Text(tr('Semua waktu')),
                     ),
                     CheckedPopupMenuItem(
                       value: 'r_hari_ini',
                       checked:
                           _rentangCustom == null && _rentang == 'hari_ini',
-                      child: const Text('Hari ini'),
+                      child: Text(tr('Hari ini')),
                     ),
                     CheckedPopupMenuItem(
                       value: 'r_7_hari',
                       checked:
                           _rentangCustom == null && _rentang == '7_hari',
-                      child: const Text('7 hari terakhir'),
+                      child: Text(tr('7 hari terakhir')),
                     ),
                     CheckedPopupMenuItem(
                       value: 'r_30_hari',
                       checked:
                           _rentangCustom == null && _rentang == '30_hari',
-                      child: const Text('30 hari terakhir'),
+                      child: Text(tr('30 hari terakhir')),
                     ),
                     CheckedPopupMenuItem(
                       value: 'r_kalender',
                       checked: _rentangCustom != null,
-                      child: const Text('Pilih dari kalender...'),
+                      child: Text(tr('Pilih dari kalender...')),
                     ),
                   ],
                 ),
@@ -1393,7 +1426,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
               future: saya ? _fSaya : _fSemua,
               builder: (context, snap) {
                 if (snap.hasError && snap.data == null) {
-                  return Center(child: Text('Gagal memuat: ${snap.error}'));
+                  return Center(child: Text('${tr('Gagal memuat')}: ${snap.error}'));
                 }
                 if (snap.data == null) {
                   return const Center(child: CircularProgressIndicator());
@@ -1421,9 +1454,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                       children: [
                         Image.asset('assets/maskot.png', height: 120),
                         const SizedBox(height: 12),
-                        Text(saya
+                        Text(tr(saya
                             ? 'Kamu belum punya postingan.'
-                            : 'Belum ada postingan yang cocok.'),
+                            : 'Belum ada postingan yang cocok.')),
                       ],
                     ),
                   );
@@ -1477,7 +1510,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                               }
                             },
                             icon: const Icon(Icons.arrow_upward, size: 16),
-                            label: Text('$_baru postingan baru'),
+                            label: Text('$_baru ${tr('postingan baru')}'),
                           ),
                         ),
                       ),
@@ -1602,17 +1635,17 @@ class _LayarDetailState extends State<LayarDetail> {
           _sudahUp = true;
         });
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Terima kasih sudah bantu UP.')));
+            content: Text(tr('Terima kasih sudah bantu UP.'))));
       } else {
         setState(() => _sudahUp = true);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content:
-                Text('Kamu sudah bantu UP postingan ini hari ini.')));
+                Text(tr('Kamu sudah bantu UP postingan ini hari ini.'))));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Bantu UP gagal, coba lagi sebentar.')));
+            content: Text(tr('Bantu UP gagal, coba lagi sebentar.'))));
       }
     }
   }
@@ -1631,7 +1664,7 @@ class _LayarDetailState extends State<LayarDetail> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Komentar gagal terkirim: $e')));
+            SnackBar(content: Text('${tr('Komentar gagal terkirim')}: $e')));
       }
     }
   }
@@ -1646,23 +1679,23 @@ class _LayarDetailState extends State<LayarDetail> {
     final jadi = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Laporkan Postingan'),
+        title: Text(tr('Laporkan Postingan')),
         content: TextField(
           controller: alasan,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Kenapa postingan ini bermasalah?',
+          decoration: InputDecoration(
+            hintText: tr('Kenapa postingan ini bermasalah?'),
             border: OutlineInputBorder(),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Batal'),
+            child: Text(tr('Batal')),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Kirim Laporan'),
+            child: Text(tr('Kirim Laporan')),
           ),
         ],
       ),
@@ -1677,15 +1710,15 @@ class _LayarDetailState extends State<LayarDetail> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content:
-                Text('Laporan terkirim. Admin akan memeriksanya.')));
+                Text(tr('Laporan terkirim. Admin akan memeriksanya.'))));
       }
     } catch (e) {
       if (mounted) {
         final duplikat = e.toString().contains('23505');
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(duplikat
+            content: Text(tr(duplikat
                 ? 'Kamu sudah pernah melaporkan postingan ini.'
-                : 'Laporan gagal terkirim.')));
+                : 'Laporan gagal terkirim.'))));
       }
     }
   }
@@ -1722,7 +1755,7 @@ class _LayarDetailState extends State<LayarDetail> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Belum bisa menghubungi: $e')));
+            SnackBar(content: Text('${tr('Belum bisa menghubungi')}: $e')));
       }
     }
   }
@@ -1738,7 +1771,7 @@ class _LayarDetailState extends State<LayarDetail> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Belum bisa menghubungi: $e')));
+            SnackBar(content: Text('${tr('Belum bisa menghubungi')}: $e')));
       }
     }
   }
@@ -1756,14 +1789,14 @@ class _LayarDetailState extends State<LayarDetail> {
         actions: [
           IconButton(
             icon: const Icon(Icons.share_outlined),
-            tooltip: 'Bagikan',
+            tooltip: tr('Bagikan'),
             onPressed: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => LayarBagikan(post: _post))),
           ),
           if (!_punyaSaya)
             IconButton(
               icon: const Icon(Icons.flag_outlined),
-              tooltip: 'Laporkan',
+              tooltip: tr('Laporkan'),
               onPressed: _laporkan,
             ),
         ],
@@ -1811,13 +1844,14 @@ class _LayarDetailState extends State<LayarDetail> {
               style:
                   const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text('Kategori: ${_post['kategori']}'),
-          Text('Lokasi: ${_post['lokasi']}'),
-          Text('Waktu kejadian: ${fmtTanggal(_post['waktu_kejadian'])}'),
+          Text('${tr('Kategori')}: ${_post['kategori']}'),
+          Text('${tr('Lokasi')}: ${_post['lokasi']}'),
+          Text(
+              '${tr('Waktu kejadian')}: ${fmtTanggal(_post['waktu_kejadian'])}'),
           if (_post['penitipan'] != null &&
               (_post['penitipan'] as String).isNotEmpty)
-            Text('Dititipkan di: ${_post['penitipan']}'),
-          Text('Dilaporkan oleh: $namaPemilik'),
+            Text('${tr('Dititipkan di')}: ${_post['penitipan']}'),
+          Text('${tr('Dilaporkan oleh')}: $namaPemilik'),
           const SizedBox(height: 6),
           BarisBadge(userId: (_post['user_id'] ?? '').toString()),
           const SizedBox(height: 6),
@@ -1828,7 +1862,10 @@ class _LayarDetailState extends State<LayarDetail> {
               const Icon(Icons.visibility_outlined,
                   size: 18, color: Colors.grey),
               const SizedBox(width: 4),
-              Text('Dilihat $dilihat kali',
+              Text(
+                  kBahasa.value == 'en'
+                      ? 'Viewed $dilihat times'
+                      : 'Dilihat $dilihat kali',
                   style: const TextStyle(color: Colors.grey)),
               const SizedBox(width: 18),
               const Icon(Icons.arrow_upward, size: 18, color: Colors.grey),
@@ -1864,13 +1901,13 @@ class _LayarDetailState extends State<LayarDetail> {
   List<Widget> _bagianKomentar() {
     final saya = sb.auth.currentUser?.id;
     return [
-      Text('Komentar (${_komentar.length})',
+      Text('${tr('Komentar')} (${_komentar.length})',
           style:
               const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       if (_komentar.isEmpty)
-        const Text('Belum ada komentar. Tanya ciri barang di sini dulu '
-            'sebelum mengajukan klaim juga boleh.'),
+        Text(tr(
+            'Belum ada komentar. Tanya ciri barang di sini dulu sebelum mengajukan klaim juga boleh.')),
       for (final k in _komentar)
         ListTile(
           contentPadding: EdgeInsets.zero,
@@ -1901,8 +1938,8 @@ class _LayarDetailState extends State<LayarDetail> {
             Expanded(
               child: TextField(
                 controller: _isiKomentar,
-                decoration: const InputDecoration(
-                  hintText: 'Tulis komentar...',
+                decoration: InputDecoration(
+                  hintText: tr('Tulis komentar...'),
                   border: OutlineInputBorder(),
                   isDense: true,
                 ),
@@ -1937,16 +1974,16 @@ class _LayarDetailState extends State<LayarDetail> {
           child: FilledButton.icon(
             onPressed: _tandaiSelesai,
             icon: const Icon(Icons.verified_outlined),
-            label: const Text('Tandai Sudah Selesai'),
+            label: Text(tr('Tandai Sudah Selesai')),
           ),
         ),
         const SizedBox(height: 16),
       ],
-      const Text('Klaim Masuk',
+      Text(tr('Klaim Masuk'),
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
       const SizedBox(height: 8),
       if (_klaimMasuk.isEmpty)
-        const Text('Belum ada klaim untuk postingan ini.'),
+        Text(tr('Belum ada klaim untuk postingan ini.')),
       for (final k in _klaimMasuk) _kartuKlaim(k),
     ];
   }
@@ -1988,7 +2025,7 @@ class _LayarDetailState extends State<LayarDetail> {
                 onPressed: () => launchUrl(Uri.parse(k['bukti_url']),
                     mode: LaunchMode.externalApplication),
                 icon: const Icon(Icons.image_outlined, size: 18),
-                label: const Text('Lihat foto bukti'),
+                label: Text(tr('Lihat foto bukti')),
               ),
             Text(fmtTanggal(k['created_at']),
                 style: const TextStyle(fontSize: 11, color: Colors.grey)),
@@ -1998,12 +2035,12 @@ class _LayarDetailState extends State<LayarDetail> {
                 children: [
                   TextButton(
                     onPressed: () => _putuskanKlaim(k, 'ditolak'),
-                    child: const Text('Tolak',
+                    child: Text(tr('Tolak'),
                         style: TextStyle(color: Colors.red)),
                   ),
                   FilledButton(
                     onPressed: () => _putuskanKlaim(k, 'disetujui'),
-                    child: const Text('Setujui'),
+                    child: Text(tr('Setujui')),
                   ),
                 ],
               ),
@@ -2013,7 +2050,7 @@ class _LayarDetailState extends State<LayarDetail> {
                 child: FilledButton.icon(
                   onPressed: () => _hubungiPengklaim(k),
                   icon: const Icon(Icons.chat, size: 18),
-                  label: const Text('Hubungi Pengklaim'),
+                  label: Text(tr('Hubungi Pengklaim')),
                 ),
               ),
           ],
@@ -2027,12 +2064,12 @@ class _LayarDetailState extends State<LayarDetail> {
     final k = _klaimSaya;
     if (k == null) {
       return [
-        const Card(
-          color: Color(0xFFE6F4F1),
+        Card(
+          color: const Color(0xFFE6F4F1),
           child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Text(
-                'Ini barangmu? Ajukan klaim dan sebutkan ciri khususnya. Nomor WhatsApp baru terbuka sesudah klaimmu disetujui yang memposting.'),
+            padding: const EdgeInsets.all(12),
+            child: Text(tr(
+                'Ini barangmu? Ajukan klaim dan sebutkan ciri khususnya. Nomor WhatsApp baru terbuka sesudah klaimmu disetujui yang memposting.')),
           ),
         ),
         const SizedBox(height: 12),
@@ -2046,7 +2083,7 @@ class _LayarDetailState extends State<LayarDetail> {
               if (terkirim == true) await _muat();
             },
             icon: const Icon(Icons.verified_user_outlined),
-            label: const Text('Ajukan Klaim'),
+            label: Text(tr('Ajukan Klaim')),
           ),
         ),
       ];
@@ -2054,26 +2091,26 @@ class _LayarDetailState extends State<LayarDetail> {
     final status = k['status'] ?? 'menunggu';
     if (status == 'menunggu') {
       return [
-        const Card(
+        Card(
           color: Colors.orange,
           child: Padding(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             child: Text(
-                'Klaimmu sudah terkirim dan menunggu keputusan yang memposting. Kamu akan mendapat notif begitu ada keputusan.',
-                style: TextStyle(color: Colors.white)),
+                tr('Klaimmu sudah terkirim dan menunggu keputusan yang memposting. Kamu akan mendapat notif begitu ada keputusan.'),
+                style: const TextStyle(color: Colors.white)),
           ),
         ),
       ];
     }
     if (status == 'ditolak') {
       return [
-        const Card(
+        Card(
           color: Colors.red,
           child: Padding(
-            padding: EdgeInsets.all(12),
+            padding: const EdgeInsets.all(12),
             child: Text(
-                'Klaimmu belum bisa disetujui. Pastikan ciri khusus yang kamu sebutkan benar-benar hanya diketahui pemilik aslinya.',
-                style: TextStyle(color: Colors.white)),
+                tr('Klaimmu belum bisa disetujui. Pastikan ciri khusus yang kamu sebutkan benar-benar hanya diketahui pemilik aslinya.'),
+                style: const TextStyle(color: Colors.white)),
           ),
         ),
       ];
@@ -2084,7 +2121,7 @@ class _LayarDetailState extends State<LayarDetail> {
         child: FilledButton.icon(
           onPressed: _hubungiPemilik,
           icon: const Icon(Icons.chat),
-          label: const Text('Hubungi via WhatsApp'),
+          label: Text(tr('Hubungi via WhatsApp')),
         ),
       ),
     ];
@@ -2105,9 +2142,9 @@ class _LayarKlaimState extends State<LayarKlaim> {
 
   Future<void> _kirim() async {
     if (_pesan.text.trim().length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Sebutkan ciri khusus barangnya lebih jelas (minimal 10 karakter).')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr(
+              'Sebutkan ciri khusus barangnya lebih jelas (minimal 10 karakter).'))));
       return;
     }
     setState(() => _sibuk = true);
@@ -2126,7 +2163,7 @@ class _LayarKlaimState extends State<LayarKlaim> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengirim klaim: $e')));
+            SnackBar(content: Text('${tr('Gagal mengirim klaim')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -2135,21 +2172,21 @@ class _LayarKlaimState extends State<LayarKlaim> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ajukan Klaim')),
+      appBar: AppBar(title: Text(tr('Ajukan Klaim'))),
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          Text('Postingan: ${widget.post['judul']}',
+          Text('${tr('Postingan')}: ${widget.post['judul']}',
               style: const TextStyle(fontWeight: FontWeight.bold)),
           const SizedBox(height: 10),
-          const Text(
-              'Sebutkan ciri khusus yang hanya diketahui pemilik asli barang ini, misalnya isi di dalamnya, tanda unik, atau nomor serinya. Jawabanmu dibaca yang memposting untuk memutuskan klaim ini benar atau bukan.'),
+          Text(tr(
+              'Sebutkan ciri khusus yang hanya diketahui pemilik asli barang ini, misalnya isi di dalamnya, tanda unik, atau nomor serinya. Jawabanmu dibaca yang memposting untuk memutuskan klaim ini benar atau bukan.')),
           const SizedBox(height: 14),
           TextField(
             controller: _pesan,
             maxLines: 4,
-            decoration: const InputDecoration(
-              labelText: 'Ciri khusus barang',
+            decoration: InputDecoration(
+              labelText: tr('Ciri khusus barang'),
               border: OutlineInputBorder(),
             ),
           ),
@@ -2161,8 +2198,9 @@ class _LayarKlaimState extends State<LayarKlaim> {
               if (x != null) setState(() => _bukti = File(x.path));
             },
             icon: const Icon(Icons.image_outlined),
-            label: Text(
-                _bukti == null ? 'Tambah Foto Bukti (opsional)' : 'Ganti Foto Bukti'),
+            label: Text(tr(_bukti == null
+                ? 'Tambah Foto Bukti (opsional)'
+                : 'Ganti Foto Bukti')),
           ),
           if (_bukti != null)
             Padding(
@@ -2175,7 +2213,7 @@ class _LayarKlaimState extends State<LayarKlaim> {
           const SizedBox(height: 18),
           FilledButton(
             onPressed: _sibuk ? null : _kirim,
-            child: Text(_sibuk ? 'Mengirim...' : 'Kirim Klaim'),
+            child: Text(_sibuk ? tr('Mengirim...') : tr('Kirim Klaim')),
           ),
         ],
       ),
@@ -2217,7 +2255,7 @@ class _LayarBuatState extends State<LayarBuat> {
   Future<void> _kirim() async {
     if (_judul.text.trim().isEmpty || _lokasi.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Judul dan lokasi wajib diisi.')));
+          content: Text(tr('Judul dan lokasi wajib diisi.'))));
       return;
     }
     setState(() => _sibuk = true);
@@ -2254,7 +2292,7 @@ class _LayarBuatState extends State<LayarBuat> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Gagal mengirim: $e')));
+            .showSnackBar(SnackBar(content: Text('${tr('Gagal mengirim')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -2272,7 +2310,7 @@ class _LayarBuatState extends State<LayarBuat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Buat Postingan')),
+      appBar: AppBar(title: Text(tr('Buat Postingan'))),
       body: Column(
         children: [
           Expanded(
@@ -2282,9 +2320,9 @@ class _LayarBuatState extends State<LayarBuat> {
                 SegmentedButton<String>(
                   segments: const [
                     ButtonSegment(
-                        value: 'hilang', label: Text('Saya Kehilangan')),
+                        value: 'hilang', label: Text(tr('Saya Kehilangan'))),
                     ButtonSegment(
-                        value: 'temuan', label: Text('Saya Menemukan')),
+                        value: 'temuan', label: Text(tr('Saya Menemukan'))),
                   ],
                   selected: {_jenis},
                   onSelectionChanged: (s) =>
@@ -2293,7 +2331,7 @@ class _LayarBuatState extends State<LayarBuat> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: _judul,
-                  decoration: _rapat('Judul (mis. Dompet hitam berisi KTM)'),
+                  decoration: _rapat(tr('Judul (mis. Dompet hitam berisi KTM)')),
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -2308,7 +2346,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                 DropdownMenuItem(value: k, child: Text(k)))
                             .toList(),
                         onChanged: (v) => setState(() => _kategori = v!),
-                        decoration: _rapat('Kategori'),
+                        decoration: _rapat(tr('Kategori')),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -2329,7 +2367,7 @@ class _LayarBuatState extends State<LayarBuat> {
                           }
                         },
                         child: InputDecorator(
-                          decoration: _rapat('Waktu'),
+                          decoration: _rapat(tr('Waktu')),
                           child: Row(
                             children: [
                               Expanded(
@@ -2347,14 +2385,14 @@ class _LayarBuatState extends State<LayarBuat> {
                 const SizedBox(height: 8),
                 TextField(
                   controller: _lokasi,
-                  decoration: _rapat('Lokasi (hilang / ditemukan)'),
+                  decoration: _rapat(tr('Lokasi (hilang / ditemukan)')),
                 ),
                 if (_jenis == 'temuan') ...[
                   const SizedBox(height: 8),
                   TextField(
                     controller: _penitipan,
                     decoration:
-                        _rapat('Barang dititipkan di (mis. pos satpam)'),
+                        _rapat(tr('Barang dititipkan di (mis. pos satpam)')),
                   ),
                 ],
                 const SizedBox(height: 8),
@@ -2362,14 +2400,14 @@ class _LayarBuatState extends State<LayarBuat> {
                   controller: _deskripsi,
                   maxLines: 2,
                   decoration:
-                      _rapat('Deskripsi dan ciri-ciri (tampil publik)'),
+                      _rapat(tr('Deskripsi dan ciri-ciri (tampil publik)')),
                 ),
                 const SizedBox(height: 8),
                 TextField(
                   controller: _rahasia,
                   maxLines: 2,
-                  decoration: _rapat('Ciri khusus rahasia',
-                      hint: 'Tidak tampil publik, untuk verifikasi klaim'),
+                  decoration: _rapat(tr('Ciri khusus rahasia'),
+                      hint: tr('Tidak tampil publik, untuk verifikasi klaim')),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
@@ -2406,7 +2444,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                   left: 4,
                                   bottom: 4,
                                   child: Chip(
-                                    label: Text('Sampul',
+                                    label: Text(tr('Sampul'),
                                         style: TextStyle(
                                             fontSize: 9,
                                             color: Colors.white)),
@@ -2432,7 +2470,7 @@ class _LayarBuatState extends State<LayarBuat> {
                               const Icon(Icons.add_a_photo_outlined,
                                   color: Colors.grey),
                               const SizedBox(height: 2),
-                              Text('Foto ${_foto.length}/5',
+                              Text('${tr('Foto')} ${_foto.length}/5',
                                   style: const TextStyle(
                                       fontSize: 11, color: Colors.grey)),
                             ],
@@ -2451,8 +2489,8 @@ class _LayarBuatState extends State<LayarBuat> {
               width: double.infinity,
               child: FilledButton(
                 onPressed: _sibuk ? null : _kirim,
-                child:
-                    Text(_sibuk ? 'Mengirim...' : 'Kirim untuk Moderasi'),
+                child: Text(
+                    _sibuk ? tr('Mengirim...') : tr('Kirim untuk Moderasi')),
               ),
             ),
           ),
@@ -2500,7 +2538,7 @@ class _LayarBagikanState extends State<LayarBagikan> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menyiapkan kartu: $e')));
+            SnackBar(content: Text('${tr('Gagal menyiapkan kartu')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -2512,7 +2550,7 @@ class _LayarBagikanState extends State<LayarBagikan> {
     final hilang = p['jenis'] == 'hilang';
     final foto = daftarFoto(p);
     return Scaffold(
-      appBar: AppBar(title: const Text('Bagikan Postingan')),
+      appBar: AppBar(title: Text(tr('Bagikan Postingan'))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -2580,7 +2618,7 @@ class _LayarBagikanState extends State<LayarBagikan> {
                           const SizedBox(height: 6),
                           Text('${p['kategori']} - ${p['lokasi']}',
                               style: const TextStyle(color: Colors.black54)),
-                          Text('Waktu: ${fmtTanggal(p['waktu_kejadian'])}',
+                          Text('${tr('Waktu')}: ${fmtTanggal(p['waktu_kejadian'])}',
                               style: const TextStyle(color: Colors.black54)),
                           const SizedBox(height: 8),
                           Text((p['deskripsi'] ?? '').toString(),
@@ -2588,9 +2626,9 @@ class _LayarBagikanState extends State<LayarBagikan> {
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(color: Colors.black87)),
                           const Divider(height: 22),
-                          const Text(
-                            'Lost and Found Kampus Unindra - buka aplikasi KutemuKan untuk klaim atau bantu UP',
-                            style: TextStyle(
+                          Text(
+                            tr('Lost and Found Kampus Unindra - buka aplikasi KutemuKan untuk klaim atau bantu UP'),
+                            style: const TextStyle(
                                 fontSize: 11, color: Colors.black45),
                           ),
                         ],
@@ -2609,10 +2647,10 @@ class _LayarBagikanState extends State<LayarBagikan> {
                 Text(_sibuk ? 'Menyiapkan...' : 'Bagikan Sekarang'),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Kartu ini tidak memuat ciri khusus rahasia dan nomor WhatsApp siapa pun.',
+          Text(
+            tr('Kartu ini tidak memuat ciri khusus rahasia dan nomor WhatsApp siapa pun.'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
         ],
       ),
@@ -2674,15 +2712,15 @@ class _LayarPantauState extends State<LayarPantau> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pantau Kategori')),
+      appBar: AppBar(title: Text(tr('Pantau Kategori'))),
       body: _muat
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                      'Nyalakan kategori yang mau kamu pantau. Setiap ada postingan baru tampil di kategori itu, kamu menerima notif dan push, walau belum pernah posting kehilangan.'),
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(tr(
+                      'Nyalakan kategori yang mau kamu pantau. Setiap ada postingan baru tampil di kategori itu, kamu menerima notif dan push, walau belum pernah posting kehilangan.')),
                 ),
                 for (final k in kKategori)
                   SwitchListTile(
@@ -2719,7 +2757,7 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
   Future<void> _kirim() async {
     if (_isi.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tulis dulu kritik atau saranmu.')));
+          SnackBar(content: Text(tr('Tulis dulu kritik atau saranmu.'))));
       return;
     }
     setState(() => _sibuk = true);
@@ -2732,12 +2770,12 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
       _isi.clear();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Terima kasih, ulasanmu terkirim.')));
+            content: Text(tr('Terima kasih, ulasanmu terkirim.'))));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengirim: $e')));
+            SnackBar(content: Text('${tr('Gagal mengirim')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -2746,11 +2784,11 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Kritik & Saran')),
+      appBar: AppBar(title: Text(tr('Kritik & Saran'))),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          const Text('Seberapa puas kamu dengan KutemuKan?'),
+          Text(tr('Seberapa puas kamu dengan KutemuKan?')),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -2770,19 +2808,19 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
           TextField(
             controller: _isi,
             maxLines: 4,
-            decoration: const InputDecoration(
-              hintText:
-                  'Fitur apa yang kurang, apa yang mengganggu, apa yang mau kamu minta ditambah...',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              hintText: tr(
+                  'Fitur apa yang kurang, apa yang mengganggu, apa yang mau kamu minta ditambah...'),
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 14),
           FilledButton(
             onPressed: _sibuk ? null : _kirim,
-            child: Text(_sibuk ? 'Mengirim...' : 'Kirim Ulasan'),
+            child: Text(_sibuk ? tr('Mengirim...') : tr('Kirim Ulasan')),
           ),
           const Divider(height: 36),
-          const Text('Ulasanku sebelumnya',
+          Text(tr('Ulasanku sebelumnya'),
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           FutureBuilder<List<Map<String, dynamic>>>(
@@ -2793,7 +2831,7 @@ class _LayarKritikSaranState extends State<LayarKritikSaran> {
               }
               final data = snap.data ?? [];
               if (data.isEmpty) {
-                return const Text('Belum ada ulasan. Jadilah yang pertama.');
+                return Text(tr('Belum ada ulasan. Jadilah yang pertama.'));
               }
               return Column(
                 children: [
@@ -2841,7 +2879,7 @@ class LayarPahlawan extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Papan Pahlawan Kampus')),
+      appBar: AppBar(title: Text(tr('Papan Pahlawan Kampus'))),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _ambil(),
         builder: (context, snap) {
@@ -2849,26 +2887,26 @@ class LayarPahlawan extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Gagal memuat: ${snap.error}'));
+            return Center(child: Text('${tr('Gagal memuat')}: ${snap.error}'));
           }
           final data = snap.data ?? [];
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              const Card(
+              Card(
                 color: kTeal,
                 child: Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   child: Text(
-                    'Peringkat bulan ini dihitung dari data asli: barang yang kembali, klaim baik yang disetujui, dan Bantu UP yang diberikan. Direset tiap awal bulan.',
-                    style: TextStyle(color: Colors.white),
+                    tr('Peringkat bulan ini dihitung dari data asli: barang yang kembali, klaim baik yang disetujui, dan Bantu UP yang diberikan. Direset tiap awal bulan.'),
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ),
               const SizedBox(height: 12),
               if (data.isEmpty)
-                const Text(
-                    'Belum ada aktivitas bulan ini. Jadilah pahlawan pertama.'),
+                Text(tr(
+                    'Belum ada aktivitas bulan ini. Jadilah pahlawan pertama.')),
               for (int i = 0; i < data.length; i++)
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -2886,8 +2924,9 @@ class LayarPahlawan extends StatelessWidget {
                               fontWeight: FontWeight.bold)),
                     ),
                     title: Text(data[i]['nama_pemilik'] ?? 'Pengguna'),
-                    subtitle: Text(
-                        '${data[i]['kembali_bulan_ini']} barang kembali - ${data[i]['klaim_ok_bulan_ini']} klaim baik - ${data[i]['up_bulan_ini']} UP diberikan'),
+                    subtitle: Text(kBahasa.value == 'en'
+                        ? '${data[i]['kembali_bulan_ini']} items returned - ${data[i]['klaim_ok_bulan_ini']} good claims - ${data[i]['up_bulan_ini']} boosts given'
+                        : '${data[i]['kembali_bulan_ini']} barang kembali - ${data[i]['klaim_ok_bulan_ini']} klaim baik - ${data[i]['up_bulan_ini']} UP diberikan'),
                     trailing: i < 3
                         ? const Icon(Icons.emoji_events,
                             color: Color(0xFFB8860B))
@@ -2931,7 +2970,7 @@ class _LayarModerasiState extends State<LayarModerasi> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Moderasi')),
+      appBar: AppBar(title: Text(tr('Moderasi'))),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _ambil(),
         builder: (context, snap) {
@@ -2941,7 +2980,7 @@ class _LayarModerasiState extends State<LayarModerasi> {
           final data = snap.data ?? [];
           if (data.isEmpty) {
             return const Center(
-                child: Text('Tidak ada postingan menunggu moderasi.'));
+                child: Text(tr('Tidak ada postingan menunggu moderasi.')));
           }
           return ListView.builder(
             itemCount: data.length,
@@ -2975,16 +3014,16 @@ class _LayarModerasiState extends State<LayarModerasi> {
                         children: [
                           TextButton(
                             onPressed: () => _putuskan(p, 'ditolak'),
-                            child: const Text('Tolak',
+                            child: Text(tr('Tolak'),
                                 style: TextStyle(color: Colors.red)),
                           ),
                           TextButton(
                             onPressed: () => _putuskan(p, 'kembali'),
-                            child: const Text('Tandai Selesai'),
+                            child: Text(tr('Tandai Selesai')),
                           ),
                           FilledButton(
                             onPressed: () => _putuskan(p, 'tampil'),
-                            child: const Text('Setujui dan Tampilkan'),
+                            child: Text(tr('Setujui dan Tampilkan')),
                           ),
                         ],
                       ),
@@ -3059,7 +3098,7 @@ class _LayarLaporanState extends State<LayarLaporan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Laporan Pengguna')),
+      appBar: AppBar(title: Text(tr('Laporan Pengguna'))),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _ambil(),
         builder: (context, snap) {
@@ -3067,11 +3106,11 @@ class _LayarLaporanState extends State<LayarLaporan> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Gagal memuat: ${snap.error}'));
+            return Center(child: Text('${tr('Gagal memuat')}: ${snap.error}'));
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return const Center(child: Text('Tidak ada laporan masuk.'));
+            return Center(child: Text(tr('Tidak ada laporan masuk.')));
           }
           return RefreshIndicator(
             onRefresh: () async => setState(() {}),
@@ -3105,15 +3144,15 @@ class _LayarLaporanState extends State<LayarLaporan> {
                           children: [
                             TextButton(
                               onPressed: () => _abaikan(r),
-                              child: const Text('Abaikan'),
+                              child: Text(tr('Abaikan')),
                             ),
                             TextButton(
                               onPressed: () => _buka(r),
-                              child: const Text('Buka'),
+                              child: Text(tr('Buka')),
                             ),
                             FilledButton(
                               onPressed: () => _turunkan(r),
-                              child: const Text('Turunkan'),
+                              child: Text(tr('Turunkan')),
                             ),
                           ],
                         ),
@@ -3147,7 +3186,7 @@ class LayarAkun extends StatelessWidget {
     final admin = profil['peran'] == 'admin';
     final email = sb.auth.currentUser?.email ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('Akun')),
+      appBar: AppBar(title: Text(tr('Akun'))),
       body: ListView(
         children: [
           Padding(
@@ -3203,8 +3242,8 @@ class LayarAkun extends StatelessWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.manage_accounts_outlined),
-            title: const Text('Edit Profil'),
-            subtitle: const Text('Nama, nomor WhatsApp, dan foto profil'),
+            title: Text(tr('Edit Profil')),
+            subtitle: Text(tr('Nama, nomor WhatsApp, dan foto profil')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () async {
               final berubah = await Navigator.of(context).push<bool>(
@@ -3215,60 +3254,123 @@ class LayarAkun extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.lock_outline),
-            title: const Text('Ubah Kata Sandi'),
+            title: Text(tr('Ubah Kata Sandi')),
             subtitle:
-                const Text('Berlaku juga untuk akun yang masuk via Google'),
+                Text(tr('Berlaku juga untuk akun yang masuk via Google')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarUbahSandi())),
           ),
           ListTile(
             leading: const Icon(Icons.rate_review_outlined),
-            title: const Text('Kritik & Saran'),
-            subtitle: const Text('Beri bintang dan tulis ulasanmu'),
+            title: Text(tr('Kritik & Saran')),
+            subtitle: Text(tr('Beri bintang dan tulis ulasanmu')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarKritikSaran())),
           ),
           ListTile(
             leading: const Icon(Icons.emoji_events_outlined),
-            title: const Text('Papan Pahlawan'),
-            subtitle: const Text('Peringkat penolong kampus bulan ini'),
+            title: Text(tr('Papan Pahlawan')),
+            subtitle: Text(tr('Peringkat penolong kampus bulan ini')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarPahlawan())),
           ),
           ListTile(
             leading: const Icon(Icons.system_update_outlined),
-            title: const Text('Cek Pembaruan'),
-            subtitle: const Text('Periksa versi aplikasi terbaru'),
+            title: Text(tr('Cek Pembaruan')),
+            subtitle: Text(tr('Periksa versi aplikasi terbaru')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => cekUpdate(context, manual: true),
+          ),
+          ListTile(
+            leading: const Icon(Icons.brightness_6_outlined),
+            title: Text(tr('Tampilan')),
+            subtitle: Text(tr('Ikuti sistem, terang, atau gelap')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final sekarang = kTemaMode.value == ThemeMode.dark
+                  ? 'gelap'
+                  : kTemaMode.value == ThemeMode.light
+                      ? 'terang'
+                      : 'sistem';
+              final pilih = await showDialog<String>(
+                context: context,
+                builder: (_) => SimpleDialog(
+                  title: Text(tr('Tampilan')),
+                  children: [
+                    for (final o in ['sistem', 'terang', 'gelap'])
+                      RadioListTile<String>(
+                        value: o,
+                        groupValue: sekarang,
+                        title: Text(tr(o == 'sistem'
+                            ? 'Sistem'
+                            : o == 'terang'
+                                ? 'Terang'
+                                : 'Gelap')),
+                        onChanged: (v) =>
+                            Navigator.of(context).pop(v),
+                      ),
+                  ],
+                ),
+              );
+              if (pilih != null) await aturTema(pilih);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.language_outlined),
+            title: Text(tr('Bahasa')),
+            subtitle: Text(tr('Indonesia atau English')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final pilih = await showDialog<String>(
+                context: context,
+                builder: (_) => SimpleDialog(
+                  title: const Text('Bahasa / Language'),
+                  children: [
+                    RadioListTile<String>(
+                      value: 'id',
+                      groupValue: kBahasa.value,
+                      title: const Text('Bahasa Indonesia'),
+                      onChanged: (v) => Navigator.of(context).pop(v),
+                    ),
+                    RadioListTile<String>(
+                      value: 'en',
+                      groupValue: kBahasa.value,
+                      title: const Text('English'),
+                      onChanged: (v) => Navigator.of(context).pop(v),
+                    ),
+                  ],
+                ),
+              );
+              if (pilih != null) await aturBahasa(pilih);
+            },
           ),
           if (admin) ...[
             ListTile(
               leading: const Icon(Icons.bar_chart_outlined),
-              title: const Text('Statistik'),
+              title: Text(tr('Statistik')),
               subtitle:
-                  const Text('Pengguna, keberhasilan, dan aktivitas klaim'),
+                  Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const LayarStatistik())),
             ),
             ListTile(
               leading: const Icon(Icons.shield_outlined),
-              title: const Text('Moderasi Postingan'),
+              title: Text(tr('Moderasi Postingan')),
               subtitle:
-                  const Text('Setujui atau tolak postingan yang menunggu'),
+                  Text(tr('Setujui atau tolak postingan yang menunggu')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const LayarModerasi())),
             ),
             ListTile(
               leading: const Icon(Icons.flag_outlined),
-              title: const Text('Laporan Pengguna'),
+              title: Text(tr('Laporan Pengguna')),
               subtitle:
-                  const Text('Postingan yang dilaporkan bermasalah'),
+                  Text(tr('Postingan yang dilaporkan bermasalah')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (_) => const LayarLaporan())),
@@ -3276,8 +3378,8 @@ class LayarAkun extends StatelessWidget {
           ],
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('Info Aplikasi'),
-            subtitle: const Text('Tentang KutemuKan dan pembuatnya'),
+            title: Text(tr('Info Aplikasi')),
+            subtitle: Text(tr('Tentang KutemuKan dan pembuatnya')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const LayarInfo())),
@@ -3295,7 +3397,7 @@ class LayarAkun extends StatelessWidget {
                 }
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Keluar'),
+              label: Text(tr('Keluar')),
             ),
           ),
         ],
@@ -3319,27 +3421,27 @@ class _LayarUbahSandiState extends State<LayarUbahSandi> {
     final b = _baru.text;
     if (b.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Kata sandi minimal 6 karakter.')));
+          content: Text(tr('Kata sandi minimal 6 karakter.'))));
       return;
     }
     if (b != _ulang.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Konfirmasi kata sandi tidak sama.')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(tr('Konfirmasi kata sandi tidak sama.'))));
       return;
     }
     setState(() => _sibuk = true);
     try {
       await sb.auth.updateUser(UserAttributes(password: b));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text(
-                'Kata sandi terpasang. Sekarang kamu juga bisa masuk memakai email dan sandi ini.')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(tr(
+                'Kata sandi terpasang. Sekarang kamu juga bisa masuk memakai email dan sandi ini.'))));
         Navigator.of(context).pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal mengubah sandi: $e')));
+            SnackBar(content: Text('${tr('Gagal mengubah sandi')}: $e')));
       }
     }
     if (mounted) setState(() => _sibuk = false);
@@ -3349,28 +3451,29 @@ class _LayarUbahSandiState extends State<LayarUbahSandi> {
   Widget build(BuildContext context) {
     final email = sb.auth.currentUser?.email ?? '';
     return Scaffold(
-      appBar: AppBar(title: const Text('Ubah Kata Sandi')),
+      appBar: AppBar(title: Text(tr('Ubah Kata Sandi'))),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-                'Akun: $email\n\nSesudah sandi terpasang, kamu bisa masuk dengan dua cara: tombol Google, atau formulir email dan sandi. Keduanya masuk ke akun yang sama.'),
+            Text(kBahasa.value == 'en'
+                ? 'Account: $email\n\nOnce a password is set, you can sign in two ways: the Google button, or the email and password form. Both lead to the same account.'
+                : 'Akun: $email\n\nSesudah sandi terpasang, kamu bisa masuk dengan dua cara: tombol Google, atau formulir email dan sandi. Keduanya masuk ke akun yang sama.'),
             const SizedBox(height: 20),
             TextField(
               controller: _baru,
               obscureText: true,
-              decoration: const InputDecoration(
-                  labelText: 'Kata sandi baru',
+              decoration: InputDecoration(
+                  labelText: tr('Kata sandi baru'),
                   border: OutlineInputBorder()),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _ulang,
               obscureText: true,
-              decoration: const InputDecoration(
-                  labelText: 'Ulangi kata sandi baru',
+              decoration: InputDecoration(
+                  labelText: tr('Ulangi kata sandi baru'),
                   border: OutlineInputBorder()),
             ),
             const SizedBox(height: 20),
@@ -3412,7 +3515,7 @@ class LayarStatistik extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Statistik')),
+      appBar: AppBar(title: Text(tr('Statistik'))),
       body: FutureBuilder<Map<String, dynamic>>(
         future: _hitung(),
         builder: (context, snap) {
@@ -3420,7 +3523,7 @@ class LayarStatistik extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snap.hasError) {
-            return Center(child: Text('Gagal memuat: ${snap.error}'));
+            return Center(child: Text('${tr('Gagal memuat')}: ${snap.error}'));
           }
           final posts = snap.data!['posts'] as List<Map<String, dynamic>>;
           final users = snap.data!['users'] as List<Map<String, dynamic>>;
@@ -3486,7 +3589,7 @@ class LayarStatistik extends StatelessWidget {
                     Text(angka,
                         style: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
-                    Text(label,
+                    Text(tr(label),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             fontSize: 11, color: Colors.grey)),
@@ -3510,10 +3613,12 @@ class LayarStatistik extends StatelessWidget {
                               fontSize: 40,
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
-                      const Text('Tingkat Keberhasilan',
+                      Text(tr('Tingkat Keberhasilan'),
                           style: TextStyle(color: Colors.white70)),
                       Text(
-                          '$kembali dari $diproses postingan yang selesai diproses berakhir kembali ke pemiliknya',
+                          kBahasa.value == 'en'
+                              ? '$kembali of $diproses fully processed posts ended up back with their owners'
+                              : '$kembali dari $diproses postingan yang selesai diproses berakhir kembali ke pemiliknya',
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               color: Colors.white, fontSize: 12)),
@@ -3539,16 +3644,16 @@ class LayarStatistik extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Aktivitas Pengguna',
+              Text(tr('Aktivitas Pengguna'),
                   style:
                       TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
-              const Text(
-                  'Diurutkan dari yang paling banyak menghasilkan pengembalian barang.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              Text(tr('Diurutkan dari yang paling banyak menghasilkan pengembalian barang.'),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.grey)),
               const SizedBox(height: 8),
               if (peringkat.isEmpty)
-                const Text('Belum ada aktivitas.'),
+                Text(tr('Belum ada aktivitas.')),
               for (final e in peringkat)
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -3560,16 +3665,17 @@ class LayarStatistik extends StatelessWidget {
                               : '?'),
                     ),
                     title: Text(namaUser[e.key] ?? 'Pengguna'),
-                    subtitle: Text(
-                        '${e.value['posting']} postingan - ${e.value['kembali']} kembali - klaim disetujui ${e.value['klaim_ok']} - klaim ditolak ${e.value['klaim_no']}'),
+                    subtitle: Text(kBahasa.value == 'en'
+                        ? '${e.value['posting']} posts - ${e.value['kembali']} returned - claims approved ${e.value['klaim_ok']} - claims rejected ${e.value['klaim_no']}'
+                        : '${e.value['posting']} postingan - ${e.value['kembali']} kembali - klaim disetujui ${e.value['klaim_ok']} - klaim ditolak ${e.value['klaim_no']}'),
                   ),
                 ),
               const SizedBox(height: 16),
-              const Text('Kritik & Saran Terbaru',
+              Text(tr('Kritik & Saran Terbaru'),
                   style:
                       TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              if (ulasan.isEmpty) const Text('Belum ada ulasan masuk.'),
+              if (ulasan.isEmpty) Text(tr('Belum ada ulasan masuk.')),
               for (final u in ulasan)
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
@@ -3668,19 +3774,19 @@ class _LayarNotifState extends State<LayarNotif> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifikasi')),
+      appBar: AppBar(title: Text(tr('Notifikasi'))),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fNotif,
         builder: (context, snap) {
           if (snap.hasError && snap.data == null) {
-            return Center(child: Text('Gagal memuat: ${snap.error}'));
+            return Center(child: Text('${tr('Gagal memuat')}: ${snap.error}'));
           }
           if (snap.data == null) {
             return const Center(child: CircularProgressIndicator());
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return const Center(child: Text('Belum ada notifikasi.'));
+            return Center(child: Text(tr('Belum ada notifikasi.')));
           }
           return RefreshIndicator(
             onRefresh: () async {
@@ -3721,7 +3827,7 @@ class LayarPrivasi extends StatelessWidget {
   const LayarPrivasi({super.key});
   @override
   Widget build(BuildContext context) {
-    const isi = '''
+    const isiId = '''
 KutemuKan mengumpulkan data yang kamu berikan sendiri: nama, nomor WhatsApp, alamat email, foto profil, dan isi postingan (judul, deskripsi, lokasi, foto barang, serta ciri khusus rahasia yang hanya dipakai untuk mencocokkan klaim dan tidak ditampilkan ke publik).
 
 Nomor WhatsApp tidak pernah ditampilkan terbuka di papan. Nomor hanya diteruskan sistem kepada pengguna yang klaimnya sudah disetujui oleh pemilik postingan, agar keduanya bisa mengatur pengembalian barang.
@@ -3731,11 +3837,22 @@ Data disimpan di Supabase (database dan autentikasi) dan foto disimpan di Cloudf
 Kamu bisa meminta penghapusan akun dan datamu dengan menghubungi pengelola lewat email dandieoffice@gmail.com. Penghapusan akun menghapus profil dan postingan yang terkait.
 
 KutemuKan adalah aplikasi komunitas independen untuk mahasiswa UNINDRA dan bukan aplikasi resmi Universitas Indraprasta PGRI.''';
+    const isiEn = '''
+KutemuKan collects the data you provide yourself: your name, WhatsApp number, email address, profile photo, and post contents (title, description, location, item photos, and secret characteristics that are used only to verify claims and are never shown publicly).
+
+Your WhatsApp number is never displayed openly on the board. The system passes it only to a user whose claim has been approved by the post owner, so both sides can arrange the item's return.
+
+Data is stored in Supabase (database and authentication) and photos are stored in Cloudflare R2. Device tokens are stored for push notifications.
+
+You can request deletion of your account and data by contacting the maintainer at dandieoffice@gmail.com. Deleting an account removes the related profile and posts.
+
+KutemuKan is an independent community app for UNINDRA students and is not an official app of Universitas Indraprasta PGRI.''';
     return Scaffold(
-      appBar: AppBar(title: const Text('Kebijakan Privasi')),
-      body: const SingleChildScrollView(
-        padding: EdgeInsets.all(20),
-        child: Text(isi, style: TextStyle(height: 1.55)),
+      appBar: AppBar(title: Text(tr('Kebijakan Privasi'))),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Text(kBahasa.value == 'en' ? isiEn : isiId,
+            style: const TextStyle(height: 1.55)),
       ),
     );
   }
@@ -3752,14 +3869,16 @@ class LayarInfo extends StatelessWidget {
     'Sesudah klaim disetujui, kedua pihak terhubung ke WhatsApp dan barang ditandai selesai saat sudah kembali.',
   ];
 
-  Widget _tombolSosial(IconData ikon, String url, String nama) {
+  Widget _tombolSosial(
+      BuildContext context, String aset, String url, String nama) {
+    final warna = Theme.of(context).iconTheme.color;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton.outlined(
           onPressed: () => launchUrl(Uri.parse(url),
               mode: LaunchMode.externalApplication),
-          icon: FaIcon(ikon, size: 20),
+          icon: Image.asset(aset, width: 20, height: 20, color: warna),
         ),
         const SizedBox(height: 2),
         Text(nama, style: const TextStyle(fontSize: 11, color: Colors.grey)),
@@ -3770,7 +3889,7 @@ class LayarInfo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Info Aplikasi')),
+      appBar: AppBar(title: Text(tr('Info Aplikasi'))),
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -3785,16 +3904,19 @@ class LayarInfo extends StatelessWidget {
                 const Text('KutemuKan',
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                const Text('Lost and Found Kampus Unindra',
-                    style: TextStyle(color: Colors.black54)),
+                Text(tr('Lost and Found Kampus Unindra'),
+                    style: TextStyle(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
-                const Chip(
-                  label: Text('Versi 1.3.2', style: TextStyle(fontSize: 11)),
+                Chip(
+                  label: Text(tr('Versi 1.3.2'),
+                      style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Papan lost and found untuk civitas kampus Unindra. Laporkan barang hilang, umumkan barang temuan, dan terima kabar otomatis saat ada yang cocok. Setiap postingan melewati moderasi admin dan setiap klaim harus disetujui pemilik postingan, jadi nomor WhatsApp tidak pernah terbuka sembarangan.',
+                Text(
+                  tr('Papan lost and found untuk civitas kampus Unindra. Laporkan barang hilang, umumkan barang temuan, dan terima kabar otomatis saat ada yang cocok. Setiap postingan melewati moderasi admin dan setiap klaim harus disetujui pemilik postingan, jadi nomor WhatsApp tidak pernah terbuka sembarangan.'),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -3812,7 +3934,7 @@ class LayarInfo extends StatelessWidget {
                     children: [
                       Icon(Icons.route_outlined, color: kTeal),
                       SizedBox(width: 8),
-                      Text('Cara Kerja',
+                      Text(tr('Cara Kerja'),
                           style: TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
                     ],
@@ -3832,7 +3954,7 @@ class LayarInfo extends StatelessWidget {
                                     fontSize: 10, color: Colors.white)),
                           ),
                           const SizedBox(width: 10),
-                          Expanded(child: Text(_langkah[i])),
+                          Expanded(child: Text(tr(_langkah[i]))),
                         ],
                       ),
                     ),
@@ -3856,22 +3978,22 @@ class LayarInfo extends StatelessWidget {
                   const Text('Ahmad Dandi Subhani',
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
-                  const Text('Pengembang KutemuKan',
+                  Text(tr('Pengembang KutemuKan'),
                       style: TextStyle(color: Colors.black54)),
-                  const Text('Mahasiswa Teknik Informatika, Universitas Indraprasta PGRI',
+                  Text(tr('Mahasiswa Teknik Informatika, Universitas Indraprasta PGRI'),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.black54, fontSize: 12)),
                   const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _tombolSosial(FontAwesomeIcons.instagram,
+                      _tombolSosial(context, 'assets/icons/instagram.png',
                           'https://instagram.com/dandisubhani_', 'Instagram'),
                       const SizedBox(width: 18),
-                      _tombolSosial(FontAwesomeIcons.whatsapp,
+                      _tombolSosial(context, 'assets/icons/whatsapp.png',
                           'https://wa.me/628563000126', 'WhatsApp'),
                       const SizedBox(width: 18),
-                      _tombolSosial(FontAwesomeIcons.github,
+                      _tombolSosial(context, 'assets/icons/github.png',
                           'https://github.com/dandienter', 'GitHub'),
                     ],
                   ),
@@ -3883,8 +4005,8 @@ class LayarInfo extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('Kebijakan Privasi'),
-            subtitle: const Text('Cara data kamu dikelola di KutemuKan'),
+            title: Text(tr('Kebijakan Privasi')),
+            subtitle: Text(tr('Cara data kamu dikelola di KutemuKan')),
             trailing: const Icon(Icons.chevron_right, size: 18),
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const LayarPrivasi())),
