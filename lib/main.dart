@@ -130,7 +130,10 @@ class _LayarLoginState extends State<LayarLogin> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.find_replace_rounded, size: 72, color: kTeal),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Image.asset('assets/maskot.jpg', height: 170),
+              ),
               const SizedBox(height: 12),
               const Text('KutemuKan',
                   style:
@@ -171,6 +174,38 @@ class _LayarLoginState extends State<LayarLogin> {
                 child: Text(_modeDaftar
                     ? 'Sudah punya akun? Masuk'
                     : 'Belum punya akun? Daftar'),
+              ),
+              const SizedBox(height: 8),
+              const Row(children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Text('atau'),
+                ),
+                Expanded(child: Divider()),
+              ]),
+              const SizedBox(height: 14),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                ),
+                onPressed: () async {
+                  try {
+                    await sb.auth.signInWithOAuth(
+                      OAuthProvider.google,
+                      redirectTo: 'kutemukan://login-callback',
+                      authScreenLaunchMode:
+                          LaunchMode.externalApplication,
+                    );
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Login Google gagal: $e')));
+                    }
+                  }
+                },
+                icon: const Icon(Icons.g_mobiledata, size: 28),
+                label: const Text('Masuk dengan Google'),
               ),
             ],
           ),
@@ -418,8 +453,19 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 }
                 final data = snap.data ?? [];
                 if (data.isEmpty) {
-                  return const Center(
-                      child: Text('Belum ada postingan yang tampil.'));
+                  return Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(18),
+                          child: Image.asset('assets/maskot.jpg', height: 130),
+                        ),
+                        const SizedBox(height: 12),
+                        const Text('Belum ada postingan yang tampil.'),
+                      ],
+                    ),
+                  );
                 }
                 return RefreshIndicator(
                   onRefresh: () async => setState(() {}),
@@ -1007,15 +1053,18 @@ class LayarInfo extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          const Center(
+          Center(
             child: Column(
               children: [
-                Icon(Icons.find_replace_rounded, size: 76, color: kTeal),
-                SizedBox(height: 10),
-                Text('KutemuKan',
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/icon.png', height: 96),
+                ),
+                const SizedBox(height: 10),
+                const Text('KutemuKan',
                     style:
                         TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
-                Text('Versi 1.0.1'),
+                const Text('Versi 1.1.0'),
                 SizedBox(height: 14),
                 Text(
                   'Papan lost and found kampus Unindra: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin agar papan tetap bersih.',

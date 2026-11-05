@@ -1,7 +1,7 @@
 name: kutemukan
 description: KutemuKan - Lost and Found Kampus Unindrabase
 publish_to: "none"
-version: 1.0.1+2
+version: 1.1.0+3
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -20,3 +20,24 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/maskot.jpg
+    - assets/icon.png
+
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#0F766E"
+  adaptive_icon_foreground: "assets/icon.png"
+
+flutter_native_splash:
+  color: "#0F766E"
+  image: assets/icon.png
+  android_12:
+    color: "#0F766E"
+    image: assets/icon.png
