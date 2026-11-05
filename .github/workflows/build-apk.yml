@@ -64,6 +64,23 @@ jobs:
           print(open(p).read())
           PYEOF
 
+      - name: Pasang Firebase (google-services)
+        run: |
+          cp android-config/google-services.json android/app/google-services.json
+          python3 - <<'PYEOF'
+          p = 'android/settings.gradle.kts'
+          s = open(p).read()
+          if 'google-services' not in s:
+              s = s.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services") version "4.4.2" apply false', 1)
+              open(p, 'w').write(s)
+          p2 = 'android/app/build.gradle.kts'
+          s2 = open(p2).read()
+          if 'google-services' not in s2:
+              s2 = s2.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
+              open(p2, 'w').write(s2)
+          print('firebase terpasang')
+          PYEOF
+
       - name: Terapkan ikon launcher dan splash screen
         run: |
           dart run flutter_launcher_icons
