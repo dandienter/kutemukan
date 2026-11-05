@@ -135,7 +135,7 @@ class _LayarLoginState extends State<LayarLogin> {
               const Text('KutemuKan',
                   style:
                       TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
-              const Text('Lost and Found Kampus',
+              const Text('Lost and Found Unindra',
                   textAlign: TextAlign.center),
               const SizedBox(height: 28),
               TextField(
@@ -1018,7 +1018,7 @@ class LayarInfo extends StatelessWidget {
                 Text('Versi 1.0.1'),
                 SizedBox(height: 14),
                 Text(
-                  'Papan lost and found kampus: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin agar papan tetap bersih.',
+                  'Papan lost and found kampus Unindra: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin agar papan tetap bersih.',
                   textAlign: TextAlign.center,
                 ),
               ],
