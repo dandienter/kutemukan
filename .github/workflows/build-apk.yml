@@ -23,12 +23,23 @@ jobs:
         run: |
           mkdir -p /tmp/scaffold
           cd /tmp/scaffold
-          flutter create --org id.kutemukan --project-name kutemukan scaffoldapp
+          flutter create --org com.kutemukan --project-name kutemukan scaffoldapp
           cd $GITHUB_WORKSPACE
           cp -r /tmp/scaffold/scaffoldapp/android ./android
           mkdir -p assets/icon
           if [ -f assets/icon/icon.png ]; then
             cp assets/icon/icon.png /tmp/icon.png
+          fi
+
+      - name: Patch applicationId menjadi com.kutemukan.id
+        run: |
+          GRADLE=android/app/build.gradle.kts
+          if [ -f "$GRADLE" ]; then
+            sed -i 's/applicationId = "[^"]*"/applicationId = "com.kutemukan.id"/' $GRADLE
+            grep applicationId $GRADLE
+          else
+            sed -i 's/applicationId "[^"]*"/applicationId "com.kutemukan.id"/' android/app/build.gradle
+            grep applicationId android/app/build.gradle
           fi
 
       - name: Patch manifest (label + izin internet)

@@ -869,6 +869,15 @@ class LayarAkun extends StatelessWidget {
                 'WA: ${profil['wa']}\nPeran: ${profil['peran']}'),
           ),
           const SizedBox(height: 12),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Info Aplikasi'),
+            subtitle: const Text('Tentang KutemuKan dan pembuatnya'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarInfo())),
+          ),
+          const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () async {
               await sb.auth.signOut();
@@ -984,6 +993,73 @@ class _LayarNotifState extends State<LayarNotif> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class LayarInfo extends StatelessWidget {
+  const LayarInfo({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Info Aplikasi')),
+      body: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          const Center(
+            child: Column(
+              children: [
+                Icon(Icons.find_replace_rounded, size: 76, color: kTeal),
+                SizedBox(height: 10),
+                Text('KutemuKan',
+                    style:
+                        TextStyle(fontSize: 26, fontWeight: FontWeight.bold)),
+                Text('Versi 1.0.1'),
+                SizedBox(height: 14),
+                Text(
+                  'Papan lost and found kampus: laporkan barang hilang, umumkan barang temuan, dan biarkan sistem mengabari saat ada yang cocok. Setiap postingan melewati moderasi admin agar papan tetap bersih.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 26),
+          const Divider(),
+          const ListTile(
+            leading: Icon(Icons.people_outline),
+            title: Text('Komunitas'),
+            subtitle: Text('Unindrabase - Universitas Indraprasta PGRI'),
+          ),
+          const ListTile(
+            leading: Icon(Icons.code_outlined),
+            title: Text('Teknologi'),
+            subtitle:
+                Text('Flutter, Supabase (PostgreSQL dan Auth), Cloudflare R2'),
+          ),
+          const Divider(),
+          const SizedBox(height: 6),
+          const Center(
+              child: Text('Dibuat oleh',
+                  style: TextStyle(color: Colors.grey))),
+          const Center(
+            child: Text('Ahmad Dandi Subhani',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ),
+          const Center(
+              child: Text('Teknik Informatika - UNINDRA',
+                  style: TextStyle(color: Colors.grey))),
+          const SizedBox(height: 14),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () => launchUrl(
+                  Uri.parse('https://instagram.com/dandisubhani_'),
+                  mode: LaunchMode.externalApplication),
+              icon: const Icon(Icons.camera_alt_outlined),
+              label: const Text('@dandisubhani_'),
+            ),
+          ),
+        ],
       ),
     );
   }
