@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -37,6 +38,8 @@ part 'bagian/klaim.dart';
 part 'bagian/buat.dart';
 part 'bagian/bagikan.dart';
 part 'bagian/pantau.dart';
+part 'bagian/chat.dart';
+part 'bagian/pengumuman.dart';
 part 'bagian/notif.dart';
 part 'bagian/akun.dart';
 part 'bagian/profil.dart';
