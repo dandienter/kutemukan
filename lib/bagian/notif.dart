@@ -12,6 +12,9 @@ class LayarNotif extends StatefulWidget {
 
 class _LayarNotifState extends State<LayarNotif> {
   late Future<List<Map<String, dynamic>>> _fNotif;
+  List<Map<String, dynamic>> _terbaru = [];
+  bool _modePilih = false;
+  final Set<String> _dipilih = {};
 
   @override
   void initState() {
@@ -31,7 +34,62 @@ class _LayarNotifState extends State<LayarNotif> {
         .eq('user_id', sb.auth.currentUser!.id)
         .order('created_at', ascending: false)
         .limit(100);
-    return List<Map<String, dynamic>>.from(rows);
+    final data = List<Map<String, dynamic>>.from(rows);
+    _terbaru = data;
+    return data;
+  }
+
+  void _masukModePilih(String? idAwal) {
+    setState(() {
+      _modePilih = true;
+      if (idAwal != null) _dipilih.add(idAwal);
+    });
+  }
+
+  void _keluarModePilih() {
+    setState(() {
+      _modePilih = false;
+      _dipilih.clear();
+    });
+  }
+
+  void _togglePilih(String id) {
+    setState(() {
+      if (_dipilih.contains(id)) {
+        _dipilih.remove(id);
+      } else {
+        _dipilih.add(id);
+      }
+    });
+  }
+
+  void _pilihSemua() {
+    setState(() {
+      if (_dipilih.length == _terbaru.length) {
+        _dipilih.clear();
+      } else {
+        _dipilih.addAll(_terbaru.map((n) => (n['id'] ?? '').toString()));
+      }
+    });
+  }
+
+  Future<void> _hapusTerpilih() async {
+    if (_dipilih.isEmpty) return;
+    final jumlah = _dipilih.length;
+    await sb.from('lf_notif').delete().inFilter('id', _dipilih.toList());
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            kBahasa.value == 'en'
+                ? '$jumlah notifications deleted.'
+                : '$jumlah notifikasi dihapus.',
+          ),
+        ),
+      );
+    }
+    _keluarModePilih();
+    _segarkanNotif();
   }
 
   IconData _ikon(String jenis) {
@@ -103,13 +161,43 @@ class _LayarNotifState extends State<LayarNotif> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr('Notifikasi')),
+        title: Text(
+          _modePilih
+              ? (kBahasa.value == 'en'
+                    ? '${_dipilih.length} selected'
+                    : '${_dipilih.length} dipilih')
+              : tr('Notifikasi'),
+        ),
+        leading: _modePilih
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: _keluarModePilih,
+              )
+            : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.done_all),
-            tooltip: tr('Tandai semua dibaca'),
-            onPressed: _tandaiSemuaDibaca,
-          ),
+          if (_modePilih) ...[
+            IconButton(
+              icon: const Icon(Icons.select_all),
+              tooltip: tr('Pilih semua'),
+              onPressed: _pilihSemua,
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              tooltip: tr('Hapus'),
+              onPressed: _dipilih.isEmpty ? null : _hapusTerpilih,
+            ),
+          ] else ...[
+            IconButton(
+              icon: const Icon(Icons.done_all),
+              tooltip: tr('Tandai semua dibaca'),
+              onPressed: _tandaiSemuaDibaca,
+            ),
+            IconButton(
+              icon: const Icon(Icons.checklist),
+              tooltip: tr('Pilih'),
+              onPressed: () => _masukModePilih(null),
+            ),
+          ],
         ],
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
@@ -137,7 +225,7 @@ class _LayarNotifState extends State<LayarNotif> {
                 final n = data[i];
                 final belum = n['dibaca'] != true;
                 return Dismissible(
-                  key: ValueKey(n['id']),
+                  key: ValueKey('${n['id']}-$_modePilih'),
                   direction: DismissDirection.endToStart,
                   background: Container(
                     color: Colors.red,
@@ -147,15 +235,26 @@ class _LayarNotifState extends State<LayarNotif> {
                   ),
                   onDismissed: (_) => _hapus(n),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: belum
-                          ? kBiru.withOpacity(0.15)
-                          : Colors.grey.shade100,
-                      child: Icon(
-                        _ikon(n['jenis'] ?? ''),
-                        color: belum ? kBiru : Colors.grey,
-                      ),
-                    ),
+                    leading: _modePilih
+                        ? Checkbox(
+                            value: _dipilih.contains(
+                              (n['id'] ?? '').toString(),
+                            ),
+                            onChanged: (_) =>
+                                _togglePilih((n['id'] ?? '').toString()),
+                          )
+                        : CircleAvatar(
+                            backgroundColor: belum
+                                ? kBiru.withOpacity(0.15)
+                                : (Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade100),
+                            child: Icon(
+                              _ikon(n['jenis'] ?? ''),
+                              color: belum ? kBiru : Colors.grey,
+                            ),
+                          ),
                     title: Text(
                       n['judul'] ?? '',
                       style: TextStyle(
@@ -171,7 +270,12 @@ class _LayarNotifState extends State<LayarNotif> {
                       tooltip: tr('Hapus'),
                       onPressed: () => _hapus(n),
                     ),
-                    onTap: () => _buka(n),
+                    onTap: () => _modePilih
+                        ? _togglePilih((n['id'] ?? '').toString())
+                        : _buka(n),
+                    onLongPress: _modePilih
+                        ? null
+                        : () => _masukModePilih((n['id'] ?? '').toString()),
                   ),
                 );
               },
