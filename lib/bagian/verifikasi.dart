@@ -48,6 +48,32 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
     if (mounted) setState(() => _sibuk = false);
   }
 
+  Widget _barisBiodata(String label, dynamic nilai) {
+    final teks = (nilai ?? '').toString();
+    if (teks.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(
+              label,
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              teks,
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final skema = Theme.of(context).colorScheme;
@@ -86,21 +112,71 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
           if (sudah) ...[
             const SizedBox(height: 16),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: skema.primaryContainer,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.verified, color: kBiru),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'NPM ${widget.profil['npm']} • ${widget.profil['prodi'] ?? ''}',
-                      style: TextStyle(color: skema.onPrimaryContainer),
-                    ),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 24,
+                        backgroundImage:
+                            (widget.profil['foto_url'] ?? '')
+                                .toString()
+                                .isNotEmpty
+                            ? NetworkImage(widget.profil['foto_url'])
+                            : null,
+                        child:
+                            (widget.profil['foto_url'] ?? '').toString().isEmpty
+                            ? const Icon(Icons.person_outline)
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    (widget.profil['nama'] ?? '').toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.verified,
+                                  color: kBiru,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                            Text(
+                              tr('Mahasiswa Terverifikasi'),
+                              style: TextStyle(
+                                color: skema.onPrimaryContainer,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
+                  const Divider(height: 22),
+                  _barisBiodata('NPM', widget.profil['npm']),
+                  _barisBiodata(tr('Program Studi'), widget.profil['prodi']),
+                  _barisBiodata(tr('Fakultas'), widget.profil['fakultas']),
+                  _barisBiodata(tr('Kelas'), widget.profil['kelas']),
+                  _barisBiodata(tr('Angkatan'), widget.profil['angkatan']),
                 ],
               ),
             ),
