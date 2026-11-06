@@ -16,7 +16,7 @@ const Set<String> kStopwords = {
   'antara', 'kepada', 'terhadap', 'sebagai', 'karena', 'namun', 'tapi',
   'lalu', 'kemudian', 'masih', 'lagi', 'sangat', 'sekali', 'lebih',
   'paling', 'para', 'setiap', 'tiap', 'bagi', 'tentang', 'seperti',
-  'yaitu', 'yakni', 'ialah', 'adalah', 'merupakan', 'dimana', 'kemana',
+  'yaitu', 'yakni', 'ialah', 'merupakan', 'dimana', 'kemana',
   'kapan', 'siapa', 'mengapa', 'bagaimana', 'berapa', 'mana', 'apa',
   'apakah', 'jika', 'kalau', 'bila', 'agar', 'supaya', 'hingga', 'sampai',
   'atas', 'bawah', 'luar', 'belakang', 'depan', 'samping', 'tengah',
