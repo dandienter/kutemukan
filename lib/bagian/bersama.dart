@@ -181,7 +181,7 @@ Future<Map<String, Map<String, dynamic>>> ambilProfilPublik(
   try {
     final rows = await sb
         .from('lf_profiles_publik')
-        .select('id, nama, foto_url, terverifikasi, prodi')
+        .select('id, nama, foto_url, terverifikasi, prodi, nama_tampilan')
         .inFilter('id', unik);
     return {
       for (final r in rows) (r['id'] as String): Map<String, dynamic>.from(r),
@@ -199,10 +199,20 @@ Future<void> pasangNama(List<Map<String, dynamic>> rows) async {
   for (final r in rows) {
     final pub = peta[(r['user_id'] ?? '').toString()];
     if (pub != null) {
-      r['nama_pemilik'] = pub['nama'];
+      final tampilan = (pub['nama_tampilan'] ?? '').toString().trim();
+      r['nama_pemilik'] = tampilan.isNotEmpty ? tampilan : pub['nama'];
       r['foto_pemilik'] = pub['foto_url'];
       r['terverifikasi_pemilik'] = pub['terverifikasi'];
       r['prodi_pemilik'] = pub['prodi'];
+      if (r['samarkan_nama'] == true) {
+        r['nama_pemilik'] = tr(
+          pub['terverifikasi'] == true
+              ? 'Pengguna Terverifikasi'
+              : 'Sesama Pengguna',
+        );
+        r['foto_pemilik'] = null;
+        r['nama_disamarkan'] = true;
+      }
     }
   }
 }
