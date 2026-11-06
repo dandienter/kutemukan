@@ -4089,10 +4089,17 @@ class LayarInfo extends StatelessWidget {
                       style: TextStyle(
                           fontSize: 16, fontWeight: FontWeight.bold)),
                   Text(tr('Pengembang KutemuKan'),
-                      style: TextStyle(color: Colors.black54)),
+                      style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant)),
                   Text(tr('Mahasiswa Teknik Informatika, Universitas Indraprasta PGRI'),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54, fontSize: 12)),
+                      style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurfaceVariant,
+                          fontSize: 12)),
                   const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
