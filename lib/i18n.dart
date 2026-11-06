@@ -231,7 +231,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.5.5': 'Version 1.5.5',
+  'Versi 1.5.6': 'Version 1.5.6',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

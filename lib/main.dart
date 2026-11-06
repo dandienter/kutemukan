@@ -3918,21 +3918,6 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                           ],
                         ],
                       ),
-                      if (profil['terverifikasi'] == true) ...[
-                        const SizedBox(height: 5),
-                        Chip(
-                          avatar: const Icon(Icons.verified,
-                              size: 14, color: kBiru),
-                          label: Text(tr('Mahasiswa Terverifikasi'),
-                              style: const TextStyle(
-                                  fontSize: 11,
-                                  color: kBiru,
-                                  fontWeight: FontWeight.w600)),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -3943,15 +3928,28 @@ class _KepalaAkunState extends State<_KepalaAkun> {
           ),
           if (_terbuka) ...[
             const SizedBox(height: 6),
+            if (profil['terverifikasi'] == true) ...[
+              Chip(
+                avatar: const Icon(Icons.verified, size: 14, color: kBiru),
+                label: Text(tr('Mahasiswa Terverifikasi'),
+                    style: const TextStyle(
+                        fontSize: 11,
+                        color: kBiru,
+                        fontWeight: FontWeight.w600)),
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              const SizedBox(height: 6),
+            ],
             if (npm.isNotEmpty) _barisDetail('NPM', npm),
             if (prodi.isNotEmpty) _barisDetail('Prodi', prodi),
             _barisDetail(
                 'WhatsApp',
                 wa.isEmpty ? tr('Nomor WhatsApp belum diisi') : '+$wa'),
             if (email.isNotEmpty) _barisDetail('Email', email),
+            const SizedBox(height: 8),
+            BarisBadge(userId: (profil['id'] ?? '').toString()),
           ],
-          const SizedBox(height: 8),
-          BarisBadge(userId: (profil['id'] ?? '').toString()),
         ],
       ),
     );
@@ -4659,7 +4657,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.5'),
+                  label: Text(tr('Versi 1.5.6'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
