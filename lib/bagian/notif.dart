@@ -197,6 +197,7 @@ class _LayarNotifState extends State<LayarNotif> {
               tooltip: tr('Pilih'),
               onPressed: () => _masukModePilih(null),
             ),
+            const TombolAkun(),
           ],
         ],
       ),
