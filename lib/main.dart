@@ -3806,7 +3806,7 @@ class LayarAkun extends StatelessWidget {
       body: ListView(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
               children: [
                 GestureDetector(
@@ -3818,57 +3818,75 @@ class LayarAkun extends StatelessWidget {
                     if (berubah == true) await onProfilDiubah?.call();
                   },
                   child: CircleAvatar(
-                    radius: 34,
+                    radius: 30,
                     backgroundImage: _foto(),
                     child: (foto == null || foto.isEmpty)
-                        ? const Icon(Icons.person, size: 34)
+                        ? const Icon(Icons.person, size: 30)
                         : null,
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(profil['nama'] ?? '',
                           style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
+                              fontSize: 18, fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 2),
-                      Text(
-                          (profil['wa'] ?? '').toString().isEmpty
-                              ? tr('Nomor WhatsApp belum diisi')
-                              : '+${profil['wa']}',
-                          style: const TextStyle(color: Colors.grey)),
-                      Text(admin ? 'Admin KutemuKan' : 'Pengguna KutemuKan',
-                          style: const TextStyle(color: Colors.grey)),
-                      if (profil['terverifikasi'] == true) ...[
-                        const SizedBox(height: 4),
-                        Row(children: [
-                          const Icon(Icons.verified,
-                              size: 16, color: kTeal),
-                          const SizedBox(width: 4),
-                          Text(tr('Mahasiswa Terverifikasi'),
-                              style: const TextStyle(
-                                  color: kTeal,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13)),
-                        ]),
-                        if ((profil['npm'] ?? '').toString().isNotEmpty)
-                          Text(
-                              'NPM ${profil['npm']}${(profil['prodi'] ?? '').toString().isNotEmpty ? ' • ${profil['prodi']}' : ''}',
-                              style: const TextStyle(
-                                  color: Colors.grey, fontSize: 12),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis),
-                      ],
-                      if (email.isNotEmpty)
-                        Text(email,
+                      const SizedBox(height: 5),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          Chip(
+                            avatar: Icon(
+                                admin
+                                    ? Icons.shield_outlined
+                                    : Icons.person_outline,
+                                size: 14),
+                            label: Text(
+                                admin
+                                    ? 'Admin KutemuKan'
+                                    : 'Pengguna KutemuKan',
+                                style: const TextStyle(fontSize: 11)),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          if (profil['terverifikasi'] == true)
+                            Chip(
+                              avatar: const Icon(Icons.verified,
+                                  size: 14, color: kTeal),
+                              label: Text(tr('Mahasiswa Terverifikasi'),
+                                  style: const TextStyle(
+                                      fontSize: 11,
+                                      color: kTeal,
+                                      fontWeight: FontWeight.w600)),
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 5),
+                      if (profil['terverifikasi'] == true &&
+                          (profil['npm'] ?? '').toString().isNotEmpty)
+                        Text(
+                            'NPM ${profil['npm']}${(profil['prodi'] ?? '').toString().isNotEmpty ? ' • ${profil['prodi']}' : ''}',
                             style: const TextStyle(
                                 color: Colors.grey, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
+                      Text(
+                          (profil['wa'] ?? '').toString().isEmpty
+                              ? tr('Nomor WhatsApp belum diisi')
+                              : '+${profil['wa']}${email.isNotEmpty ? ' • $email' : ''}',
+                          style: const TextStyle(
+                              color: Colors.grey, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 6),
                       BarisBadge(
                           userId: (profil['id'] ?? '').toString()),
@@ -4566,7 +4584,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.0'),
+                  label: Text(tr('Versi 1.5.1'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
