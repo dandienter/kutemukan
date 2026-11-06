@@ -2560,12 +2560,12 @@ class _LayarBuatState extends State<LayarBuat> {
                   onSelectionChanged: (s) =>
                       setState(() => _jenis = s.first),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 16),
                 TextField(
                   controller: _judul,
                   decoration: _rapat(tr('Judul (mis. Dompet hitam berisi KTM)')),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2593,10 +2593,18 @@ class _LayarBuatState extends State<LayarBuat> {
                                 .subtract(const Duration(days: 365)),
                             lastDate: DateTime.now(),
                           );
-                          if (tgl != null && mounted) {
-                            setState(() => _waktu = DateTime(tgl.year,
-                                tgl.month, tgl.day, _waktu.hour, _waktu.minute));
-                          }
+                          if (tgl == null || !mounted) return;
+                          final jam = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.fromDateTime(_waktu),
+                          );
+                          if (!mounted) return;
+                          setState(() => _waktu = DateTime(
+                              tgl.year,
+                              tgl.month,
+                              tgl.day,
+                              jam?.hour ?? _waktu.hour,
+                              jam?.minute ?? _waktu.minute));
                         },
                         child: InputDecorator(
                           decoration: _rapat(tr('Waktu')),
@@ -2604,7 +2612,7 @@ class _LayarBuatState extends State<LayarBuat> {
                             children: [
                               Expanded(
                                   child: Text(
-                                      fmtBulan(_waktu.toIso8601String()))),
+                                      fmtTanggal(_waktu.toIso8601String()))),
                               const Icon(Icons.edit_calendar_outlined,
                                   size: 18, color: Colors.grey),
                             ],
@@ -2614,34 +2622,34 @@ class _LayarBuatState extends State<LayarBuat> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 TextField(
                   controller: _lokasi,
                   decoration: _rapat(tr('Lokasi (hilang / ditemukan)')),
                 ),
                 if (_jenis == 'temuan') ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   TextField(
                     controller: _penitipan,
                     decoration:
                         _rapat(tr('Barang dititipkan di (mis. pos satpam)')),
                   ),
                 ],
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 TextField(
                   controller: _deskripsi,
                   maxLines: 2,
                   decoration:
                       _rapat(tr('Deskripsi dan ciri-ciri (tampil publik)')),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
                 TextField(
                   controller: _rahasia,
                   maxLines: 2,
                   decoration: _rapat(tr('Ciri khusus rahasia'),
                       hint: tr('Tidak tampil publik, untuk verifikasi klaim')),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 16),
                 SizedBox(
                   height: 78,
                   child: ListView(
@@ -4145,7 +4153,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.4.0'),
+                  label: Text(tr('Versi 1.4.1'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
