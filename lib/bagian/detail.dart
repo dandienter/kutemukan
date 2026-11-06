@@ -554,15 +554,17 @@ class _LayarDetailState extends State<LayarDetail> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
+                color: Colors.green.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
+                border: Border.all(color: Colors.green.withOpacity(0.45)),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.security_outlined,
-                    color: Colors.green.shade700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.green.shade300
+                        : Colors.green.shade700,
                     size: 26,
                   ),
                   const SizedBox(width: 12),
@@ -574,7 +576,10 @@ class _LayarDetailState extends State<LayarDetail> {
                           tr('Dititipkan di'),
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.green.shade700,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? Colors.green.shade300
+                                : Colors.green.shade700,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -752,6 +757,29 @@ class _LayarDetailState extends State<LayarDetail> {
         style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: kBiru.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(Icons.lock_outline, size: 16, color: kBiru),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                tr(
+                  'Jangan tulis ciri khusus barangmu di komentar publik. Ciri khusus cukup disampaikan lewat klaim.',
+                ),
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 10),
       if (_komentar.isEmpty)
         Text(
           tr(
@@ -871,14 +899,13 @@ class _LayarDetailState extends State<LayarDetail> {
       if (_post['status'] == 'tampil') ...[
         if (menunggu.isNotEmpty)
           Card(
-            color: Colors.orange.shade50,
+            color: Colors.orange.withOpacity(0.12),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
                 tr(
                   'Ada klaim menunggu keputusanmu. Periksa ciri khususnya baik-baik sebelum menyetujui.',
                 ),
-                style: const TextStyle(color: Colors.black87),
               ),
             ),
           ),
