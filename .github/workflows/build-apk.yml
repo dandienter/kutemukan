@@ -47,6 +47,7 @@ jobs:
           MANIFEST=android/app/src/main/AndroidManifest.xml
           sed -i 's/android:label="kutemukan"/android:label="KutemuKan"/' $MANIFEST
           grep -q 'android.permission.INTERNET' $MANIFEST || sed -i 's|<application|<uses-permission android:name="android.permission.INTERNET"/>\n    <application|' $MANIFEST
+          for P in RECORD_AUDIO ACCESS_FINE_LOCATION ACCESS_COARSE_LOCATION; do grep -q "android.permission.$P" $MANIFEST || sed -i "s|<application|<uses-permission android:name=\"android.permission.$P\"/>\n    <application|" $MANIFEST; done
           python3 - <<'PYEOF'
           import re
           p = 'android/app/src/main/AndroidManifest.xml'
