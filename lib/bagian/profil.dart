@@ -16,6 +16,7 @@ class _LayarProfilState extends State<LayarProfil> {
   final _namaTampilan = TextEditingController();
   final _wa = TextEditingController();
   bool _sibuk = false;
+  bool _waAktif = true;
   bool _fotoDihapus = false;
   String? _fotoUrl;
   File? _fotoBaru;
@@ -30,6 +31,7 @@ class _LayarProfilState extends State<LayarProfil> {
       _nama.text = awal['nama'] ?? '';
       _namaTampilan.text = awal['nama_tampilan'] ?? '';
       _wa.text = awal['wa'] ?? '';
+      _waAktif = awal['wa_aktif'] != false;
       _fotoUrl = awal['foto_url'] as String?;
     } else {
       final meta = sb.auth.currentUser?.userMetadata;
@@ -116,6 +118,7 @@ class _LayarProfilState extends State<LayarProfil> {
               'nama_tampilan': _namaTampilan.text.trim().isEmpty
                   ? null
                   : _namaTampilan.text.trim(),
+              'wa_aktif': _waAktif,
             })
             .eq('id', id);
         if (mounted) {
@@ -138,6 +141,7 @@ class _LayarProfilState extends State<LayarProfil> {
           'nama_tampilan': _namaTampilan.text.trim().isEmpty
               ? null
               : _namaTampilan.text.trim(),
+          'wa_aktif': _waAktif,
         });
         if (mounted) {
           Navigator.of(
@@ -227,6 +231,18 @@ class _LayarProfilState extends State<LayarProfil> {
                 labelText: tr('Nomor WhatsApp (08xx)'),
                 border: OutlineInputBorder(),
               ),
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(tr('Bagikan WhatsApp saat klaim disetujui')),
+              subtitle: Text(
+                tr(
+                  'Bila mati, nomor WhatsApp-mu tidak dibuka ke siapa pun. Komunikasi berjalan lewat Chat di Aplikasi.',
+                ),
+                style: const TextStyle(fontSize: 12),
+              ),
+              value: _waAktif,
+              onChanged: (v) => setState(() => _waAktif = v),
             ),
             const SizedBox(height: 20),
             SizedBox(
