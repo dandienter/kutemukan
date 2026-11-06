@@ -66,8 +66,11 @@ jobs:
           PYEOF
 
       - name: Pasang Firebase (google-services)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          cp android-config/google-services.json android/app/google-services.json
+          printf '%s' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+          python3 -c "import json; json.load(open('android/app/google-services.json')); print('google-services.json valid, sumber: GitHub Secrets')"
           python3 - <<'PYEOF'
           p = 'android/settings.gradle.kts'
           s = open(p).read()
