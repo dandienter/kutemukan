@@ -5,7 +5,10 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:record/record.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
