@@ -4209,7 +4209,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.4.1'),
+                  label: Text(tr('Versi 1.4.2'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
