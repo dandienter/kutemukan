@@ -1,7 +1,7 @@
 name: kutemukan
 description: KutemuKan - Lost and Found Unindra
 publish_to: "none"
-version: 1.5.5+18
+version: 1.5.7+20
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -49,6 +49,6 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/icon.png"
 
 flutter_native_splash:
-  color: "#0F766E"
+  color: "#0057A8"
   android_12:
-    color: "#0F766E"
+    color: "#0057A8"
