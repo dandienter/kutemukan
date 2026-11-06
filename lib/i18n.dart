@@ -389,6 +389,19 @@ const Map<String, String> _idKeEn = {
   'Pemilik postingan memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.': 'The post owner chose not to share WhatsApp. Use the in-app Chat.',
   'Pengklaim memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.': 'The claimant chose not to share WhatsApp. Use the in-app Chat.',
   'Kode Serah Terima': 'Handover Code',
+  'Pratinjau PDF': 'Preview PDF',
+  'Pratinjau Laporan': 'Report Preview',
+  'Izin Kamera Ditolak': 'Camera Permission Denied',
+  'Izin kamera sudah ditolak permanen. Aktifkan lewat Pengaturan aplikasi agar bisa memindai QR.':
+      'Camera permission was permanently denied. Enable it in the app settings to scan QR codes.',
+  'Nanti Saja': 'Later',
+  'Buka Pengaturan': 'Open Settings',
+  'Izin kamera diperlukan untuk memindai QR':
+      'Camera permission is needed to scan the QR code',
+  'Kamera tidak bisa dibuka': 'Could not open the camera',
+  'Izin kamera belum diberikan. Aktifkan izin kamera untuk KutemuKan di Pengaturan, lalu coba lagi.':
+      'Camera permission has not been granted. Enable camera permission for KutemuKan in Settings, then try again.',
+  'Kembali': 'Back',
   'Tunjukkan kode ini ke pemilik postingan saat barang diserahkan. Jangan bagikan ke orang lain.': 'Show this code to the post owner when the item is handed over. Do not share it with anyone else.',
   'Serah terima selesai': 'Handover completed',
   'Kode dari pengklaim': 'Code from the claimant',
