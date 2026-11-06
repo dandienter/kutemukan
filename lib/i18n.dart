@@ -143,6 +143,9 @@ const Map<String, String> _idKeEn = {
       'Unindra student? Use your NPM and SIKA password and your status is verified right away.',
   'Kata sandi SIKA': 'SIKA password',
   'Masuk dengan SIKA': 'Sign in with SIKA',
+  'Daftar Akun Baru': 'Create Account',
+  'Masuk dengan Email': 'Sign in with Email',
+  'Pilihan lain': 'Other options',
   'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.':
       'Your SIKA password is only forwarded to the campus server, never stored.',
   'Isi NPM dan kata sandi SIKA dulu.': 'Enter your NPM and SIKA password first.',
@@ -228,7 +231,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.5.4': 'Version 1.5.4',
+  'Versi 1.5.5': 'Version 1.5.5',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

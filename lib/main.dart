@@ -145,7 +145,7 @@ Future<Map<String, dynamic>> verifikasiSika(
 
 SupabaseClient get sb => Supabase.instance.client;
 
-const Color kTeal = Color(0xFF0F766E);
+const Color kBiru = Color(0xFF0057A8);
 const List<String> kKategori = [
   'Dompet & Uang',
   'KTM & Dokumen',
@@ -311,7 +311,7 @@ class BarisBadge extends StatelessWidget {
       case 'Perunggu':
         return const Color(0xFFA0522D);
       default:
-        return kTeal;
+        return kBiru;
     }
   }
 
@@ -425,12 +425,12 @@ class KutemuKanApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: kTeal),
+            colorScheme: ColorScheme.fromSeed(seedColor: kBiru),
             useMaterial3: true,
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
-                seedColor: kTeal, brightness: Brightness.dark),
+                seedColor: kBiru, brightness: Brightness.dark),
             useMaterial3: true,
           ),
           home: const LayarSplash(),
@@ -479,7 +479,7 @@ class _LayarSplashState extends State<LayarSplash>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kTeal,
+      backgroundColor: kBiru,
       body: Center(
         child: FadeTransition(
           opacity: _pudar,
@@ -599,7 +599,7 @@ class _LayarPanduanState extends State<LayarPanduan> {
                   width: _hal == i ? 22 : 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _hal == i ? kTeal : Colors.grey.shade300,
+                    color: _hal == i ? kBiru : Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -719,6 +719,7 @@ class _LayarLoginState extends State<LayarLogin> {
   final _npm = TextEditingController();
   final _sandiSika = TextEditingController();
   bool _modeDaftar = true;
+  String? _pilihan;
   bool _sibuk = false;
   bool _sibukSika = false;
   String? _galat;
@@ -784,6 +785,79 @@ class _LayarLoginState extends State<LayarLogin> {
                         fontWeight: FontWeight.w600,
                         color: skema.onSurfaceVariant)),
                 const SizedBox(height: 16),
+                if (_pilihan == null) ...[
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => setState(() {
+                      _modeDaftar = true;
+                      _pilihan = 'email';
+                    }),
+                    icon: const Icon(Icons.person_add_alt_1),
+                    label: Text(tr('Daftar Akun Baru')),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => setState(() {
+                      _modeDaftar = false;
+                      _pilihan = 'email';
+                    }),
+                    icon: const Icon(Icons.mail_outline),
+                    label: Text(tr('Masuk dengan Email')),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                        backgroundColor: kBiru,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12))),
+                    onPressed: () => setState(() => _pilihan = 'sika'),
+                    icon: const Icon(Icons.school),
+                    label: Text(tr('Masuk dengan SIKA')),
+                  ),
+                  const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await sb.auth.signInWithOAuth(
+                        OAuthProvider.google,
+                        redirectTo: 'kutemukan://login-callback',
+                        authScreenLaunchMode:
+                            LaunchMode.externalApplication,
+                      );
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('${tr('Login Google gagal')}: $e')));
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: Text(tr('Masuk dengan Google')),
+                ),
+                ],
+                if (_pilihan == 'email') ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _pilihan = null),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: Text(tr('Pilihan lain')),
+                  ),
+                ),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
@@ -838,19 +912,42 @@ class _LayarLoginState extends State<LayarLogin> {
                                     TextStyle(color: skema.onErrorContainer)),
                           ),
                         ],
-                        Row(children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(tr('atau')),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          onPressed: _sibuk ? null : _kirim,
+                          child: Text(_sibuk
+                              ? tr('Memproses...')
+                              : (_modeDaftar ? tr('Daftar') : tr('Masuk'))),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              setState(() => _modeDaftar = !_modeDaftar),
+                          child: Text(_modeDaftar
+                              ? tr('Sudah punya akun? Masuk')
+                              : tr('Belum punya akun? Daftar')),
+                        ),
+                      ],
+                    ),
                   ),
-                  const Expanded(child: Divider()),
-                ]),
-                const SizedBox(height: 14),
+                ),
+                        ],
+                if (_pilihan == 'sika') ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => setState(() => _pilihan = null),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: Text(tr('Pilihan lain')),
+                  ),
+                ),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
-                  color: kTeal,
+                  color: kBiru,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   child: Padding(
@@ -915,7 +1012,7 @@ class _LayarLoginState extends State<LayarLogin> {
                         FilledButton(
                           style: FilledButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: kTeal,
+                              foregroundColor: kBiru,
                               minimumSize: const Size.fromHeight(46),
                               shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12))),
@@ -938,62 +1035,7 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                const SizedBox(height: 20),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                              minimumSize: const Size.fromHeight(50),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12))),
-                          onPressed: _sibuk ? null : _kirim,
-                          child: Text(_sibuk
-                              ? tr('Memproses...')
-                              : (_modeDaftar ? tr('Daftar') : tr('Masuk'))),
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              setState(() => _modeDaftar = !_modeDaftar),
-                          child: Text(_modeDaftar
-                              ? tr('Sudah punya akun? Masuk')
-                              : tr('Belum punya akun? Daftar')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(tr('atau')),
-                  ),
-                  const Expanded(child: Divider()),
-                ]),
-                const SizedBox(height: 14),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await sb.auth.signInWithOAuth(
-                        OAuthProvider.google,
-                        redirectTo: 'kutemukan://login-callback',
-                        authScreenLaunchMode:
-                            LaunchMode.externalApplication,
-                      );
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('${tr('Login Google gagal')}: $e')));
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: Text(tr('Masuk dengan Google')),
-                ),
+                ],
               ],
             ),
           ),
@@ -2181,7 +2223,7 @@ class _LayarDetailState extends State<LayarDetail> {
                       width: _fotoKe == i ? 18 : 7,
                       height: 7,
                       decoration: BoxDecoration(
-                        color: _fotoKe == i ? kTeal : Colors.grey.shade300,
+                        color: _fotoKe == i ? kBiru : Colors.grey.shade300,
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
@@ -2278,7 +2320,7 @@ class _LayarDetailState extends State<LayarDetail> {
             const SizedBox(height: 20),
             Row(
               children: [
-                const Icon(Icons.auto_awesome, size: 19, color: kTeal),
+                const Icon(Icons.auto_awesome, size: 19, color: kBiru),
                 const SizedBox(width: 6),
                 Text(tr('Kemungkinan Cocok'),
                     style: const TextStyle(
@@ -2312,7 +2354,7 @@ class _LayarDetailState extends State<LayarDetail> {
                     label: Text('${(h.skor * 100).round()}%',
                         style: const TextStyle(
                             fontSize: 11, color: Colors.white)),
-                    backgroundColor: kTeal,
+                    backgroundColor: kBiru,
                     visualDensity: VisualDensity.compact,
                   ),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(
@@ -2415,7 +2457,7 @@ class _LayarDetailState extends State<LayarDetail> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: const BorderSide(color: kTeal),
+                    borderSide: const BorderSide(color: kBiru),
                   ),
                 ),
               ),
@@ -2924,7 +2966,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                         style: TextStyle(
                                             fontSize: 9,
                                             color: Colors.white)),
-                                    backgroundColor: kTeal,
+                                    backgroundColor: kBiru,
                                     visualDensity: VisualDensity.compact,
                                   ),
                                 ),
@@ -3041,7 +3083,7 @@ class _LayarBagikanState extends State<LayarBagikan> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      color: kTeal,
+                      color: kBiru,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
                       child: Row(
@@ -3370,7 +3412,7 @@ class LayarPahlawan extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: kTeal,
+                color: kBiru,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
@@ -3705,7 +3747,7 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
                   fontSize: 34,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 3,
-                  color: kTeal)),
+                  color: kBiru)),
           Text(tr('Sistem Informasi Akademik Unindra'),
               style: TextStyle(color: skema.onSurfaceVariant)),
           const SizedBox(height: 12),
@@ -3723,7 +3765,7 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
                   color: skema.primaryContainer,
                   borderRadius: BorderRadius.circular(12)),
               child: Row(children: [
-                const Icon(Icons.verified, color: kTeal),
+                const Icon(Icons.verified, color: kBiru),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -3880,11 +3922,11 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                         const SizedBox(height: 5),
                         Chip(
                           avatar: const Icon(Icons.verified,
-                              size: 14, color: kTeal),
+                              size: 14, color: kBiru),
                           label: Text(tr('Mahasiswa Terverifikasi'),
                               style: const TextStyle(
                                   fontSize: 11,
-                                  color: kTeal,
+                                  color: kBiru,
                                   fontWeight: FontWeight.w600)),
                           visualDensity: VisualDensity.compact,
                           materialTapTargetSize:
@@ -3949,7 +3991,7 @@ class LayarAkun extends StatelessWidget {
                 ? 'NPM ${profil['npm']} • ${profil['prodi'] ?? ''}'
                 : tr('Hubungkan akun SIKA untuk badge terverifikasi')),
             trailing: profil['terverifikasi'] == true
-                ? const Icon(Icons.verified, color: kTeal)
+                ? const Icon(Icons.verified, color: kBiru)
                 : const Icon(Icons.chevron_right),
             onTap: () async {
               final berubah = await Navigator.of(context).push<bool>(
@@ -4290,7 +4332,7 @@ class LayarStatistik extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 child: Column(
                   children: [
-                    Icon(ikon, color: kTeal),
+                    Icon(ikon, color: kBiru),
                     const SizedBox(height: 6),
                     Text(angka,
                         style: const TextStyle(
@@ -4309,7 +4351,7 @@ class LayarStatistik extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: kTeal,
+                color: kBiru,
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Column(
@@ -4508,9 +4550,9 @@ class _LayarNotifState extends State<LayarNotif> {
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor:
-                        belum ? kTeal.withOpacity(0.15) : Colors.grey.shade100,
+                        belum ? kBiru.withOpacity(0.15) : Colors.grey.shade100,
                     child: Icon(_ikon(n['jenis'] ?? ''),
-                        color: belum ? kTeal : Colors.grey),
+                        color: belum ? kBiru : Colors.grey),
                   ),
                   title: Text(n['judul'] ?? '',
                       style: TextStyle(
@@ -4617,7 +4659,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.4'),
+                  label: Text(tr('Versi 1.5.5'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
@@ -4639,7 +4681,7 @@ class LayarInfo extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.route_outlined, color: kTeal),
+                      const Icon(Icons.route_outlined, color: kBiru),
                       SizedBox(width: 8),
                       Text(tr('Cara Kerja'),
                           style: TextStyle(
@@ -4655,7 +4697,7 @@ class LayarInfo extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 10,
-                            backgroundColor: kTeal,
+                            backgroundColor: kBiru,
                             child: Text('${i + 1}',
                                 style: const TextStyle(
                                     fontSize: 10, color: Colors.white)),
@@ -4678,7 +4720,7 @@ class LayarInfo extends StatelessWidget {
                 children: [
                   const CircleAvatar(
                     radius: 26,
-                    backgroundColor: kTeal,
+                    backgroundColor: kBiru,
                     child: Icon(Icons.person, color: Colors.white, size: 28),
                   ),
                   const SizedBox(height: 10),
