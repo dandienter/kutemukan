@@ -343,10 +343,13 @@ class _LayarDetailState extends State<LayarDetail> {
     String? sub,
     bool verified = false,
     bool terakhir = false,
+    VoidCallback? onTap,
   }) {
     return Column(
       children: [
-        Padding(
+        InkWell(
+          onTap: onTap,
+          child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 9),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -393,6 +396,7 @@ class _LayarDetailState extends State<LayarDetail> {
                 ),
               ),
             ],
+          ),
           ),
         ),
         if (!terakhir) const Divider(height: 1),
@@ -538,6 +542,18 @@ class _LayarDetailState extends State<LayarDetail> {
                     sub: (_post['prodi_pemilik'] ?? '').toString().isEmpty
                         ? null
                         : (_post['prodi_pemilik'] ?? '').toString(),
+                    onTap:
+                        (_post['nama_disamarkan'] == true ||
+                            (_post['user_id'] ?? '').toString() ==
+                                (sb.auth.currentUser?.id ?? ''))
+                        ? null
+                        : () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => LayarProfilPublik(
+                                userId: (_post['user_id'] ?? '').toString(),
+                              ),
+                            ),
+                          ),
                   ),
                   _barisInfo(
                     Icons.publish_outlined,
