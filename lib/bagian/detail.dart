@@ -364,7 +364,20 @@ class _LayarDetailState extends State<LayarDetail> {
         params: {'p_post_id': _post['id']},
       );
       final wa = hasil?.toString() ?? '';
-      if (wa.isEmpty) throw 'Klaim belum disetujui';
+      if (wa.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr(
+                  'Pemilik postingan memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.',
+                ),
+              ),
+            ),
+          );
+        }
+        return;
+      }
       await _bukaWa(
         wa,
         'Halo, klaim saya soal "${_post['judul']}" sudah disetujui. ',
@@ -385,7 +398,20 @@ class _LayarDetailState extends State<LayarDetail> {
         params: {'p_claim_id': klaim['id']},
       );
       final wa = hasil?.toString() ?? '';
-      if (wa.isEmpty) throw 'Nomor tidak tersedia';
+      if (wa.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr(
+                  'Pengklaim memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.',
+                ),
+              ),
+            ),
+          );
+        }
+        return;
+      }
       await _bukaWa(
         wa,
         'Halo, soal klaim "${_post['judul']}" yang sudah saya setujui. ',
