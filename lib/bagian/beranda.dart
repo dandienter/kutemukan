@@ -607,27 +607,18 @@ class _LayarBerandaState extends State<LayarBeranda> {
           padding: const EdgeInsets.only(left: 12),
           child: Image.asset('assets/burung.png'),
         ),
-        title: const Text('KutemuKan'),
+        title: const Text(
+          'KutemuKan',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 21),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.forum_outlined),
-            tooltip: tr('Pesan'),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const LayarDaftarChat()),
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications_active_outlined),
-            tooltip: tr('Pantau Kategori'),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const LayarPantau())),
-          ),
           IconButton(
             icon: const Icon(Icons.emoji_events_outlined),
             tooltip: tr('Papan Pahlawan'),
             onPressed: () => Navigator.of(context)
                 .push(MaterialPageRoute(builder: (_) => const LayarPahlawan())),
           ),
+          TombolAkun(profil: widget.profil),
         ],
       ),
       body: Column(
