@@ -89,6 +89,32 @@ class LayarStatistik extends StatelessWidget {
           final klaimMenunggu = klaim
               .where((x) => x['status'] == 'menunggu')
               .length;
+          final klaimDitolak = klaim
+              .where((x) => x['status'] == 'ditolak')
+              .length;
+          final sudahKembali = posts.where((x) => x['status'] == 'kembali');
+          double rataHariKembali = 0;
+          if (sudahKembali.isNotEmpty) {
+            var totalJam = 0.0;
+            var terhitung = 0;
+            for (final x in sudahKembali) {
+              final a = DateTime.tryParse((x['created_at'] ?? '').toString());
+              final b = DateTime.tryParse((x['updated_at'] ?? '').toString());
+              if (a != null && b != null) {
+                totalJam += b.difference(a).inMinutes / 60.0;
+                terhitung++;
+              }
+            }
+            if (terhitung > 0) rataHariKembali = totalJam / terhitung / 24;
+          }
+          final perLokasi = <String, int>{};
+          for (final x in posts) {
+            final l = (x['lokasi'] ?? '').toString().trim();
+            if (l.isNotEmpty) perLokasi[l] = (perLokasi[l] ?? 0) + 1;
+          }
+          final lokasiUrut = perLokasi.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
+          final lokasiTop = lokasiUrut.isEmpty ? null : lokasiUrut.first;
           final perKategori = <String, int>{};
           for (final x in posts) {
             final k = (x['kategori'] ?? 'Lainnya').toString();
@@ -227,6 +253,25 @@ class LayarStatistik extends StatelessWidget {
                     rataBintang == 0 ? '-' : rataBintang.toStringAsFixed(1),
                     'Rata-rata Bintang',
                     Icons.star_outline,
+                  ),
+                  kartu(
+                    '$klaimDitolak',
+                    'Klaim Ditolak',
+                    Icons.block_outlined,
+                  ),
+                  kartu(
+                    rataHariKembali == 0
+                        ? '-'
+                        : rataHariKembali.toStringAsFixed(1),
+                    'Rata-rata Hari Kembali',
+                    Icons.timelapse_outlined,
+                  ),
+                  kartu(
+                    lokasiTop == null ? '-' : '${lokasiTop.value}',
+                    lokasiTop == null
+                        ? 'Lokasi Tersering'
+                        : 'di ${lokasiTop.key}',
+                    Icons.place_outlined,
                   ),
                 ],
               ),
