@@ -1268,6 +1268,28 @@ class _LayarDetailState extends State<LayarDetail> {
                     letterSpacing: 6,
                   ),
                 ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: QrImageView(
+                    data:
+                        'KUTEMUKAN-SERAH:${k['id']}:$kodeSaya',
+                    version: QrVersions.auto,
+                    size: 168,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  tr(
+                    'Atau tunjukkan QR ini untuk dipindai pemilik postingan.',
+                  ),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 4),
                 Text(
                   tr(
@@ -1358,29 +1380,115 @@ class _FormVerifikasiKodeState extends State<_FormVerifikasiKode> {
     }
   }
 
+  Future<void> _pindai() async {
+    final hasil = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const _LayarPindaiQr()),
+    );
+    if (hasil == null || !mounted) return;
+    var kode = hasil.trim();
+    if (kode.startsWith('KUTEMUKAN-SERAH:')) {
+      final bagian = kode.split(':');
+      if (bagian.length != 3 ||
+          bagian[1] != (widget.klaim['id'] ?? '').toString()) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('QR ini bukan untuk klaim ini.'))),
+        );
+        return;
+      }
+      kode = bagian[2];
+    }
+    _kode.text = kode;
+    await _verifikasi();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: TextField(
-            controller: _kode,
-            keyboardType: TextInputType.number,
-            maxLength: 6,
-            decoration: InputDecoration(
-              labelText: tr('Kode dari pengklaim'),
-              border: const OutlineInputBorder(),
-              isDense: true,
-              counterText: '',
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _kode,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                decoration: InputDecoration(
+                  labelText: tr('Kode dari pengklaim'),
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                  counterText: '',
+                ),
+              ),
             ),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: _proses ? null : _verifikasi,
+              child: Text(tr('Selesaikan')),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _proses ? null : _pindai,
+            icon: const Icon(Icons.qr_code_scanner_outlined),
+            label: Text(tr('Pindai QR Pengklaim')),
           ),
         ),
-        const SizedBox(width: 8),
-        FilledButton(
-          onPressed: _proses ? null : _verifikasi,
-          child: Text(tr('Selesaikan')),
-        ),
       ],
+    );
+  }
+}
+
+// ===========================================================================
+// Layar pemindai QR serah terima
+// ===========================================================================
+
+class _LayarPindaiQr extends StatefulWidget {
+  const _LayarPindaiQr();
+  @override
+  State<_LayarPindaiQr> createState() => _LayarPindaiQrState();
+}
+
+class _LayarPindaiQrState extends State<_LayarPindaiQr> {
+  bool _ketemu = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Pindai Kode QR'))),
+      body: Stack(
+        children: [
+          MobileScanner(
+            onDetect: (tangkap) {
+              if (_ketemu) return;
+              for (final b in tangkap.barcodes) {
+                final nilai = (b.rawValue ?? '').trim();
+                if (nilai.isNotEmpty) {
+                  _ketemu = true;
+                  Navigator.of(context).pop(nilai);
+                  return;
+                }
+              }
+            },
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 28,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  tr('Arahkan kamera ke QR di HP pengklaim'),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
