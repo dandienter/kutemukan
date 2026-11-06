@@ -434,7 +434,7 @@ class _LayarSplashState extends State<LayarSplash>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/maskot.png', height: 210),
+                Image.asset('assets/logo.png', height: 235),
                 const SizedBox(height: 10),
                 Text(tr('Lost and Found Kampus Unindra'),
                     style: TextStyle(fontSize: 15, color: Colors.white70)),
@@ -522,7 +522,7 @@ class _LayarPanduanState extends State<LayarPanduan> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Image.asset('assets/maskot.png', height: 210),
+                      Image.asset('assets/logo.png', height: 210),
                       const SizedBox(height: 26),
                       Text(tr(_slides[i].$1),
                           style: const TextStyle(
@@ -684,85 +684,136 @@ class _LayarLoginState extends State<LayarLogin> {
 
   @override
   Widget build(BuildContext context) {
+    final skema = Theme.of(context).colorScheme;
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Image.asset('assets/maskot.png', height: 200),
-              const SizedBox(height: 6),
-              Text(tr('Lost and Found Kampus Unindra'),
-                  textAlign: TextAlign.center),
-              const SizedBox(height: 28),
-              TextField(
-                controller: _email,
-                keyboardType: TextInputType.emailAddress,
-                decoration: InputDecoration(
-                    labelText: 'Email', border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 14),
-              TextField(
-                controller: _sandi,
-                obscureText: true,
-                decoration: InputDecoration(
-                    labelText: tr('Kata sandi'), border: OutlineInputBorder()),
-              ),
-              if (_galat != null) ...[
-                const SizedBox(height: 12),
-                Text(_galat!, style: const TextStyle(color: Colors.red)),
-              ],
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: _sibuk ? null : _kirim,
-                  child: Text(_sibuk
-                      ? tr('Memproses...')
-                      : (_modeDaftar ? tr('Daftar') : tr('Masuk'))),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/logo.png', height: 185),
+                const SizedBox(height: 4),
+                Text(tr('Lost and Found Kampus Unindra'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: skema.onSurfaceVariant)),
+                const SizedBox(height: 24),
+                Card(
+                  elevation: 2,
+                  margin: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                            _modeDaftar
+                                ? tr('Buat akun baru')
+                                : tr('Selamat datang kembali'),
+                            style: const TextStyle(
+                                fontSize: 19, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 4),
+                        Text(
+                            _modeDaftar
+                                ? tr('Daftar supaya bisa posting dan klaim barang.')
+                                : tr('Masuk untuk melanjutkan.'),
+                            style: TextStyle(color: skema.onSurfaceVariant)),
+                        const SizedBox(height: 18),
+                        TextField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          decoration: InputDecoration(
+                              labelText: 'Email',
+                              prefixIcon: const Icon(Icons.mail_outline),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        const SizedBox(height: 14),
+                        TextField(
+                          controller: _sandi,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                              labelText: tr('Kata sandi'),
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        if (_galat != null) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: skema.errorContainer,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(_galat!,
+                                style:
+                                    TextStyle(color: skema.onErrorContainer)),
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          onPressed: _sibuk ? null : _kirim,
+                          child: Text(_sibuk
+                              ? tr('Memproses...')
+                              : (_modeDaftar ? tr('Daftar') : tr('Masuk'))),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              setState(() => _modeDaftar = !_modeDaftar),
+                          child: Text(_modeDaftar
+                              ? tr('Sudah punya akun? Masuk')
+                              : tr('Belum punya akun? Daftar')),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () =>
-                    setState(() => _modeDaftar = !_modeDaftar),
-                child: Text(_modeDaftar
-                    ? tr('Sudah punya akun? Masuk')
-                    : tr('Belum punya akun? Daftar')),
-              ),
-              const SizedBox(height: 8),
-              Row(children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(tr('atau')),
-                ),
-                Expanded(child: Divider()),
-              ]),
-              const SizedBox(height: 14),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                ),
-                onPressed: () async {
-                  try {
-                    await sb.auth.signInWithOAuth(
-                      OAuthProvider.google,
-                      redirectTo: 'kutemukan://login-callback',
-                      authScreenLaunchMode:
-                          LaunchMode.externalApplication,
-                    );
-                  } catch (e) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('${tr('Login Google gagal')}: $e')));
+                const SizedBox(height: 20),
+                Row(children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(tr('atau')),
+                  ),
+                  const Expanded(child: Divider()),
+                ]),
+                const SizedBox(height: 14),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await sb.auth.signInWithOAuth(
+                        OAuthProvider.google,
+                        redirectTo: 'kutemukan://login-callback',
+                        authScreenLaunchMode:
+                            LaunchMode.externalApplication,
+                      );
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('${tr('Login Google gagal')}: $e')));
+                      }
                     }
-                  }
-                },
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: Text(tr('Masuk dengan Google')),
-              ),
-            ],
+                  },
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: Text(tr('Masuk dengan Google')),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1373,6 +1424,11 @@ class _LayarBerandaState extends State<LayarBeranda> {
     final saya = _segmen == 1;
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 54,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 12),
+          child: Image.asset('assets/burung.png'),
+        ),
         title: const Text('KutemuKan'),
         actions: [
           IconButton(
@@ -1530,7 +1586,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Image.asset('assets/maskot.png', height: 120),
+                        Image.asset('assets/burung.png', height: 120),
                         const SizedBox(height: 12),
                         Text(tr(saya
                             ? 'Kamu belum punya postingan.'

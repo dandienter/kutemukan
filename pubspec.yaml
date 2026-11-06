@@ -32,6 +32,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/maskot.png
+    - assets/logo.png
+    - assets/burung.png
     - assets/splash.png
     - assets/icon.png
     - assets/icon-penuh.png
