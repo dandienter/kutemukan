@@ -316,6 +316,17 @@ class LayarAkun extends StatelessWidget {
                 context,
               ).push(MaterialPageRoute(builder: (_) => const LayarStatistik())),
             ),
+            ListTile(
+              leading: const Icon(Icons.campaign_outlined),
+              title: Text(tr('Pengumuman')),
+              subtitle: Text(tr('Buat dan kelola pengumuman komunitas')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const LayarPengumuman(admin: true),
+                ),
+              ),
+            ),
           ],
           _judulSeksi(tr('Lainnya')),
           ListTile(
