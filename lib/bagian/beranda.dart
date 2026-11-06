@@ -14,6 +14,8 @@ Color warnaStatus(String s) {
       return Colors.blueGrey;
     case 'ditolak':
       return Colors.red;
+    case 'arsip':
+      return Colors.grey;
     default:
       return Colors.grey;
   }
@@ -29,6 +31,8 @@ String labelStatus(String s) {
       return tr('Sudah kembali');
     case 'ditolak':
       return tr('Ditolak');
+    case 'arsip':
+      return tr('Diarsipkan');
     default:
       return s;
   }
@@ -131,6 +135,15 @@ class KartuPostingan extends StatelessWidget {
                         PopupMenuItem(
                           value: 'kembali',
                           child: Text(tr('Tandai sudah selesai')),
+                        ),
+                      if (post['status'] == 'tampil' || post['status'] == 'arsip')
+                        PopupMenuItem(
+                          value: 'perpanjang',
+                          child: Text(
+                            post['status'] == 'arsip'
+                                ? tr('Perpanjang dan Tampilkan Lagi')
+                                : tr('Perpanjang 30 Hari'),
+                          ),
                         ),
                       PopupMenuItem(value: 'hapus', child: Text(tr('Hapus'))),
                     ],
@@ -305,13 +318,69 @@ class _LayarBerandaState extends State<LayarBeranda> {
   late Future<List<Map<String, dynamic>>> _fSemua;
   late Future<List<Map<String, dynamic>>> _fSaya;
   late Future<Map<String, dynamic>> _fStat;
+  late Future<Map<String, dynamic>?> _fPengumuman;
+  bool _bannerTutup = false;
 
   void _segarkan() {
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
     _fStat = _ambilStat();
+    _fPengumuman = _ambilPengumuman();
     _muatUpHariIni();
     if (mounted) setState(() {});
+  }
+
+  Future<Map<String, dynamic>?> _ambilPengumuman() async {
+    try {
+      final rows = await sb
+          .from('lf_pengumuman')
+          .select()
+          .eq('aktif', true)
+          .order('created_at', ascending: false)
+          .limit(1);
+      if (rows.isEmpty) return null;
+      return Map<String, dynamic>.from(rows.first);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _bannerPengumuman() {
+    if (_bannerTutup) return const SizedBox.shrink();
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _fPengumuman,
+      builder: (context, snap) {
+        final p = snap.data;
+        if (p == null) return const SizedBox.shrink();
+        return Card(
+          color: Colors.amber.shade100,
+          margin: const EdgeInsets.fromLTRB(10, 10, 10, 2),
+          child: ListTile(
+            leading: const Icon(Icons.campaign_outlined, color: Colors.black87),
+            title: Text(
+              (p['judul'] ?? '').toString(),
+              style: const TextStyle(
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(
+              tr('Pengumuman komunitas'),
+              style: const TextStyle(color: Colors.black54),
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.close, size: 18, color: Colors.black54),
+              onPressed: () => setState(() => _bannerTutup = true),
+            ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LayarPengumuman()),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -320,6 +389,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
     _fStat = _ambilStat();
+    _fPengumuman = _ambilPengumuman();
     _muatUpHariIni();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cekUpdate(context);
@@ -501,6 +571,25 @@ class _LayarBerandaState extends State<LayarBeranda> {
             'updated_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', p['id']);
+    } else if (aksi == 'perpanjang') {
+      final kini = DateTime.now().toUtc().toIso8601String();
+      await sb
+          .from('lf_posts')
+          .update({
+            'diperpanjang_pada': kini,
+            'updated_at': kini,
+            if (p['status'] == 'arsip') 'status': 'menunggu',
+          })
+          .eq('id', p['id']);
+      if (mounted && p['status'] == 'arsip') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              tr('Postingan diajukan lagi dan menunggu moderasi.'),
+            ),
+          ),
+        );
+      }
     } else if (aksi == 'hapus') {
       if (!await konfirmasiHapusPost(context)) return;
       await sb.from('lf_posts').delete().eq('id', p['id']);
@@ -520,6 +609,13 @@ class _LayarBerandaState extends State<LayarBeranda> {
         ),
         title: const Text('KutemuKan'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.forum_outlined),
+            tooltip: tr('Pesan'),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const LayarDaftarChat()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.notifications_active_outlined),
             tooltip: tr('Pantau Kategori'),
@@ -644,6 +740,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
               ],
             ),
           ),
+          if (!saya) _bannerPengumuman(),
           if (!saya)
             FutureBuilder<Map<String, dynamic>>(
               future: _fStat,
