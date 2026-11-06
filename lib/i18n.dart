@@ -128,6 +128,7 @@ const Map<String, String> _idKeEn = {
   'Masuk dengan Google': 'Continue with Google',
   'Masuk dengan SIKA': 'Sign in with SIKA',
   'Pakai email saja': 'Use email instead',
+  'Tandai semua dibaca': 'Mark all as read',
   'Sistem Informasi Akademik Unindra': 'Unindra Academic Information System',
   'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.': 'Unindra student? Use your NPM and SIKA password and your status is verified right away.',
   'Kata sandi SIKA': 'SIKA password',
