@@ -100,6 +100,28 @@ String fmtTanggal(dynamic v) {
   return DateFormat('d MMM yyyy, HH:mm', kBahasa.value).format(d.toLocal());
 }
 
+/// Waktu relatif ringkas untuk kartu postingan: baru saja, sekian
+/// menit atau jam lalu, Kemarin, sekian hari lalu, lalu tanggal biasa.
+String fmtRelatif(dynamic v) {
+  if (v == null) return '';
+  final d = DateTime.tryParse(v.toString());
+  if (d == null) return '';
+  final beda = DateTime.now().difference(d.toLocal());
+  final en = kBahasa.value == 'en';
+  if (beda.inMinutes < 1) return en ? 'just now' : 'baru saja';
+  if (beda.inMinutes < 60) {
+    return en ? '${beda.inMinutes}m ago' : '${beda.inMinutes} menit lalu';
+  }
+  if (beda.inHours < 24) {
+    return en ? '${beda.inHours}h ago' : '${beda.inHours} jam lalu';
+  }
+  if (beda.inDays == 1) return en ? 'Yesterday' : 'Kemarin';
+  if (beda.inDays < 7) {
+    return en ? '${beda.inDays} days ago' : '${beda.inDays} hari lalu';
+  }
+  return fmtTanggal(v);
+}
+
 /// Tampilkan satu foto layar penuh di dalam aplikasi (bisa dicubit
 /// untuk memperbesar), tanpa melempar pengguna ke peramban.
 void lihatFotoBesar(BuildContext context, String url) {
@@ -159,7 +181,7 @@ Future<Map<String, Map<String, dynamic>>> ambilProfilPublik(
   try {
     final rows = await sb
         .from('lf_profiles_publik')
-        .select('id, nama, foto_url')
+        .select('id, nama, foto_url, terverifikasi, prodi')
         .inFilter('id', unik);
     return {
       for (final r in rows) (r['id'] as String): Map<String, dynamic>.from(r),
@@ -179,6 +201,8 @@ Future<void> pasangNama(List<Map<String, dynamic>> rows) async {
     if (pub != null) {
       r['nama_pemilik'] = pub['nama'];
       r['foto_pemilik'] = pub['foto_url'];
+      r['terverifikasi_pemilik'] = pub['terverifikasi'];
+      r['prodi_pemilik'] = pub['prodi'];
     }
   }
 }
