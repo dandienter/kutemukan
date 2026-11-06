@@ -9,6 +9,13 @@ const String kSupabaseAnonKey =
 // pengguna, jadi tidak ada kunci bersama tertanam di aplikasi.
 const String kUploadUrl = 'https://api.mysika.my.id/api/lf/upload';
 
+// Login dan verifikasi SIKA lewat API MySIKA (backend VPS). NPM dan kata
+// sandi SIKA hanya diteruskan ke server kampus untuk diverifikasi,
+// tidak pernah disimpan di aplikasi maupun database KutemuKan.
+const String kMasukSikaUrl = 'https://api.mysika.my.id/api/lf/masuk-sika';
+const String kVerifikasiSikaUrl =
+    'https://api.mysika.my.id/api/lf/verifikasi-sika';
+
 // Berkas penanda versi terbaru untuk fitur cek pembaruan.
 const String kVersionJsonUrl =
     'https://temubalik.43-130-228-96.sslip.io/kutemukan-version.json';

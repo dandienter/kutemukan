@@ -138,6 +138,27 @@ const Map<String, String> _idKeEn = {
       'Informatics Engineering student, Universitas Indraprasta PGRI',
   'Masuk': 'Sign In',
   'Masuk dengan Google': 'Continue with Google',
+  'Sistem Informasi Akademik Unindra': 'Unindra Academic Information System',
+  'Mahasiswa Unindra? Masuk pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.':
+      'Unindra student? Sign in with your NPM and SIKA password and your status is verified right away.',
+  'Kata sandi SIKA': 'SIKA password',
+  'Masuk dengan SIKA': 'Sign in with SIKA',
+  'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.':
+      'Your SIKA password is only forwarded to the campus server, never stored.',
+  'Isi NPM dan kata sandi SIKA dulu.': 'Enter your NPM and SIKA password first.',
+  'Verifikasi Mahasiswa': 'Student Verification',
+  'Hubungkan akun SIKA untuk badge terverifikasi':
+      'Link your SIKA account for a verified badge',
+  'Mahasiswa Terverifikasi': 'Verified Student',
+  'Nomor WhatsApp belum diisi': 'WhatsApp number not set yet',
+  'Berhasil terverifikasi sebagai mahasiswa.':
+      'Successfully verified as a student.',
+  'Masukkan NPM dan kata sandi SIKA. Bila cocok, akunmu naik status jadi Mahasiswa Terverifikasi dan nama, prodi, serta NPM resmi dari SIKA tampil di profilmu.':
+      'Enter your NPM and SIKA password. If they match, your account is upgraded to Verified Student and your official name, study program, and NPM from SIKA appear on your profile.',
+  'Kata sandi SIKA hanya diteruskan ke server kampus untuk verifikasi, tidak disimpan di KutemuKan.':
+      'Your SIKA password is only forwarded to the campus server for verification, never stored in KutemuKan.',
+  'Perbarui Data SIKA': 'Refresh SIKA Data',
+  'Verifikasi': 'Verify',
   'Mengirim...': 'Sending...',
   'Moderasi': 'Moderation',
   'Moderasi Postingan': 'Post Moderation',
@@ -206,7 +227,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.4.2': 'Version 1.4.2',
+  'Versi 1.5.0': 'Version 1.5.0',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

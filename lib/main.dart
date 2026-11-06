@@ -94,6 +94,55 @@ Future<String> unggahBerkas(File f) async {
   return data['url'] as String;
 }
 
+/// Panggil endpoint SIKA di API MySIKA. Melempar pesan galat yang sudah
+/// diterjemahkan ke bahasa pengguna bila server menolak.
+Future<Map<String, dynamic>> _panggilSika(String url, String npm,
+    String kataSandi,
+    {bool pakaiToken = false}) async {
+  final res = await http
+      .post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          if (pakaiToken)
+            'Authorization':
+                'Bearer ${sb.auth.currentSession?.accessToken ?? ''}',
+        },
+        body: jsonEncode({'npm': npm, 'password': kataSandi}),
+      )
+      .timeout(const Duration(seconds: 30));
+  Map<String, dynamic> data = {};
+  try {
+    data = jsonDecode(res.body) as Map<String, dynamic>;
+  } catch (_) {}
+  if (res.statusCode != 200) {
+    throw (data['detail'] ?? 'Server SIKA menolak permintaan').toString();
+  }
+  return data;
+}
+
+/// Masuk memakai akun SIKA: backend memverifikasi ke server kampus,
+/// menyiapkan akun aplikasi, lalu fungsi ini membuka sesi Supabase-nya.
+/// Mengembalikan biodata resmi dari SIKA.
+Future<Map<String, dynamic>> masukDenganSika(
+    String npm, String kataSandi) async {
+  final data = await _panggilSika(kMasukSikaUrl, npm, kataSandi);
+  await sb.auth.signInWithPassword(
+    email: data['email'] as String,
+    password: data['kata_sandi_sesi'] as String,
+  );
+  return (data['biodata'] as Map).cast<String, dynamic>();
+}
+
+/// Kaitkan verifikasi SIKA ke akun yang sedang masuk (email/Google).
+/// Mengembalikan biodata resmi dari SIKA.
+Future<Map<String, dynamic>> verifikasiSika(
+    String npm, String kataSandi) async {
+  final data =
+      await _panggilSika(kVerifikasiSikaUrl, npm, kataSandi, pakaiToken: true);
+  return (data['biodata'] as Map).cast<String, dynamic>();
+}
+
 SupabaseClient get sb => Supabase.instance.client;
 
 const Color kTeal = Color(0xFF0F766E);
@@ -636,6 +685,11 @@ class _GerbangState extends State<Gerbang> {
           }
           return const LayarProfil();
         }
+        // Akun dari jembatan SIKA belum punya nomor WhatsApp. Minta
+        // dilengkapi dulu supaya fitur hubungi saat klaim bisa jalan.
+        if ((profil['wa'] ?? '').toString().isEmpty) {
+          return LayarProfil(profilAwal: profil);
+        }
         return LayarUtama(profil: profil);
       },
     );
@@ -657,9 +711,32 @@ class LayarLogin extends StatefulWidget {
 class _LayarLoginState extends State<LayarLogin> {
   final _email = TextEditingController();
   final _sandi = TextEditingController();
+  final _npm = TextEditingController();
+  final _sandiSika = TextEditingController();
   bool _modeDaftar = false;
   bool _sibuk = false;
+  bool _sibukSika = false;
   String? _galat;
+  String? _galatSika;
+
+  Future<void> _masukSika() async {
+    final npm = _npm.text.trim();
+    if (npm.isEmpty || _sandiSika.text.isEmpty) {
+      setState(() => _galatSika = tr('Isi NPM dan kata sandi SIKA dulu.'));
+      return;
+    }
+    setState(() {
+      _sibukSika = true;
+      _galatSika = null;
+    });
+    try {
+      await masukDenganSika(npm, _sandiSika.text);
+      // Sesi terbuka, Gerbang akan mengarahkan masuk.
+    } catch (e) {
+      _galatSika = e.toString();
+    }
+    if (mounted) setState(() => _sibukSika = false);
+  }
 
   Future<void> _kirim() async {
     setState(() {
@@ -702,6 +779,104 @@ class _LayarLoginState extends State<LayarLogin> {
                         fontWeight: FontWeight.w600,
                         color: skema.onSurfaceVariant)),
                 const SizedBox(height: 24),
+                Card(
+                  elevation: 2,
+                  margin: EdgeInsets.zero,
+                  color: kTeal,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text('SIKA',
+                            style: TextStyle(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 3,
+                                color: Colors.white)),
+                        Text(tr('Sistem Informasi Akademik Unindra'),
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 13)),
+                        const SizedBox(height: 8),
+                        Text(
+                            tr('Mahasiswa Unindra? Masuk pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.'),
+                            style: const TextStyle(color: Colors.white)),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _npm,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.black87),
+                          decoration: InputDecoration(
+                              labelText: 'NPM',
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon: const Icon(Icons.badge_outlined),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _sandiSika,
+                          obscureText: true,
+                          style: const TextStyle(color: Colors.black87),
+                          decoration: InputDecoration(
+                              labelText: tr('Kata sandi SIKA'),
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        if (_galatSika != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: skema.errorContainer,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(_galatSika!,
+                                style:
+                                    TextStyle(color: skema.onErrorContainer)),
+                          ),
+                        ],
+                        const SizedBox(height: 16),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: kTeal,
+                              minimumSize: const Size.fromHeight(50),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          onPressed: _sibukSika ? null : _masukSika,
+                          child: Text(
+                              _sibukSika
+                                  ? tr('Memproses...')
+                                  : tr('Masuk dengan SIKA'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                            tr('Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(tr('atau')),
+                  ),
+                  const Expanded(child: Divider()),
+                ]),
+                const SizedBox(height: 20),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
@@ -887,7 +1062,16 @@ class _LayarProfilState extends State<LayarProfil> {
       if (_modeEdit) {
         await sb.from('lf_profiles').update(
             {'nama': nama, 'wa': wa, 'foto_url': fotoUrl}).eq('id', id);
-        if (mounted) Navigator.of(context).pop(true);
+        if (mounted) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop(true);
+          } else {
+            // Dibuka Gerbang sebagai pelengkap profil (mis. akun SIKA
+            // yang belum punya nomor WhatsApp), bukan rute yang ditumpuk.
+            Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (_) => const Gerbang()));
+          }
+        }
       } else {
         await sb.from('lf_profiles').insert(
             {'id': id, 'nama': nama, 'wa': wa, 'foto_url': fotoUrl});
@@ -3467,6 +3651,140 @@ class _LayarLaporanState extends State<LayarLaporan> {
   }
 }
 
+/// Layar verifikasi mahasiswa: pengguna yang masuk lewat email/Google
+/// mengaitkan akun SIKA-nya di sini. Backend menulis identitas resmi
+/// (NPM, prodi, fakultas, kelas, angkatan) langsung ke database.
+class LayarVerifikasiSika extends StatefulWidget {
+  final Map<String, dynamic> profil;
+  const LayarVerifikasiSika({super.key, required this.profil});
+  @override
+  State<LayarVerifikasiSika> createState() => _LayarVerifikasiSikaState();
+}
+
+class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
+  final _npm = TextEditingController();
+  final _sandi = TextEditingController();
+  bool _sibuk = false;
+  String? _galat;
+
+  @override
+  void initState() {
+    super.initState();
+    _npm.text = (widget.profil['npm'] ?? '').toString();
+  }
+
+  Future<void> _kirim() async {
+    if (_npm.text.trim().isEmpty || _sandi.text.isEmpty) {
+      setState(() => _galat = tr('Isi NPM dan kata sandi SIKA dulu.'));
+      return;
+    }
+    setState(() {
+      _sibuk = true;
+      _galat = null;
+    });
+    try {
+      await verifikasiSika(_npm.text.trim(), _sandi.text);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(tr('Berhasil terverifikasi sebagai mahasiswa.'))));
+        Navigator.of(context).pop(true);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _galat = e.toString());
+    }
+    if (mounted) setState(() => _sibuk = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final skema = Theme.of(context).colorScheme;
+    final sudah = widget.profil['terverifikasi'] == true;
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Verifikasi Mahasiswa'))),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text('SIKA',
+              style: TextStyle(
+                  fontSize: 34,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 3,
+                  color: kTeal)),
+          Text(tr('Sistem Informasi Akademik Unindra'),
+              style: TextStyle(color: skema.onSurfaceVariant)),
+          const SizedBox(height: 12),
+          Text(tr(
+              'Masukkan NPM dan kata sandi SIKA. Bila cocok, akunmu naik status jadi Mahasiswa Terverifikasi dan nama, prodi, serta NPM resmi dari SIKA tampil di profilmu.')),
+          const SizedBox(height: 8),
+          Text(
+              tr('Kata sandi SIKA hanya diteruskan ke server kampus untuk verifikasi, tidak disimpan di KutemuKan.'),
+              style: TextStyle(color: skema.onSurfaceVariant, fontSize: 12)),
+          if (sudah) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: skema.primaryContainer,
+                  borderRadius: BorderRadius.circular(12)),
+              child: Row(children: [
+                const Icon(Icons.verified, color: kTeal),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                      'NPM ${widget.profil['npm']} • ${widget.profil['prodi'] ?? ''}',
+                      style: TextStyle(color: skema.onPrimaryContainer)),
+                ),
+              ]),
+            ),
+          ],
+          const SizedBox(height: 20),
+          TextField(
+            controller: _npm,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+                labelText: 'NPM',
+                prefixIcon: const Icon(Icons.badge_outlined),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12))),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: _sandi,
+            obscureText: true,
+            decoration: InputDecoration(
+                labelText: tr('Kata sandi SIKA'),
+                prefixIcon: const Icon(Icons.lock_outline),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12))),
+          ),
+          if (_galat != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                  color: skema.errorContainer,
+                  borderRadius: BorderRadius.circular(10)),
+              child: Text(_galat!,
+                  style: TextStyle(color: skema.onErrorContainer)),
+            ),
+          ],
+          const SizedBox(height: 20),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12))),
+            onPressed: _sibuk ? null : _kirim,
+            child: Text(_sibuk
+                ? tr('Memproses...')
+                : (sudah ? tr('Perbarui Data SIKA') : tr('Verifikasi'))),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class LayarAkun extends StatelessWidget {
   final Map<String, dynamic> profil;
   final Future<void> Function()? onProfilDiubah;
@@ -3518,10 +3836,33 @@ class LayarAkun extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       const SizedBox(height: 2),
-                      Text('+${profil['wa']}',
+                      Text(
+                          (profil['wa'] ?? '').toString().isEmpty
+                              ? tr('Nomor WhatsApp belum diisi')
+                              : '+${profil['wa']}',
                           style: const TextStyle(color: Colors.grey)),
                       Text(admin ? 'Admin KutemuKan' : 'Pengguna KutemuKan',
                           style: const TextStyle(color: Colors.grey)),
+                      if (profil['terverifikasi'] == true) ...[
+                        const SizedBox(height: 4),
+                        Row(children: [
+                          const Icon(Icons.verified,
+                              size: 16, color: kTeal),
+                          const SizedBox(width: 4),
+                          Text(tr('Mahasiswa Terverifikasi'),
+                              style: const TextStyle(
+                                  color: kTeal,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13)),
+                        ]),
+                        if ((profil['npm'] ?? '').toString().isNotEmpty)
+                          Text(
+                              'NPM ${profil['npm']}${(profil['prodi'] ?? '').toString().isNotEmpty ? ' • ${profil['prodi']}' : ''}',
+                              style: const TextStyle(
+                                  color: Colors.grey, fontSize: 12),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis),
+                      ],
                       if (email.isNotEmpty)
                         Text(email,
                             style: const TextStyle(
@@ -3547,6 +3888,22 @@ class LayarAkun extends StatelessWidget {
               final berubah = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(
                       builder: (_) => LayarProfil(profilAwal: profil)));
+              if (berubah == true) await onProfilDiubah?.call();
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.school_outlined),
+            title: Text(tr('Verifikasi Mahasiswa')),
+            subtitle: Text(profil['terverifikasi'] == true
+                ? 'NPM ${profil['npm']} • ${profil['prodi'] ?? ''}'
+                : tr('Hubungkan akun SIKA untuk badge terverifikasi')),
+            trailing: profil['terverifikasi'] == true
+                ? const Icon(Icons.verified, color: kTeal)
+                : const Icon(Icons.chevron_right),
+            onTap: () async {
+              final berubah = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(
+                      builder: (_) => LayarVerifikasiSika(profil: profil)));
               if (berubah == true) await onProfilDiubah?.call();
             },
           ),
@@ -4209,7 +4566,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.4.2'),
+                  label: Text(tr('Versi 1.5.0'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
