@@ -150,6 +150,7 @@ const Map<String, String> _idKeEn = {
   'Hubungkan akun SIKA untuk badge terverifikasi':
       'Link your SIKA account for a verified badge',
   'Mahasiswa Terverifikasi': 'Verified Student',
+  'Ketuk untuk melihat kontak': 'Tap to view contact',
   'Nomor WhatsApp belum diisi': 'WhatsApp number not set yet',
   'Berhasil terverifikasi sebagai mahasiswa.':
       'Successfully verified as a student.',
@@ -227,7 +228,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.5.1': 'Version 1.5.1',
+  'Versi 1.5.2': 'Version 1.5.2',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

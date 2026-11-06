@@ -367,8 +367,8 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
         context: context,
         builder: (_) => AlertDialog(
           title: Text(kBahasa.value == 'en'
-              ? 'Version ${data['versi']} is available'
-              : 'Versi ${data['versi']} tersedia'),
+              ? 'Version ${data['versi'] ?? data['nama'] ?? ''} is available'
+              : 'Versi ${data['versi'] ?? data['nama'] ?? ''} tersedia'),
           content: Text((data['catatan'] ?? '').toString()),
           actions: [
             TextButton(
@@ -3785,6 +3785,45 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
   }
 }
 
+/// Baris kontak kepala Akun: nomor WA dan email disembunyikan secara
+/// bawaan dan hanya tampil saat diketuk (privasi + kepala lebih ringkas).
+class _BarisKontak extends StatefulWidget {
+  final String wa;
+  final String email;
+  const _BarisKontak({required this.wa, required this.email});
+
+  @override
+  State<_BarisKontak> createState() => _BarisKontakState();
+}
+
+class _BarisKontakState extends State<_BarisKontak> {
+  bool _tampil = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isi = '+${widget.wa}'
+        '${widget.email.isNotEmpty ? ' • ${widget.email}' : ''}';
+    return InkWell(
+      onTap: () => setState(() => _tampil = !_tampil),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(_tampil ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+              size: 14, color: Colors.grey),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+                _tampil ? isi : tr('Ketuk untuk melihat kontak'),
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class LayarAkun extends StatelessWidget {
   final Map<String, dynamic> profil;
   final Future<void> Function()? onProfilDiubah;
@@ -3830,46 +3869,41 @@ class LayarAkun extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(profil['nama'] ?? '',
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
-                      const SizedBox(height: 5),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
+                      Row(
                         children: [
-                          Chip(
-                            avatar: Icon(
-                                admin
-                                    ? Icons.shield_outlined
-                                    : Icons.person_outline,
-                                size: 14),
-                            label: Text(
-                                admin
-                                    ? 'Admin KutemuKan'
-                                    : 'Pengguna KutemuKan',
-                                style: const TextStyle(fontSize: 11)),
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
+                          Flexible(
+                            child: Text(profil['nama'] ?? '',
+                                style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis),
                           ),
-                          if (profil['terverifikasi'] == true)
-                            Chip(
-                              avatar: const Icon(Icons.verified,
-                                  size: 14, color: kTeal),
-                              label: Text(tr('Mahasiswa Terverifikasi'),
-                                  style: const TextStyle(
-                                      fontSize: 11,
-                                      color: kTeal,
-                                      fontWeight: FontWeight.w600)),
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
+                          if (admin) ...[
+                            const SizedBox(width: 6),
+                            const Tooltip(
+                              message: 'Admin KutemuKan',
+                              child: Icon(Icons.verified,
+                                  size: 18, color: Colors.blue),
                             ),
+                          ],
                         ],
                       ),
+                      if (profil['terverifikasi'] == true) ...[
+                        const SizedBox(height: 5),
+                        Chip(
+                          avatar: const Icon(Icons.verified,
+                              size: 14, color: kTeal),
+                          label: Text(tr('Mahasiswa Terverifikasi'),
+                              style: const TextStyle(
+                                  fontSize: 11,
+                                  color: kTeal,
+                                  fontWeight: FontWeight.w600)),
+                          visualDensity: VisualDensity.compact,
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
+                      ],
                       const SizedBox(height: 5),
                       if (profil['terverifikasi'] == true &&
                           (profil['npm'] ?? '').toString().isNotEmpty)
@@ -3879,14 +3913,16 @@ class LayarAkun extends StatelessWidget {
                                 color: Colors.grey, fontSize: 12),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
-                      Text(
-                          (profil['wa'] ?? '').toString().isEmpty
-                              ? tr('Nomor WhatsApp belum diisi')
-                              : '+${profil['wa']}${email.isNotEmpty ? ' • $email' : ''}',
-                          style: const TextStyle(
-                              color: Colors.grey, fontSize: 12),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis),
+                      if ((profil['wa'] ?? '').toString().isEmpty)
+                        Text(tr('Nomor WhatsApp belum diisi'),
+                            style: const TextStyle(
+                                color: Colors.grey, fontSize: 12),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis)
+                      else
+                        _BarisKontak(
+                            wa: (profil['wa'] ?? '').toString(),
+                            email: email),
                       const SizedBox(height: 6),
                       BarisBadge(
                           userId: (profil['id'] ?? '').toString()),
@@ -4584,7 +4620,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.1'),
+                  label: Text(tr('Versi 1.5.2'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
