@@ -57,6 +57,11 @@ class KartuPostingan extends StatelessWidget {
     final nama = (post['nama_pemilik'] ?? '').toString();
     final dilihat = (post['views_count'] as num?)?.toInt() ?? 0;
     final ups = (post['up_count'] as num?)?.toInt() ?? 0;
+    final skema = Theme.of(context).colorScheme;
+    final warnaMeta = skema.onSurfaceVariant;
+    final warnaTitip = Theme.of(context).brightness == Brightness.dark
+        ? Colors.green.shade400
+        : Colors.green.shade700;
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Column(
@@ -78,8 +83,8 @@ class KartuPostingan extends StatelessWidget {
                   )
                 : CircleAvatar(
                     backgroundColor: hilang
-                        ? Colors.red.shade50
-                        : Colors.green.shade50,
+                        ? Colors.red.withOpacity(0.13)
+                        : Colors.green.withOpacity(0.13),
                     child: Icon(
                       hilang ? Icons.search_off : Icons.find_in_page_outlined,
                       color: hilang ? Colors.red : Colors.green,
@@ -137,7 +142,7 @@ class KartuPostingan extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
             child: Row(
               children: [
-                const Icon(Icons.place_outlined, size: 15, color: Colors.grey),
+                Icon(Icons.place_outlined, size: 15, color: warnaMeta),
                 const SizedBox(width: 3),
                 Expanded(
                   child: Text(
@@ -148,15 +153,11 @@ class KartuPostingan extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
-                  Icons.schedule_outlined,
-                  size: 14,
-                  color: Colors.grey,
-                ),
+                Icon(Icons.schedule_outlined, size: 14, color: warnaMeta),
                 const SizedBox(width: 3),
                 Text(
                   fmtRelatif(post['waktu_kejadian'] ?? post['created_at']),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: warnaMeta),
                 ),
               ],
             ),
@@ -168,7 +169,7 @@ class KartuPostingan extends StatelessWidget {
                 (post['deskripsi'] ?? '').toString(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+                style: TextStyle(fontSize: 13, color: warnaMeta),
               ),
             ),
           if (nama.isNotEmpty)
@@ -180,7 +181,7 @@ class KartuPostingan extends StatelessWidget {
                     kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: warnaMeta),
                   ),
                   if (post['terverifikasi_pemilik'] == true) ...[
                     const SizedBox(width: 4),
@@ -207,7 +208,7 @@ class KartuPostingan extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.green.shade700,
+                        color: warnaTitip,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -219,22 +220,18 @@ class KartuPostingan extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
             child: Row(
               children: [
-                const Icon(
-                  Icons.visibility_outlined,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+                Icon(Icons.visibility_outlined, size: 16, color: warnaMeta),
                 const SizedBox(width: 4),
                 Text(
                   '$dilihat',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: warnaMeta),
                 ),
                 const SizedBox(width: 16),
-                const Icon(Icons.arrow_upward, size: 16, color: Colors.grey),
+                Icon(Icons.arrow_upward, size: 16, color: warnaMeta),
                 const SizedBox(width: 4),
                 Text(
                   '$ups UP',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: warnaMeta),
                 ),
                 const Spacer(),
                 if (onUp != null && !sudahUp)
