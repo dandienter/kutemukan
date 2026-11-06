@@ -248,6 +248,11 @@ Future<List<Map<String, String>>> badgeUntuk(String userId) async {
     tambah('Sering Lapor', s['total_posting'], [5, 15, 30]);
     tambah('Penemu Andal', s['temuan_kembali'], [1, 3, 10]);
     tambah('Suka Menolong', s['klaim_ok'], [1, 5, 15]);
+    tambah(
+      'Kontributor Tepercaya',
+      ((s['temuan_kembali'] as num?) ?? 0) + ((s['klaim_ok'] as num?) ?? 0),
+      [3, 8, 20],
+    );
     tambah('Pengangkat Rame', s['up_diberikan'], [25, 75, 200]);
   } catch (_) {
     // badge gagal dimuat, tampilan tetap jalan
