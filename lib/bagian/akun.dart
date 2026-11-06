@@ -147,6 +147,21 @@ class _KepalaAkunState extends State<_KepalaAkun> {
   }
 }
 
+Widget _judulSeksi(String teks) {
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+    child: Text(
+      teks.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.bold,
+        color: kBiru,
+        letterSpacing: 0.8,
+      ),
+    ),
+  );
+}
+
 class LayarAkun extends StatelessWidget {
   final Map<String, dynamic> profil;
   final Future<void> Function()? onProfilDiubah;
@@ -204,30 +219,7 @@ class LayarAkun extends StatelessWidget {
               context,
             ).push(MaterialPageRoute(builder: (_) => const LayarUbahSandi())),
           ),
-          ListTile(
-            leading: const Icon(Icons.rate_review_outlined),
-            title: Text(tr('Kritik & Saran')),
-            subtitle: Text(tr('Beri bintang dan tulis ulasanmu')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const LayarKritikSaran())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.emoji_events_outlined),
-            title: Text(tr('Papan Pahlawan')),
-            subtitle: Text(tr('Peringkat penolong kampus bulan ini')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const LayarPahlawan())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.system_update_outlined),
-            title: Text(tr('Cek Pembaruan')),
-            subtitle: Text(tr('Periksa versi aplikasi terbaru')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => cekUpdate(context, manual: true),
-          ),
+          _judulSeksi(tr('Pengaturan')),
           ListTile(
             leading: const Icon(Icons.brightness_6_outlined),
             title: Text(tr('Tampilan')),
@@ -294,16 +286,9 @@ class LayarAkun extends StatelessWidget {
               if (pilih != null) await aturBahasa(pilih);
             },
           ),
+
           if (admin) ...[
-            ListTile(
-              leading: const Icon(Icons.bar_chart_outlined),
-              title: Text(tr('Statistik')),
-              subtitle: Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LayarStatistik())),
-            ),
+            _judulSeksi(tr('Admin')),
             ListTile(
               leading: const Icon(Icons.shield_outlined),
               title: Text(tr('Moderasi Postingan')),
@@ -322,7 +307,41 @@ class LayarAkun extends StatelessWidget {
                 context,
               ).push(MaterialPageRoute(builder: (_) => const LayarLaporan())),
             ),
+            ListTile(
+              leading: const Icon(Icons.bar_chart_outlined),
+              title: Text(tr('Statistik')),
+              subtitle: Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const LayarStatistik())),
+            ),
           ],
+          _judulSeksi(tr('Lainnya')),
+          ListTile(
+            leading: const Icon(Icons.emoji_events_outlined),
+            title: Text(tr('Papan Pahlawan')),
+            subtitle: Text(tr('Peringkat penolong kampus bulan ini')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const LayarPahlawan())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.rate_review_outlined),
+            title: Text(tr('Kritik & Saran')),
+            subtitle: Text(tr('Beri bintang dan tulis ulasanmu')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const LayarKritikSaran())),
+          ),
+          ListTile(
+            leading: const Icon(Icons.system_update_outlined),
+            title: Text(tr('Cek Pembaruan')),
+            subtitle: Text(tr('Periksa versi aplikasi terbaru')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => cekUpdate(context, manual: true),
+          ),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: Text(tr('Info Aplikasi')),
