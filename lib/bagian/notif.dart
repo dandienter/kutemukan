@@ -266,11 +266,6 @@ class _LayarNotifState extends State<LayarNotif> {
                       '${n['isi'] ?? ''}\n${fmtTanggal(n['created_at'])}',
                     ),
                     isThreeLine: true,
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline, size: 20),
-                      tooltip: tr('Hapus'),
-                      onPressed: () => _hapus(n),
-                    ),
                     onTap: () => _modePilih
                         ? _togglePilih((n['id'] ?? '').toString())
                         : _buka(n),
