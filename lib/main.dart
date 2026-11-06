@@ -719,7 +719,6 @@ class _LayarLoginState extends State<LayarLogin> {
   final _npm = TextEditingController();
   final _sandiSika = TextEditingController();
   bool _modeDaftar = true;
-  String? _pilihan;
   bool _sibuk = false;
   bool _sibukSika = false;
   String? _galat;
@@ -785,79 +784,6 @@ class _LayarLoginState extends State<LayarLogin> {
                         fontWeight: FontWeight.w600,
                         color: skema.onSurfaceVariant)),
                 const SizedBox(height: 16),
-                if (_pilihan == null) ...[
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                    onPressed: () => setState(() {
-                      _modeDaftar = true;
-                      _pilihan = 'email';
-                    }),
-                    icon: const Icon(Icons.person_add_alt_1),
-                    label: Text(tr('Daftar Akun Baru')),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                    onPressed: () => setState(() {
-                      _modeDaftar = false;
-                      _pilihan = 'email';
-                    }),
-                    icon: const Icon(Icons.mail_outline),
-                    label: Text(tr('Masuk dengan Email')),
-                  ),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                        backgroundColor: kBiru,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(50),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                    onPressed: () => setState(() => _pilihan = 'sika'),
-                    icon: const Icon(Icons.school),
-                    label: Text(tr('Masuk dengan SIKA')),
-                  ),
-                  const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () async {
-                    try {
-                      await sb.auth.signInWithOAuth(
-                        OAuthProvider.google,
-                        redirectTo: 'kutemukan://login-callback',
-                        authScreenLaunchMode:
-                            LaunchMode.externalApplication,
-                      );
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                            content: Text('${tr('Login Google gagal')}: $e')));
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: Text(tr('Masuk dengan Google')),
-                ),
-                ],
-                if (_pilihan == 'email') ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _pilihan = null),
-                    icon: const Icon(Icons.arrow_back, size: 18),
-                    label: Text(tr('Pilihan lain')),
-                  ),
-                ),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
@@ -934,16 +860,16 @@ class _LayarLoginState extends State<LayarLogin> {
                     ),
                   ),
                 ),
-                        ],
-                if (_pilihan == 'sika') ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: () => setState(() => _pilihan = null),
-                    icon: const Icon(Icons.arrow_back, size: 18),
-                    label: Text(tr('Pilihan lain')),
+                const SizedBox(height: 14),
+                Row(children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(tr('atau')),
                   ),
-                ),
+                  const Expanded(child: Divider()),
+                ]),
+                const SizedBox(height: 14),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
@@ -1034,8 +960,41 @@ class _LayarLoginState extends State<LayarLogin> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 20),
+                Row(children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(tr('atau')),
+                  ),
+                  const Expanded(child: Divider()),
+                ]),
                 const SizedBox(height: 14),
-                ],
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () async {
+                    try {
+                      await sb.auth.signInWithOAuth(
+                        OAuthProvider.google,
+                        redirectTo: 'kutemukan://login-callback',
+                        authScreenLaunchMode:
+                            LaunchMode.externalApplication,
+                      );
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text('${tr('Login Google gagal')}: $e')));
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  label: Text(tr('Masuk dengan Google')),
+                ),
+
               ],
             ),
           ),
@@ -4657,7 +4616,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.7'),
+                  label: Text(tr('Versi 1.5.8'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
