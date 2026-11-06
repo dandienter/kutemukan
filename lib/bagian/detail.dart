@@ -336,6 +336,70 @@ class _LayarDetailState extends State<LayarDetail> {
     }
   }
 
+  Widget _barisInfo(
+    IconData ikon,
+    String label,
+    dynamic nilai, {
+    String? sub,
+    bool verified = false,
+    bool terakhir = false,
+  }) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(ikon, size: 20, color: kBiru),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 118,
+                child: Text(
+                  label,
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            (nilai ?? '').toString(),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        if (verified) ...[
+                          const SizedBox(width: 5),
+                          const Icon(Icons.verified, size: 15, color: kBiru),
+                        ],
+                      ],
+                    ),
+                    if (sub != null && sub.isNotEmpty)
+                      Text(
+                        sub,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!terakhir) const Divider(height: 1),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final hilang = _post['jenis'] == 'hilang';
@@ -419,19 +483,117 @@ class _LayarDetailState extends State<LayarDetail> {
             style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          Text('${tr('Kategori')}: ${_post['kategori']}'),
-          Text('${tr('Lokasi')}: ${_post['lokasi']}'),
-          Text(
-            '${tr('Waktu kejadian')}: ${fmtTanggal(_post['waktu_kejadian'])}',
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              Chip(
+                label: Text(
+                  hilang ? 'HILANG' : 'TEMUAN',
+                  style: const TextStyle(fontSize: 11, color: Colors.white),
+                ),
+                backgroundColor: hilang ? Colors.red : Colors.green,
+                visualDensity: VisualDensity.compact,
+              ),
+              Chip(
+                label: Text(
+                  labelStatus(_post['status'] ?? ''),
+                  style: const TextStyle(fontSize: 11, color: Colors.white),
+                ),
+                backgroundColor: warnaStatus(_post['status'] ?? ''),
+                visualDensity: VisualDensity.compact,
+              ),
+              Chip(
+                label: Text(
+                  (_post['kategori'] ?? '').toString(),
+                  style: const TextStyle(fontSize: 11),
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
           ),
-          if (_post['penitipan'] != null &&
-              (_post['penitipan'] as String).isNotEmpty)
-            Text('${tr('Dititipkan di')}: ${_post['penitipan']}'),
-          Text('${tr('Dilaporkan oleh')}: $namaPemilik'),
-          const SizedBox(height: 6),
+          const SizedBox(height: 12),
+          Card(
+            margin: EdgeInsets.zero,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+              child: Column(
+                children: [
+                  _barisInfo(
+                    Icons.place_outlined,
+                    tr('Lokasi'),
+                    _post['lokasi'],
+                  ),
+                  _barisInfo(
+                    Icons.event_outlined,
+                    tr('Waktu kejadian'),
+                    fmtTanggal(_post['waktu_kejadian']),
+                    sub: fmtRelatif(_post['waktu_kejadian']),
+                  ),
+                  _barisInfo(
+                    Icons.person_outline,
+                    tr('Dilaporkan oleh'),
+                    namaPemilik,
+                    verified: _post['terverifikasi_pemilik'] == true,
+                    sub: (_post['prodi_pemilik'] ?? '').toString().isEmpty
+                        ? null
+                        : (_post['prodi_pemilik'] ?? '').toString(),
+                  ),
+                  _barisInfo(
+                    Icons.publish_outlined,
+                    tr('Diposting'),
+                    fmtTanggal(_post['created_at']),
+                    terakhir: true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if ((_post['penitipan'] ?? '').toString().isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.security_outlined,
+                    color: Colors.green.shade700,
+                    size: 26,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr('Dititipkan di'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green.shade700,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          (_post['penitipan'] ?? '').toString(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
           BarisBadge(userId: (_post['user_id'] ?? '').toString()),
-          const SizedBox(height: 6),
-          Text('Status: ${labelStatus(_post['status'] ?? '')}'),
           const SizedBox(height: 10),
           Row(
             children: [
@@ -460,8 +622,18 @@ class _LayarDetailState extends State<LayarDetail> {
                 ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(_post['deskripsi'] ?? ''),
+          const SizedBox(height: 16),
+          Text(
+            tr('Deskripsi'),
+            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            (_post['deskripsi'] ?? '').toString().isEmpty
+                ? tr('Tidak ada deskripsi.')
+                : (_post['deskripsi'] ?? '').toString(),
+            style: const TextStyle(fontSize: 15, height: 1.45),
+          ),
           _bagianCocok(),
           const Divider(height: 32),
           if (_muatKlaim)
