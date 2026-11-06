@@ -13,6 +13,7 @@ class LayarProfil extends StatefulWidget {
 
 class _LayarProfilState extends State<LayarProfil> {
   final _nama = TextEditingController();
+  final _namaTampilan = TextEditingController();
   final _wa = TextEditingController();
   bool _sibuk = false;
   bool _fotoDihapus = false;
@@ -27,6 +28,7 @@ class _LayarProfilState extends State<LayarProfil> {
     final awal = widget.profilAwal;
     if (awal != null) {
       _nama.text = awal['nama'] ?? '';
+      _namaTampilan.text = awal['nama_tampilan'] ?? '';
       _wa.text = awal['wa'] ?? '';
       _fotoUrl = awal['foto_url'] as String?;
     } else {
@@ -107,7 +109,14 @@ class _LayarProfilState extends State<LayarProfil> {
       if (_modeEdit) {
         await sb
             .from('lf_profiles')
-            .update({'nama': nama, 'wa': wa, 'foto_url': fotoUrl})
+            .update({
+              'nama': nama,
+              'wa': wa,
+              'foto_url': fotoUrl,
+              'nama_tampilan': _namaTampilan.text.trim().isEmpty
+                  ? null
+                  : _namaTampilan.text.trim(),
+            })
             .eq('id', id);
         if (mounted) {
           if (Navigator.of(context).canPop()) {
@@ -126,6 +135,9 @@ class _LayarProfilState extends State<LayarProfil> {
           'nama': nama,
           'wa': wa,
           'foto_url': fotoUrl,
+          'nama_tampilan': _namaTampilan.text.trim().isEmpty
+              ? null
+              : _namaTampilan.text.trim(),
         });
         if (mounted) {
           Navigator.of(
@@ -197,6 +209,18 @@ class _LayarProfilState extends State<LayarProfil> {
             ),
             const SizedBox(height: 14),
             TextField(
+              controller: _namaTampilan,
+              decoration: InputDecoration(
+                labelText: tr('Nama tampilan (opsional)'),
+                helperText: tr(
+                  'Dipakai di postingan dan profil publik. Kosongkan untuk memakai nama asli.',
+                ),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
               controller: _wa,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
@@ -220,6 +244,158 @@ class _LayarProfilState extends State<LayarProfil> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+
+// ===========================================================================
+// Profil publik pengguna lain: hanya data aman (tanpa WA, email, NPM).
+// ===========================================================================
+
+class LayarProfilPublik extends StatelessWidget {
+  final String userId;
+  const LayarProfilPublik({super.key, required this.userId});
+
+  Future<Map<String, dynamic>> _muat() async {
+    final peta = await ambilProfilPublik([userId]);
+    final pub = peta[userId] ?? <String, dynamic>{};
+    int aktif = 0;
+    try {
+      final rows = await sb
+          .from('lf_posts')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('status', 'tampil');
+      aktif = rows.length;
+    } catch (_) {}
+    Map<String, dynamic> stat = {};
+    try {
+      final rows = await sb
+          .from('lf_stat_pengguna')
+          .select()
+          .eq('user_id', userId);
+      if (rows.isNotEmpty) stat = Map<String, dynamic>.from(rows.first);
+    } catch (_) {}
+    return {'pub': pub, 'aktif': aktif, 'stat': stat};
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Profil Pengguna'))),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _muat(),
+        builder: (context, snap) {
+          if (snap.data == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final pub = snap.data!['pub'] as Map<String, dynamic>;
+          final stat = snap.data!['stat'] as Map<String, dynamic>;
+          final aktif = snap.data!['aktif'] as int;
+          final tampilan = (pub['nama_tampilan'] ?? '').toString().trim();
+          final nama = tampilan.isNotEmpty
+              ? tampilan
+              : (pub['nama'] ?? tr('Pengguna')).toString();
+          final foto = (pub['foto_url'] ?? '').toString();
+          final terverifikasi = pub['terverifikasi'] == true;
+          final prodi = (pub['prodi'] ?? '').toString();
+          final sejak = DateTime.tryParse((pub['created_at'] ?? '').toString());
+          int angka(String k) => (stat[k] as num?)?.toInt() ?? 0;
+          Widget sel(String label, int nilai) => Expanded(
+            child: Column(
+              children: [
+                Text(
+                  '$nilai',
+                  style: const TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color: kBiru,
+                  ),
+                ),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Center(
+                child: CircleAvatar(
+                  radius: 44,
+                  backgroundImage: foto.isNotEmpty ? NetworkImage(foto) : null,
+                  child: foto.isEmpty
+                      ? Text(
+                          nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                          style: const TextStyle(fontSize: 34),
+                        )
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      nama,
+                      style: const TextStyle(
+                        fontSize: 19,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  if (terverifikasi) ...[
+                    const SizedBox(width: 6),
+                    const Icon(Icons.verified, size: 19, color: kBiru),
+                  ],
+                ],
+              ),
+              if (terverifikasi)
+                Center(
+                  child: Text(
+                    tr('Mahasiswa Terverifikasi'),
+                    style: const TextStyle(color: kBiru, fontSize: 13),
+                  ),
+                ),
+              if (prodi.isNotEmpty)
+                Center(
+                  child: Text(
+                    prodi,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                ),
+              if (sejak != null)
+                Center(
+                  child: Text(
+                    '${tr('Bergabung sejak')} ${fmtTanggal(sejak.toIso8601String())}',
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ),
+              const SizedBox(height: 18),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Row(
+                    children: [
+                      sel(tr('Postingan aktif'), aktif),
+                      sel(tr('Barang Kembali'), angka('temuan_kembali')),
+                      sel(tr('Klaim Disetujui'), angka('klaim_ok')),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              BarisBadge(userId: userId),
+            ],
+          );
+        },
       ),
     );
   }
