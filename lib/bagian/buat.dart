@@ -24,6 +24,7 @@ class _LayarBuatState extends State<LayarBuat> {
   final List<File> _foto = [];
   final List<String> _fotoLama = [];
   bool _sibuk = false;
+  bool _samarkan = false;
 
   bool get _modeUbah => widget.post != null;
 
@@ -40,6 +41,7 @@ class _LayarBuatState extends State<LayarBuat> {
       _lokasi.text = (p['lokasi'] ?? '').toString();
       _penitipan.text = (p['penitipan'] ?? '').toString();
       _rahasia.text = (p['detail_rahasia'] ?? '').toString();
+      _samarkan = p['samarkan_nama'] == true;
       final w = DateTime.tryParse((p['waktu_kejadian'] ?? '').toString());
       if (w != null) _waktu = w.toLocal();
       _fotoLama.addAll(daftarFoto(p));
@@ -96,6 +98,8 @@ class _LayarBuatState extends State<LayarBuat> {
             ? null
             : _rahasia.text.trim(),
         'penitipan': _jenis == 'temuan' ? _penitipan.text.trim() : null,
+        'samarkan_nama':
+            _samarkan && widget.profil['terverifikasi'] == true,
       };
       if (_modeUbah) {
         final statusLama = (widget.post!['status'] ?? '').toString();
@@ -253,6 +257,21 @@ class _LayarBuatState extends State<LayarBuat> {
                     decoration: _rapat(
                       tr('Barang dititipkan di (mis. pos satpam)'),
                     ),
+                  ),
+                ],
+                if (widget.profil['terverifikasi'] == true) ...[
+                  const SizedBox(height: 6),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(tr('Samarkan nama saya')),
+                    subtitle: Text(
+                      tr(
+                        'Nama dan foto profil tidak ditampilkan pada postingan ini. Identitas terverifikasi tetap tercatat untuk keamanan.',
+                      ),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    value: _samarkan,
+                    onChanged: (v) => setState(() => _samarkan = v),
                   ),
                 ],
                 const SizedBox(height: 14),
