@@ -27,7 +27,14 @@ Future<Map<String, dynamic>> _panggilSika(
     data = jsonDecode(res.body) as Map<String, dynamic>;
   } catch (_) {}
   if (res.statusCode != 200) {
-    throw (data['detail'] ?? 'Server SIKA menolak permintaan').toString();
+    // Bila badan balasan bukan JSON dari server kami (misal halaman galat
+    // perantara), pakai pesan yang sesuai kode statusnya.
+    final cadangan = switch (res.statusCode) {
+      401 => 'NPM atau kata sandi SIKA salah',
+      502 || 503 || 504 => 'SIKA sedang sulit dihubungi, coba lagi sebentar',
+      _ => 'Server SIKA menolak permintaan',
+    };
+    throw (data['detail'] ?? cadangan).toString();
   }
   return data;
 }

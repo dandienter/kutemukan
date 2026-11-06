@@ -224,10 +224,16 @@ class _LayarLaporanBarangState extends State<LayarLaporanBarang> {
       final labelPeriode = _bulan == null
           ? 'semua'
           : '${_bulan!.year}-${_bulan!.month.toString().padLeft(2, '0')}';
-      await Printing.sharePdf(
-        bytes: bytes,
-        filename: 'laporan-kutemukan-$labelPeriode.pdf',
-      );
+      if (mounted) {
+        await Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => _LayarPratinjauLaporan(
+              bytes: bytes,
+              nama: 'laporan-kutemukan-$labelPeriode.pdf',
+            ),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -385,7 +391,7 @@ class _LayarLaporanBarangState extends State<LayarLaporanBarang> {
                               : _unduhPdf,
                           icon: const Icon(Icons.picture_as_pdf_outlined),
                           label: Text(
-                            _buatPdf ? tr('Membuat PDF...') : tr('Unduh PDF'),
+                            _buatPdf ? tr('Membuat PDF...') : tr('Pratinjau PDF'),
                           ),
                         ),
                       ),
@@ -422,6 +428,31 @@ class _LayarLaporanBarangState extends State<LayarLaporanBarang> {
                 ),
               ],
             ),
+    );
+  }
+}
+
+
+/// Pratinjau dokumen PDF sebelum dibagikan atau disimpan: pengguna
+/// melihat dulu hasil akhirnya halaman per halaman.
+class _LayarPratinjauLaporan extends StatelessWidget {
+  const _LayarPratinjauLaporan({required this.bytes, required this.nama});
+
+  final Uint8List bytes;
+  final String nama;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Pratinjau Laporan'))),
+      body: PdfPreview(
+        build: (format) async => bytes,
+        allowPrinting: true,
+        allowSharing: true,
+        canChangePageFormat: false,
+        canChangeOrientation: false,
+        pdfFileName: nama,
+      ),
     );
   }
 }
