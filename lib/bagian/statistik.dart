@@ -379,6 +379,20 @@ class LayarStatistik extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 16),
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.picture_as_pdf_outlined, color: kBiru),
+                  title: Text(tr('Laporan Barang (PDF)')),
+                  subtitle: Text(
+                    tr('Semua barang dengan saringan bulan, jenis, status, dan kategori.'),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const LayarLaporanBarang()),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
               Text(
                 tr('Kritik & Saran Terbaru'),
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
