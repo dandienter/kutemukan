@@ -175,7 +175,20 @@ class KartuPostingan extends StatelessWidget {
           if (nama.isNotEmpty)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
-              child: Row(
+              child: InkWell(
+                onTap:
+                    (post['nama_disamarkan'] == true ||
+                        (post['user_id'] ?? '').toString() ==
+                            (sb.auth.currentUser?.id ?? ''))
+                    ? null
+                    : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => LayarProfilPublik(
+                            userId: (post['user_id'] ?? '').toString(),
+                          ),
+                        ),
+                      ),
+                child: Row(
                 children: [
                   Text(
                     kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
@@ -188,6 +201,7 @@ class KartuPostingan extends StatelessWidget {
                     const Icon(Icons.verified, size: 14, color: kBiru),
                   ],
                 ],
+                ),
               ),
             ),
           if ((post['penitipan'] ?? '').toString().isNotEmpty)
@@ -233,6 +247,23 @@ class KartuPostingan extends StatelessWidget {
                   '$ups UP',
                   style: TextStyle(fontSize: 12, color: warnaMeta),
                 ),
+                if (post['diklaim'] == true && post['status'] == 'tampil') ...[
+                  const SizedBox(width: 12),
+                  const Icon(
+                    Icons.how_to_reg_outlined,
+                    size: 15,
+                    color: Colors.deepPurple,
+                  ),
+                  const SizedBox(width: 3),
+                  Text(
+                    tr('Telah Diklaim'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Colors.deepPurple,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
                 const Spacer(),
                 if (onUp != null && !sudahUp)
                   TextButton.icon(
@@ -273,10 +304,12 @@ class _LayarBerandaState extends State<LayarBeranda> {
   final Set<String> _upHariIni = {};
   late Future<List<Map<String, dynamic>>> _fSemua;
   late Future<List<Map<String, dynamic>>> _fSaya;
+  late Future<Map<String, dynamic>> _fStat;
 
   void _segarkan() {
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
+    _fStat = _ambilStat();
     _muatUpHariIni();
     if (mounted) setState(() {});
   }
@@ -286,6 +319,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
     super.initState();
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
+    _fStat = _ambilStat();
     _muatUpHariIni();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cekUpdate(context);
@@ -338,6 +372,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
     final data = List<Map<String, dynamic>>.from(rows);
     await pasangNama(data);
     return data;
+  }
+
+  Future<Map<String, dynamic>> _ambilStat() async {
+    try {
+      final hasil = await sb.rpc('lf_stat_publik');
+      return Map<String, dynamic>.from(hasil as Map);
+    } catch (_) {
+      return const {};
+    }
   }
 
   Future<List<Map<String, dynamic>>> _ambilSaya() async {
@@ -601,6 +644,49 @@ class _LayarBerandaState extends State<LayarBeranda> {
               ],
             ),
           ),
+          if (!saya)
+            FutureBuilder<Map<String, dynamic>>(
+              future: _fStat,
+              builder: (context, snap) {
+                final s = snap.data ?? const {};
+                if (s.isEmpty) return const SizedBox.shrink();
+                final meta = Theme.of(context).colorScheme.onSurfaceVariant;
+                int angka(String k) => (s[k] as num?)?.toInt() ?? 0;
+                Widget sel(String label, int nilai, Color warna) => Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        '$nilai',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                          color: warna,
+                        ),
+                      ),
+                      Text(
+                        label,
+                        style: TextStyle(fontSize: 11, color: meta),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                );
+                return Card(
+                  margin: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Row(
+                      children: [
+                        sel(tr('Total Barang'), angka('total'), kBiru),
+                        sel(tr('Hilang'), angka('hilang'), Colors.red),
+                        sel(tr('Ditemukan'), angka('temuan'), Colors.green),
+                        sel(tr('Sudah kembali'), angka('kembali'), Colors.blueGrey),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: saya ? _fSaya : _fSemua,
