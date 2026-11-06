@@ -139,8 +139,8 @@ const Map<String, String> _idKeEn = {
   'Masuk': 'Sign In',
   'Masuk dengan Google': 'Continue with Google',
   'Sistem Informasi Akademik Unindra': 'Unindra Academic Information System',
-  'Mahasiswa Unindra? Masuk pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.':
-      'Unindra student? Sign in with your NPM and SIKA password and your status is verified right away.',
+  'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.':
+      'Unindra student? Use your NPM and SIKA password and your status is verified right away.',
   'Kata sandi SIKA': 'SIKA password',
   'Masuk dengan SIKA': 'Sign in with SIKA',
   'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.':
@@ -228,7 +228,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.5.3': 'Version 1.5.3',
+  'Versi 1.5.4': 'Version 1.5.4',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

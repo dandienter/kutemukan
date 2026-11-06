@@ -718,7 +718,7 @@ class _LayarLoginState extends State<LayarLogin> {
   final _sandi = TextEditingController();
   final _npm = TextEditingController();
   final _sandiSika = TextEditingController();
-  bool _modeDaftar = false;
+  bool _modeDaftar = true;
   bool _sibuk = false;
   bool _sibukSika = false;
   String? _galat;
@@ -775,7 +775,7 @@ class _LayarLoginState extends State<LayarLogin> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/logo.png', height: 185),
+                Image.asset('assets/logo.png', height: 118),
                 const SizedBox(height: 4),
                 Text(tr('Lost and Found Kampus Unindra'),
                     textAlign: TextAlign.center,
@@ -783,112 +783,14 @@ class _LayarLoginState extends State<LayarLogin> {
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                         color: skema.onSurfaceVariant)),
-                const SizedBox(height: 24),
-                Card(
-                  elevation: 2,
-                  margin: EdgeInsets.zero,
-                  color: kTeal,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('SIKA',
-                            style: TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 3,
-                                color: Colors.white)),
-                        Text(tr('Sistem Informasi Akademik Unindra'),
-                            style: const TextStyle(
-                                color: Colors.white70, fontSize: 13)),
-                        const SizedBox(height: 8),
-                        Text(
-                            tr('Mahasiswa Unindra? Masuk pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.'),
-                            style: const TextStyle(color: Colors.white)),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: _npm,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                              labelText: 'NPM',
-                              filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Icon(Icons.badge_outlined),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12))),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _sandiSika,
-                          obscureText: true,
-                          style: const TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                              labelText: tr('Kata sandi SIKA'),
-                              filled: true,
-                              fillColor: Colors.white,
-                              prefixIcon: const Icon(Icons.lock_outline),
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12))),
-                        ),
-                        if (_galatSika != null) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                color: skema.errorContainer,
-                                borderRadius: BorderRadius.circular(10)),
-                            child: Text(_galatSika!,
-                                style:
-                                    TextStyle(color: skema.onErrorContainer)),
-                          ),
-                        ],
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: kTeal,
-                              minimumSize: const Size.fromHeight(50),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12))),
-                          onPressed: _sibukSika ? null : _masukSika,
-                          child: Text(
-                              _sibukSika
-                                  ? tr('Memproses...')
-                                  : tr('Masuk dengan SIKA'),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                            tr('Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.'),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                color: Colors.white60, fontSize: 11)),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Row(children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(tr('atau')),
-                  ),
-                  const Expanded(child: Divider()),
-                ]),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Card(
                   elevation: 2,
                   margin: EdgeInsets.zero,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20)),
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -936,7 +838,107 @@ class _LayarLoginState extends State<LayarLogin> {
                                     TextStyle(color: skema.onErrorContainer)),
                           ),
                         ],
-                        const SizedBox(height: 20),
+                        Row(children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(tr('atau')),
+                  ),
+                  const Expanded(child: Divider()),
+                ]),
+                const SizedBox(height: 14),
+                Card(
+                  elevation: 2,
+                  margin: EdgeInsets.zero,
+                  color: kTeal,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.school, color: Colors.white, size: 22),
+                            const SizedBox(width: 8),
+                            const Text('Masuk dengan SIKA',
+                                style: TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                            tr('Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.'),
+                            style: const TextStyle(color: Colors.white70, fontSize: 12.5)),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _npm,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.black87),
+                          decoration: InputDecoration(
+                              labelText: 'NPM',
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon: const Icon(Icons.badge_outlined),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _sandiSika,
+                          obscureText: true,
+                          style: const TextStyle(color: Colors.black87),
+                          decoration: InputDecoration(
+                              labelText: tr('Kata sandi SIKA'),
+                              filled: true,
+                              fillColor: Colors.white,
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                        ),
+                        if (_galatSika != null) ...[
+                          const SizedBox(height: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                                color: skema.errorContainer,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(_galatSika!,
+                                style:
+                                    TextStyle(color: skema.onErrorContainer)),
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: kTeal,
+                              minimumSize: const Size.fromHeight(46),
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12))),
+                          onPressed: _sibukSika ? null : _masukSika,
+                          child: Text(
+                              _sibukSika
+                                  ? tr('Memproses...')
+                                  : tr('Masuk'),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                            tr('Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.'),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                                color: Colors.white60, fontSize: 11)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                const SizedBox(height: 20),
                         FilledButton(
                           style: FilledButton.styleFrom(
                               minimumSize: const Size.fromHeight(50),
@@ -3921,6 +3923,7 @@ class LayarAkun extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final admin = profil['peran'] == 'admin';
     return Scaffold(
       appBar: AppBar(title: Text(tr('Akun'))),
       body: ListView(
@@ -4614,7 +4617,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.3'),
+                  label: Text(tr('Versi 1.5.4'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
