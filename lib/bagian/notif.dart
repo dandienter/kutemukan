@@ -70,6 +70,15 @@ class _LayarNotifState extends State<LayarNotif> {
     _segarkanNotif();
   }
 
+  Future<void> _hapus(Map<String, dynamic> n) async {
+    await sb.from('lf_notif').delete().eq('id', n['id']);
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Notifikasi dihapus.'))));
+    }
+    _segarkanNotif();
+  }
+
   Future<void> _buka(Map<String, dynamic> n) async {
     await sb.from('lf_notif').update({'dibaca': true}).eq('id', n['id']);
     if (n['jenis'] == 'moderasi' && mounted) {
@@ -127,27 +136,43 @@ class _LayarNotifState extends State<LayarNotif> {
               itemBuilder: (_, i) {
                 final n = data[i];
                 final belum = n['dibaca'] != true;
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: belum
-                        ? kBiru.withOpacity(0.15)
-                        : Colors.grey.shade100,
-                    child: Icon(
-                      _ikon(n['jenis'] ?? ''),
-                      color: belum ? kBiru : Colors.grey,
+                return Dismissible(
+                  key: ValueKey(n['id']),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.only(right: 20),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  onDismissed: (_) => _hapus(n),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: belum
+                          ? kBiru.withOpacity(0.15)
+                          : Colors.grey.shade100,
+                      child: Icon(
+                        _ikon(n['jenis'] ?? ''),
+                        color: belum ? kBiru : Colors.grey,
+                      ),
                     ),
-                  ),
-                  title: Text(
-                    n['judul'] ?? '',
-                    style: TextStyle(
-                      fontWeight: belum ? FontWeight.bold : FontWeight.normal,
+                    title: Text(
+                      n['judul'] ?? '',
+                      style: TextStyle(
+                        fontWeight: belum ? FontWeight.bold : FontWeight.normal,
+                      ),
                     ),
+                    subtitle: Text(
+                      '${n['isi'] ?? ''}\n${fmtTanggal(n['created_at'])}',
+                    ),
+                    isThreeLine: true,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete_outline, size: 20),
+                      tooltip: tr('Hapus'),
+                      onPressed: () => _hapus(n),
+                    ),
+                    onTap: () => _buka(n),
                   ),
-                  subtitle: Text(
-                    '${n['isi'] ?? ''}\n${fmtTanggal(n['created_at'])}',
-                  ),
-                  isThreeLine: true,
-                  onTap: () => _buka(n),
                 );
               },
             ),
