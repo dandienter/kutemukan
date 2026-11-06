@@ -91,9 +91,9 @@ class KartuPostingan extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             subtitle: Text(
-              '${post['kategori']} - ${post['lokasi']}\n'
-              '${nama.isNotEmpty ? 'oleh $nama - ' : ''}${fmtTanggal(post['created_at'])}',
-              maxLines: 2,
+              (post['kategori'] ?? '').toString(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -133,6 +133,88 @@ class KartuPostingan extends StatelessWidget {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
+            child: Row(
+              children: [
+                const Icon(Icons.place_outlined, size: 15, color: Colors.grey),
+                const SizedBox(width: 3),
+                Expanded(
+                  child: Text(
+                    (post['lokasi'] ?? '').toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.schedule_outlined,
+                  size: 14,
+                  color: Colors.grey,
+                ),
+                const SizedBox(width: 3),
+                Text(
+                  fmtRelatif(post['waktu_kejadian'] ?? post['created_at']),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          if ((post['deskripsi'] ?? '').toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
+              child: Text(
+                (post['deskripsi'] ?? '').toString(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade700),
+              ),
+            ),
+          if (nama.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
+              child: Row(
+                children: [
+                  Text(
+                    kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  if (post['terverifikasi_pemilik'] == true) ...[
+                    const SizedBox(width: 4),
+                    const Icon(Icons.verified, size: 14, color: kBiru),
+                  ],
+                ],
+              ),
+            ),
+          if ((post['penitipan'] ?? '').toString().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 12, 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.security_outlined,
+                    size: 14,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${tr('Dititipkan di')}: ${post['penitipan']}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
             child: Row(
