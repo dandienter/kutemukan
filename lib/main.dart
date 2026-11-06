@@ -1854,12 +1854,16 @@ class _LayarDetailState extends State<LayarDetail> {
               child: PageView.builder(
                 itemCount: foto.length,
                 onPageChanged: (i) => setState(() => _fotoKe = i),
-                itemBuilder: (_, i) => ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.network(foto[i],
-                      width: double.infinity, fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.image_not_supported_outlined))),
+                itemBuilder: (_, i) => GestureDetector(
+                  onTap: () => lihatFotoBesar(context, foto[i]),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(foto[i],
+                        width: double.infinity, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Center(
+                            child:
+                                Icon(Icons.image_not_supported_outlined))),
+                  ),
                 ),
               ),
             ),
