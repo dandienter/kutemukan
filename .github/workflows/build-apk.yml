@@ -144,6 +144,33 @@ jobs:
           flutter build apk --release --target-platform android-arm64
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/KutemuKan.apk
 
+      - name: Rampingkan APK (buang pustaka non-arm64, tanda tangan ulang)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          python3 - <<'PYEOF'
+          import zipfile
+          src = 'build/app/outputs/flutter-apk/KutemuKan.apk'
+          dst = 'build/app/outputs/flutter-apk/KutemuKan-mentah.apk'
+          zin = zipfile.ZipFile(src)
+          zout = zipfile.ZipFile(dst, 'w')
+          dibuang = 0
+          for item in zin.infolist():
+              if item.filename.startswith(('lib/x86_64/', 'lib/armeabi-v7a/', 'META-INF/')):
+                  dibuang += item.file_size
+                  continue
+              zout.writestr(item, zin.read(item.filename), compress_type=item.compress_type)
+          zout.close()
+          print(f'pustaka non-arm64 dibuang: {dibuang} byte')
+          PYEOF
+          BT=$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)
+          "$ANDROID_HOME/build-tools/$BT/zipalign" -p -f 4 build/app/outputs/flutter-apk/KutemuKan-mentah.apk build/app/outputs/flutter-apk/KutemuKan-sejajar.apk
+          "$ANDROID_HOME/build-tools/$BT/apksigner" sign --ks android/app/kutemukan.jks --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out build/app/outputs/flutter-apk/KutemuKan.apk build/app/outputs/flutter-apk/KutemuKan-sejajar.apk
+          "$ANDROID_HOME/build-tools/$BT/apksigner" verify build/app/outputs/flutter-apk/KutemuKan.apk
+          ls -la build/app/outputs/flutter-apk/KutemuKan.apk
+
       - name: Terbitkan Release
         uses: softprops/action-gh-release@v2
         with:
