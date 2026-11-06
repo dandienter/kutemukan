@@ -11,13 +11,15 @@ class LayarStatistik extends StatelessWidget {
     final posts = List<Map<String, dynamic>>.from(
       await sb
           .from('lf_posts')
-          .select('user_id, jenis, status, up_count, views_count'),
+          .select(
+            'user_id, jenis, status, up_count, views_count, kategori, created_at',
+          ),
     );
     final users = List<Map<String, dynamic>>.from(
       await sb.from('lf_profiles').select('id, nama'),
     );
     final klaim = List<Map<String, dynamic>>.from(
-      await sb.from('lf_claims').select('user_id, status'),
+      await sb.from('lf_claims').select('user_id, status, created_at'),
     );
     final ulasan = List<Map<String, dynamic>>.from(
       await sb
@@ -75,6 +77,28 @@ class LayarStatistik extends StatelessWidget {
           );
           final diproses = posts.length - menunggu;
           final persen = diproses == 0 ? 0 : (kembali * 100 / diproses).round();
+
+          final batas7 = DateTime.now().subtract(const Duration(days: 7));
+          bool baru7(dynamic v) {
+            final d = DateTime.tryParse((v ?? '').toString());
+            return d != null && d.isAfter(batas7);
+          }
+
+          final postBaru7 = posts.where((x) => baru7(x['created_at'])).length;
+          final klaimBaru7 = klaim.where((x) => baru7(x['created_at'])).length;
+          final klaimMenunggu = klaim
+              .where((x) => x['status'] == 'menunggu')
+              .length;
+          final perKategori = <String, int>{};
+          for (final x in posts) {
+            final k = (x['kategori'] ?? 'Lainnya').toString();
+            perKategori[k] = (perKategori[k] ?? 0) + 1;
+          }
+          final kategoriUrut = perKategori.entries.toList()
+            ..sort((a, b) => b.value.compareTo(a.value));
+          final maksKategori = kategoriUrut.isEmpty
+              ? 1
+              : kategoriUrut.first.value;
 
           final namaUser = <String, String>{
             for (final u in users) (u['id'] ?? ''): (u['nama'] ?? '-'),
@@ -206,6 +230,76 @@ class LayarStatistik extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 16),
+              Text(
+                tr('7 Hari Terakhir'),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              GridView.count(
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  kartu(
+                    '$postBaru7',
+                    'Postingan Baru',
+                    Icons.post_add_outlined,
+                  ),
+                  kartu('$klaimBaru7', 'Klaim Baru', Icons.how_to_reg_outlined),
+                  kartu(
+                    '$klaimMenunggu',
+                    'Klaim Menunggu',
+                    Icons.pending_actions_outlined,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                tr('Kategori Terbanyak'),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              if (kategoriUrut.isEmpty) Text(tr('Belum ada aktivitas.')),
+              for (final e in kategoriUrut.take(6))
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 128,
+                        child: Text(
+                          e.key,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(6),
+                          child: LinearProgressIndicator(
+                            value: e.value / maksKategori,
+                            minHeight: 12,
+                            color: kBiru,
+                            backgroundColor: kBiru.withOpacity(0.12),
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 34,
+                        child: Text(
+                          '${e.value}',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 16),
               Text(
                 tr('Aktivitas Pengguna'),
