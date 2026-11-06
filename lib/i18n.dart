@@ -81,7 +81,7 @@ const Map<String, String> _idKeEn = {
   'Admin': 'Admin',
   'Pilih': 'Select',
   'Pilih semua': 'Select all',
-  'Jangan tulis ciri khusus barangmu di komentar publik. Ciri khusus cukup disampaikan lewat klaim.': 'Do not write your item's secret features in public comments. Share secret features only through a claim.',
+  'Jangan tulis ciri khusus barangmu di komentar publik. Ciri khusus cukup disampaikan lewat klaim.': 'Do not write the secret features of your item in public comments. Share secret features only through a claim.',
   'Diposting': 'Posted on',
   'Deskripsi': 'Description',
   'Tidak ada deskripsi.': 'No description.',
