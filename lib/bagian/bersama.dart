@@ -33,6 +33,31 @@ Future<String> unggahBerkas(File f) async {
   return data['url'] as String;
 }
 
+/// Tampilkan pilihan sumber foto: ambil langsung dari kamera atau pilih
+/// dari galeri. Mengembalikan null bila pengguna membatalkan pilihan.
+Future<ImageSource?> pilihSumberFoto(BuildContext context) {
+  return showModalBottomSheet<ImageSource>(
+    context: context,
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_camera_outlined),
+            title: Text(tr('Ambil dari Kamera')),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library_outlined),
+            title: Text(tr('Pilih dari Galeri')),
+            onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 /// Panggil endpoint SIKA di API MySIKA. Melempar pesan galat yang sudah
 /// diterjemahkan ke bahasa pengguna bila server menolak.
 

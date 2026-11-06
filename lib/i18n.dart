@@ -179,6 +179,8 @@ const Map<String, String> _idKeEn = {
   'Periksa versi aplikasi terbaru': 'Check for the latest app version',
   'Peringkat penolong kampus bulan ini': 'This month\'s campus helper ranking',
   'Pilih dari kalender...': 'Pick from calendar...',
+  'Ambil dari Kamera': 'Take from Camera',
+  'Pilih dari Galeri': 'Choose from Gallery',
   'Postingan ini akan dihapus permanen.':
       'This post will be permanently deleted.',
   'Postingan terkirim. Menunggu moderasi admin sebelum tampil.':
@@ -223,7 +225,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.6.4': 'Version 1.6.4',
+  'Versi 1.6.5': 'Version 1.6.5',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',

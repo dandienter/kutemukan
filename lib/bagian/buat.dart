@@ -48,6 +48,19 @@ class _LayarBuatState extends State<LayarBuat> {
 
   Future<void> _pilihFoto() async {
     if (_fotoLama.length + _foto.length >= 5) return;
+    final sumber = await pilihSumberFoto(context);
+    if (sumber == null || !mounted) return;
+    if (sumber == ImageSource.camera) {
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 78,
+      );
+      if (x == null) return;
+      setState(() {
+        if (_fotoLama.length + _foto.length < 5) _foto.add(File(x.path));
+      });
+      return;
+    }
     final xs = await ImagePicker().pickMultiImage(imageQuality: 78, limit: 5);
     if (xs.isEmpty) return;
     setState(() {

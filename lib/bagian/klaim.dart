@@ -81,11 +81,15 @@ class _LayarKlaimState extends State<LayarKlaim> {
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () async {
+              final sumber = await pilihSumberFoto(context);
+              if (sumber == null) return;
               final x = await ImagePicker().pickImage(
-                source: ImageSource.gallery,
+                source: sumber,
                 imageQuality: 85,
               );
-              if (x != null) setState(() => _bukti = File(x.path));
+              if (x != null && mounted) {
+                setState(() => _bukti = File(x.path));
+              }
             },
             icon: const Icon(Icons.image_outlined),
             label: Text(

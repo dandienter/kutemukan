@@ -38,8 +38,10 @@ class _LayarProfilState extends State<LayarProfil> {
   }
 
   Future<void> _pilihFoto() async {
+    final sumber = await pilihSumberFoto(context);
+    if (sumber == null || !mounted) return;
     final x = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
+      source: sumber,
       imageQuality: 85,
     );
     if (x != null) setState(() => _fotoBaru = File(x.path));
