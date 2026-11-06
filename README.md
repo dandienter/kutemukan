@@ -46,8 +46,8 @@ Di dalam aplikasi juga ada tombol Cek Update di tab Akun yang akan memberi tahu 
 
 ## Privasi
 
-Nomor WhatsApp tidak pernah tampil publik. Yang terlihat publik hanya nama, foto profil, badge, dan isi postingan. Ciri rahasia hanya dibaca pemilik postingan dan pengklaim yang bersangkutan. Kebijakan privasi tersedia di dalam aplikasi dan di https://temubalik.43-130-228-96.sslip.io/privasi.html
+Nomor WhatsApp tidak pernah tampil publik. Yang terlihat publik hanya nama, foto profil, badge, dan isi postingan. Ciri rahasia hanya dibaca pemilik postingan dan pengklaim yang bersangkutan. Kebijakan privasi lengkap tersedia di dalam aplikasi.
 
 ## Lisensi dan kontribusi
 
-Kode sumber dibuka untuk tujuan belajar. Saran dan laporan bug bisa disampaikan lewat menu Kritik dan Saran di dalam aplikasi atau lewat Issues di repo ini.
+Kode sumber dirilis dengan [Lisensi MIT](LICENSE). Saran dan laporan bug bisa disampaikan lewat menu Kritik dan Saran di dalam aplikasi atau lewat Issues di repo ini.
