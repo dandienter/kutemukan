@@ -8,6 +8,7 @@ const String kSupabaseAnonKey =
 // berkas ke Cloudflare R2. Autentikasi memakai token login Supabase
 // pengguna, jadi tidak ada kunci bersama tertanam di aplikasi.
 const String kUploadUrl = 'https://api.mysika.my.id/api/lf/upload';
+const String kUploadAudioUrl = 'https://api.mysika.my.id/api/lf/upload-audio';
 
 // Login dan verifikasi SIKA lewat API MySIKA (backend VPS). NPM dan kata
 // sandi SIKA hanya diteruskan ke server kampus untuk diverifikasi,
