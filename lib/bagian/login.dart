@@ -16,6 +16,7 @@ class _LayarLoginState extends State<LayarLogin> {
   final _npm = TextEditingController();
   final _sandiSika = TextEditingController();
   bool _modeDaftar = true;
+  bool _formSika = false;
   bool _sibuk = false;
   bool _sibukSika = false;
   String? _galat;
@@ -85,101 +86,7 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  elevation: 2,
-                  margin: EdgeInsets.zero,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          _modeDaftar
-                              ? tr('Buat akun baru')
-                              : tr('Selamat datang kembali'),
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _modeDaftar
-                              ? tr(
-                                  'Daftar supaya bisa posting dan klaim barang.',
-                                )
-                              : tr('Masuk untuk melanjutkan.'),
-                          style: TextStyle(color: skema.onSurfaceVariant),
-                        ),
-                        const SizedBox(height: 18),
-                        TextField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            prefixIcon: const Icon(Icons.mail_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        TextField(
-                          controller: _sandi,
-                          obscureText: true,
-                          decoration: InputDecoration(
-                            labelText: tr('Kata sandi'),
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        if (_galat != null) ...[
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: skema.errorContainer,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              _galat!,
-                              style: TextStyle(color: skema.onErrorContainer),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 20),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size.fromHeight(50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _sibuk ? null : _kirim,
-                          child: Text(
-                            _sibuk
-                                ? tr('Memproses...')
-                                : (_modeDaftar ? tr('Daftar') : tr('Masuk')),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              setState(() => _modeDaftar = !_modeDaftar),
-                          child: Text(
-                            _modeDaftar
-                                ? tr('Sudah punya akun? Masuk')
-                                : tr('Belum punya akun? Daftar'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _formSika ? _kartuSika(skema) : _kartuEmail(skema),
                 const SizedBox(height: 14),
                 Row(
                   children: [
@@ -192,133 +99,20 @@ class _LayarLoginState extends State<LayarLogin> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                Card(
-                  elevation: 2,
-                  margin: EdgeInsets.zero,
-                  color: kBiru,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.school,
-                              color: Colors.white,
-                              size: 22,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Masuk dengan SIKA',
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          tr(
-                            'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.',
-                          ),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _npm,
-                          keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                            labelText: 'NPM',
-                            filled: true,
-                            fillColor: Colors.white,
-                            prefixIcon: const Icon(Icons.badge_outlined),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _sandiSika,
-                          obscureText: true,
-                          style: const TextStyle(color: Colors.black87),
-                          decoration: InputDecoration(
-                            labelText: tr('Kata sandi SIKA'),
-                            filled: true,
-                            fillColor: Colors.white,
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        if (_galatSika != null) ...[
-                          const SizedBox(height: 12),
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: skema.errorContainer,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              _galatSika!,
-                              style: TextStyle(color: skema.onErrorContainer),
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 12),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: kBiru,
-                            minimumSize: const Size.fromHeight(46),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _sibukSika ? null : _masukSika,
-                          child: Text(
-                            _sibukSika ? tr('Memproses...') : tr('Masuk'),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          tr(
-                            'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.',
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white60,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
+                if (!_formSika) ...[
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    onPressed: () => setState(() => _formSika = true),
+                    icon: const Icon(Icons.school, size: 22),
+                    label: Text(tr('Masuk dengan SIKA')),
                   ),
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(tr('atau')),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 14),
+                  const SizedBox(height: 12),
+                ],
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(50),
@@ -349,6 +143,207 @@ class _LayarLoginState extends State<LayarLogin> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _kartuEmail(ColorScheme skema) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _modeDaftar ? tr('Buat akun baru') : tr('Selamat datang kembali'),
+              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              _modeDaftar
+                  ? tr('Daftar supaya bisa posting dan klaim barang.')
+                  : tr('Masuk untuk melanjutkan.'),
+              style: TextStyle(color: skema.onSurfaceVariant),
+            ),
+            const SizedBox(height: 18),
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                prefixIcon: const Icon(Icons.mail_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _sandi,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: tr('Kata sandi'),
+                prefixIcon: const Icon(Icons.lock_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (_galat != null) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: skema.errorContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _galat!,
+                  style: TextStyle(color: skema.onErrorContainer),
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _sibuk ? null : _kirim,
+              child: Text(
+                _sibuk
+                    ? tr('Memproses...')
+                    : (_modeDaftar ? tr('Daftar') : tr('Masuk')),
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _modeDaftar = !_modeDaftar),
+              child: Text(
+                _modeDaftar
+                    ? tr('Sudah punya akun? Masuk')
+                    : tr('Belum punya akun? Daftar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _kartuSika(ColorScheme skema) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      color: kBiru,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.school, color: Colors.white, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  tr('Masuk dengan SIKA'),
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              tr(
+                'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.',
+              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _npm,
+              keyboardType: TextInputType.number,
+              style: const TextStyle(color: Colors.black87),
+              decoration: InputDecoration(
+                labelText: 'NPM',
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.badge_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _sandiSika,
+              obscureText: true,
+              style: const TextStyle(color: Colors.black87),
+              decoration: InputDecoration(
+                labelText: tr('Kata sandi SIKA'),
+                filled: true,
+                fillColor: Colors.white,
+                prefixIcon: const Icon(Icons.lock_outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            if (_galatSika != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: skema.errorContainer,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  _galatSika!,
+                  style: TextStyle(color: skema.onErrorContainer),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: kBiru,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onPressed: _sibukSika ? null : _masukSika,
+              child: Text(
+                _sibukSika ? tr('Memproses...') : tr('Masuk'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              tr(
+                'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.',
+              ),
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white60, fontSize: 11),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _formSika = false),
+              child: Text(
+                tr('Pakai email saja'),
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ),
+          ],
         ),
       ),
     );
