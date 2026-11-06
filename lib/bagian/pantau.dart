@@ -293,7 +293,7 @@ class _LayarPantauState extends State<LayarPantau> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Pantau'))),
+      appBar: AppBar(title: Text(tr('Pantau')), actions: const [TombolAkun()]),
       body: _muat
           ? const Center(child: CircularProgressIndicator())
           : ListView(
