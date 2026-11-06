@@ -322,23 +322,28 @@ class BarisBadge extends StatelessWidget {
       builder: (context, snap) {
         final data = snap.data ?? [];
         if (data.isEmpty) return const SizedBox.shrink();
-        return Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final b in data)
-              Chip(
-                avatar: Icon(Icons.emoji_events_outlined,
-                    size: 15, color: _warna(b['tingkat'] ?? '')),
-                label: Text(
-                    (b['tingkat'] ?? '').isEmpty
-                        ? tr((b['nama'] ?? '').toString())
-                        : '${tr((b['nama'] ?? '').toString())} ${b['tingkat']}',
-                    style: const TextStyle(fontSize: 11)),
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-          ],
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (int i = 0; i < data.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Chip(
+                  avatar: Icon(Icons.emoji_events_outlined,
+                      size: 13, color: _warna(data[i]['tingkat'] ?? '')),
+                  label: Text(
+                      (data[i]['tingkat'] ?? '').isEmpty
+                          ? tr((data[i]['nama'] ?? '').toString())
+                          : '${tr((data[i]['nama'] ?? '').toString())} ${data[i]['tingkat']}',
+                      style: const TextStyle(fontSize: 10.5)),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  labelPadding: const EdgeInsets.only(right: 4),
+                ),
+              ],
+            ],
+          ),
         );
       },
     );
@@ -2806,25 +2811,17 @@ class _LayarBuatState extends State<LayarBuat> {
                   decoration: _rapat(tr('Judul (mis. Dompet hitam berisi KTM)')),
                 ),
                 const SizedBox(height: 14),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: DropdownButtonFormField<String>(
-                        value: _kategori,
-                        items: kKategori
-                            .map((k) =>
-                                DropdownMenuItem(value: k, child: Text(k)))
-                            .toList(),
-                        onChanged: (v) => setState(() => _kategori = v!),
-                        decoration: _rapat(tr('Kategori')),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      flex: 2,
-                      child: InkWell(
+                DropdownButtonFormField<String>(
+                  value: _kategori,
+                  items: kKategori
+                      .map((k) =>
+                          DropdownMenuItem(value: k, child: Text(k)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _kategori = v!),
+                  decoration: _rapat(tr('Kategori')),
+                ),
+                const SizedBox(height: 14),
+                InkWell(
                         onTap: () async {
                           final tgl = await showDatePicker(
                             context: context,
@@ -2858,9 +2855,6 @@ class _LayarBuatState extends State<LayarBuat> {
                             ],
                           ),
                         ),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: 14),
                 TextField(
@@ -3785,67 +3779,56 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
   }
 }
 
-/// Baris kontak kepala Akun: nomor WA dan email disembunyikan secara
-/// bawaan dan hanya tampil saat diketuk (privasi + kepala lebih ringkas).
-class _BarisKontak extends StatefulWidget {
-  final String wa;
-  final String email;
-  const _BarisKontak({required this.wa, required this.email});
+/// Kepala tab Akun: ringkas secara bawaan. NPM, prodi, nomor WhatsApp,
+/// dan email hanya tampil sesudah kepala diketuk, sesuai permintaan user
+/// (jangan menumpuk dan tanpa ikon mata).
+class _KepalaAkun extends StatefulWidget {
+  final Map<String, dynamic> profil;
+  final Future<void> Function()? onProfilDiubah;
+  const _KepalaAkun({required this.profil, this.onProfilDiubah});
 
   @override
-  State<_BarisKontak> createState() => _BarisKontakState();
+  State<_KepalaAkun> createState() => _KepalaAkunState();
 }
 
-class _BarisKontakState extends State<_BarisKontak> {
-  bool _tampil = false;
+class _KepalaAkunState extends State<_KepalaAkun> {
+  bool _terbuka = false;
 
-  @override
-  Widget build(BuildContext context) {
-    final isi = '+${widget.wa}'
-        '${widget.email.isNotEmpty ? ' • ${widget.email}' : ''}';
-    return InkWell(
-      onTap: () => setState(() => _tampil = !_tampil),
+  Widget _barisDetail(String label, String nilai) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(_tampil ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-              size: 14, color: Colors.grey),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-                _tampil ? isi : tr('Ketuk untuk melihat kontak'),
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+          SizedBox(
+            width: 76,
+            child: Text(label,
+                style: const TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
+          Expanded(
+            child: Text(nilai, style: const TextStyle(fontSize: 12.5)),
           ),
         ],
       ),
     );
   }
-}
-
-class LayarAkun extends StatelessWidget {
-  final Map<String, dynamic> profil;
-  final Future<void> Function()? onProfilDiubah;
-  const LayarAkun({super.key, required this.profil, this.onProfilDiubah});
-
-  ImageProvider? _foto() {
-    final f = profil['foto_url'] as String?;
-    if (f != null && f.isNotEmpty) return NetworkImage(f);
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
+    final profil = widget.profil;
     final foto = profil['foto_url'] as String?;
     final admin = profil['peran'] == 'admin';
     final email = sb.auth.currentUser?.email ?? '';
-    return Scaffold(
-      appBar: AppBar(title: Text(tr('Akun'))),
-      body: ListView(
+    final npm = (profil['npm'] ?? '').toString();
+    final prodi = (profil['prodi'] ?? '').toString();
+    final wa = (profil['wa'] ?? '').toString();
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+          InkWell(
+            onTap: () => setState(() => _terbuka = !_terbuka),
             child: Row(
               children: [
                 GestureDetector(
@@ -3854,11 +3837,13 @@ class LayarAkun extends StatelessWidget {
                         MaterialPageRoute(
                             builder: (_) =>
                                 LayarProfil(profilAwal: profil)));
-                    if (berubah == true) await onProfilDiubah?.call();
+                    if (berubah == true) await widget.onProfilDiubah?.call();
                   },
                   child: CircleAvatar(
                     radius: 30,
-                    backgroundImage: _foto(),
+                    backgroundImage: (foto != null && foto.isNotEmpty)
+                        ? NetworkImage(foto)
+                        : null,
                     child: (foto == null || foto.isEmpty)
                         ? const Icon(Icons.person, size: 30)
                         : null,
@@ -3904,34 +3889,43 @@ class LayarAkun extends StatelessWidget {
                               MaterialTapTargetSize.shrinkWrap,
                         ),
                       ],
-                      const SizedBox(height: 5),
-                      if (profil['terverifikasi'] == true &&
-                          (profil['npm'] ?? '').toString().isNotEmpty)
-                        Text(
-                            'NPM ${profil['npm']}${(profil['prodi'] ?? '').toString().isNotEmpty ? ' • ${profil['prodi']}' : ''}',
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis),
-                      if ((profil['wa'] ?? '').toString().isEmpty)
-                        Text(tr('Nomor WhatsApp belum diisi'),
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis)
-                      else
-                        _BarisKontak(
-                            wa: (profil['wa'] ?? '').toString(),
-                            email: email),
-                      const SizedBox(height: 6),
-                      BarisBadge(
-                          userId: (profil['id'] ?? '').toString()),
                     ],
                   ),
                 ),
+                Icon(_terbuka ? Icons.expand_less : Icons.expand_more,
+                    color: Colors.grey),
               ],
             ),
           ),
+          if (_terbuka) ...[
+            const SizedBox(height: 6),
+            if (npm.isNotEmpty) _barisDetail('NPM', npm),
+            if (prodi.isNotEmpty) _barisDetail('Prodi', prodi),
+            _barisDetail(
+                'WhatsApp',
+                wa.isEmpty ? tr('Nomor WhatsApp belum diisi') : '+$wa'),
+            if (email.isNotEmpty) _barisDetail('Email', email),
+          ],
+          const SizedBox(height: 8),
+          BarisBadge(userId: (profil['id'] ?? '').toString()),
+        ],
+      ),
+    );
+  }
+}
+
+class LayarAkun extends StatelessWidget {
+  final Map<String, dynamic> profil;
+  final Future<void> Function()? onProfilDiubah;
+  const LayarAkun({super.key, required this.profil, this.onProfilDiubah});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Akun'))),
+      body: ListView(
+        children: [
+          _KepalaAkun(profil: profil, onProfilDiubah: onProfilDiubah),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.manage_accounts_outlined),
@@ -4620,7 +4614,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.5.2'),
+                  label: Text(tr('Versi 1.5.3'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
