@@ -20,6 +20,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'cocok.dart';
 import 'config.dart';
 import 'i18n.dart';
 
@@ -1618,6 +1619,7 @@ class _LayarDetailState extends State<LayarDetail> {
   final TextEditingController _isiKomentar = TextEditingController();
   bool _muatKlaim = true;
   bool _sudahUp = false;
+  Future<List<HasilCocok>>? _fCocok;
   int _fotoKe = 0;
   RealtimeChannel? _kanalKomentar;
 
@@ -1626,6 +1628,7 @@ class _LayarDetailState extends State<LayarDetail> {
   @override
   void initState() {
     super.initState();
+    _fCocok = _hitungCocok();
     _muat();
     _kanalKomentar = sb
         .channel('komentar-${_post['id']}')
@@ -1984,6 +1987,7 @@ class _LayarDetailState extends State<LayarDetail> {
           ),
           const SizedBox(height: 12),
           Text(_post['deskripsi'] ?? ''),
+          _bagianCocok(),
           const Divider(height: 32),
           if (_muatKlaim)
             const Center(child: CircularProgressIndicator())
@@ -1995,6 +1999,82 @@ class _LayarDetailState extends State<LayarDetail> {
           ..._bagianKomentar(),
         ],
       ),
+    );
+  }
+
+  Future<List<HasilCocok>> _hitungCocok() async {
+    try {
+      final rows = await sb
+          .from('lf_posts')
+          .select(
+              'id, user_id, jenis, status, judul, deskripsi, kategori, lokasi, created_at, foto_urls, foto_url')
+          .eq('status', 'tampil')
+          .limit(200);
+      final korpus = List<Map<String, dynamic>>.from(rows);
+      final mesin = MesinCocok(korpus);
+      return mesin.cariCocok(_post, korpus);
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Widget _bagianCocok() {
+    if (_post['status'] != 'tampil') return const SizedBox.shrink();
+    return FutureBuilder<List<HasilCocok>>(
+      future: _fCocok,
+      builder: (context, snap) {
+        final hasil = snap.data ?? [];
+        if (hasil.isEmpty) return const SizedBox.shrink();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Icon(Icons.auto_awesome, size: 19, color: kTeal),
+                const SizedBox(width: 6),
+                Text(tr('Kemungkinan Cocok'),
+                    style: const TextStyle(
+                        fontSize: 17, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+                tr('Dihitung otomatis dari kemiripan isi, kategori, lokasi, dan waktu.'),
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 8),
+            for (final h in hasil)
+              Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: ListTile(
+                  leading: daftarFoto(h.post).isEmpty
+                      ? const CircleAvatar(
+                          child: Icon(Icons.search, size: 18))
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(daftarFoto(h.post).first,
+                              width: 44, height: 44, fit: BoxFit.cover),
+                        ),
+                  title: Text((h.post['judul'] ?? '').toString(),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                  subtitle: Text(
+                      '${h.post['kategori'] ?? ''} - ${h.post['lokasi'] ?? ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  trailing: Chip(
+                    label: Text('${(h.skor * 100).round()}%',
+                        style: const TextStyle(
+                            fontSize: 11, color: Colors.white)),
+                    backgroundColor: kTeal,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => LayarDetail(post: h.post))),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -4065,7 +4145,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.3.4'),
+                  label: Text(tr('Versi 1.4.0'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),

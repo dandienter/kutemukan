@@ -115,6 +115,9 @@ const Map<String, String> _idKeEn = {
   'Klaimmu sudah terkirim dan menunggu keputusan yang memposting. Kamu akan mendapat notif begitu ada keputusan.':
       'Your claim has been sent and is waiting for the poster\'s decision. You will be notified once there is a decision.',
   'Komentar': 'Comments',
+  'Kemungkinan Cocok': 'Possible Matches',
+  'Dihitung otomatis dari kemiripan isi, kategori, lokasi, dan waktu.':
+      'Calculated automatically from content, category, location, and time similarity.',
   'Konfirmasi kata sandi tidak sama.':
       'Password confirmation does not match.',
   'Kritik & Saran': 'Feedback',
@@ -203,7 +206,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.3.4': 'Version 1.3.4',
+  'Versi 1.4.0': 'Version 1.4.0',
   'atau': 'or',
   'Bahasa': 'Language',
   'Emas': 'Gold',
