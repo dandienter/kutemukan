@@ -120,6 +120,8 @@ class KartuPostingan extends StatelessWidget {
                   PopupMenuButton<String>(
                     onSelected: onAksi,
                     itemBuilder: (_) => [
+                      if (post['status'] != 'kembali')
+                        PopupMenuItem(value: 'ubah', child: Text(tr('Ubah'))),
                       if (post['status'] == 'tampil')
                         PopupMenuItem(
                           value: 'kembali',
@@ -360,6 +362,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
   }
 
   Future<void> _aksiSaya(Map<String, dynamic> p, String aksi) async {
+    if (aksi == 'ubah') {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => LayarBuat(profil: widget.profil, post: p),
+        ),
+      );
+      _segarkan();
+      return;
+    }
     if (aksi == 'kembali') {
       await sb
           .from('lf_posts')
@@ -369,6 +380,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
           })
           .eq('id', p['id']);
     } else if (aksi == 'hapus') {
+      if (!await konfirmasiHapusPost(context)) return;
       await sb.from('lf_posts').delete().eq('id', p['id']);
     }
     _segarkan();

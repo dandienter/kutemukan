@@ -316,3 +316,26 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
     }
   }
 }
+
+Future<bool> konfirmasiHapusPost(BuildContext context) async {
+  final jadi = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: Text(tr('Hapus postingan?')),
+      content: Text(
+        tr('Postingan ini akan dihapus permanen dan tidak bisa dikembalikan.'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(tr('Batal')),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: Text(tr('Ya, hapus')),
+        ),
+      ],
+    ),
+  );
+  return jadi == true;
+}

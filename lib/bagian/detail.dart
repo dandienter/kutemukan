@@ -255,6 +255,37 @@ class _LayarDetailState extends State<LayarDetail> {
     await _muat();
   }
 
+  Future<void> _ubahPost() async {
+    Map<String, dynamic> profil = {};
+    try {
+      final rows = await sb
+          .from('lf_profiles')
+          .select()
+          .eq('id', sb.auth.currentUser!.id);
+      if (rows.isNotEmpty) profil = rows.first;
+    } catch (_) {}
+    if (!mounted) return;
+    final hasil = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LayarBuat(profil: profil, post: _post),
+      ),
+    );
+    if (hasil == true && mounted) {
+      await _muat();
+      setState(() {});
+    }
+  }
+
+  Future<void> _hapusPost() async {
+    if (!await konfirmasiHapusPost(context)) return;
+    await sb.from('lf_posts').delete().eq('id', _post['id']);
+    if (mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(tr('Postingan dihapus.'))));
+      Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _bukaWa(String wa, String sapaan) async {
     final teks = Uri.encodeComponent(sapaan);
     await launchUrl(
@@ -323,6 +354,12 @@ class _LayarDetailState extends State<LayarDetail> {
               MaterialPageRoute(builder: (_) => LayarBagikan(post: _post)),
             ),
           ),
+          if (_punyaSaya && _post['status'] != 'kembali')
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: tr('Ubah'),
+              onPressed: _ubahPost,
+            ),
           if (!_punyaSaya)
             IconButton(
               icon: const Icon(Icons.flag_outlined),
@@ -683,6 +720,18 @@ class _LayarDetailState extends State<LayarDetail> {
         ),
         const SizedBox(height: 16),
       ],
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: _hapusPost,
+          icon: const Icon(Icons.delete_outline, color: Colors.red),
+          label: Text(
+            tr('Hapus Postingan'),
+            style: const TextStyle(color: Colors.red),
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
       Text(
         tr('Klaim Masuk'),
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),

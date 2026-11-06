@@ -73,9 +73,8 @@ class _LayarNotifState extends State<LayarNotif> {
   Future<void> _buka(Map<String, dynamic> n) async {
     await sb.from('lf_notif').update({'dibaca': true}).eq('id', n['id']);
     if (n['jenis'] == 'moderasi' && mounted) {
-      await Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const LayarModerasi()));
+      await Navigator.of(context)
+          .push(MaterialPageRoute(builder: (_) => const LayarModerasi()));
       _segarkanNotif();
       return;
     }

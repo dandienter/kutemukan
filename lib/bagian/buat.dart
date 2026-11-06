@@ -6,7 +6,8 @@ part of '../main.dart';
 
 class LayarBuat extends StatefulWidget {
   final Map<String, dynamic> profil;
-  const LayarBuat({super.key, required this.profil});
+  final Map<String, dynamic>? post;
+  const LayarBuat({super.key, required this.profil, this.post});
   @override
   State<LayarBuat> createState() => _LayarBuatState();
 }
@@ -21,15 +22,37 @@ class _LayarBuatState extends State<LayarBuat> {
   final _rahasia = TextEditingController();
   DateTime _waktu = DateTime.now();
   final List<File> _foto = [];
+  final List<String> _fotoLama = [];
   bool _sibuk = false;
 
+  bool get _modeUbah => widget.post != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.post;
+    if (p != null) {
+      _jenis = (p['jenis'] ?? 'hilang').toString();
+      final kat = (p['kategori'] ?? '').toString();
+      if (kKategori.contains(kat)) _kategori = kat;
+      _judul.text = (p['judul'] ?? '').toString();
+      _deskripsi.text = (p['deskripsi'] ?? '').toString();
+      _lokasi.text = (p['lokasi'] ?? '').toString();
+      _penitipan.text = (p['penitipan'] ?? '').toString();
+      _rahasia.text = (p['detail_rahasia'] ?? '').toString();
+      final w = DateTime.tryParse((p['waktu_kejadian'] ?? '').toString());
+      if (w != null) _waktu = w.toLocal();
+      _fotoLama.addAll(daftarFoto(p));
+    }
+  }
+
   Future<void> _pilihFoto() async {
-    if (_foto.length >= 5) return;
+    if (_fotoLama.length + _foto.length >= 5) return;
     final xs = await ImagePicker().pickMultiImage(imageQuality: 78, limit: 5);
     if (xs.isEmpty) return;
     setState(() {
       for (final x in xs) {
-        if (_foto.length < 5) _foto.add(File(x.path));
+        if (_fotoLama.length + _foto.length < 5) _foto.add(File(x.path));
       }
     });
   }
@@ -43,12 +66,11 @@ class _LayarBuatState extends State<LayarBuat> {
     }
     setState(() => _sibuk = true);
     try {
-      final urls = <String>[];
+      final urls = <String>[..._fotoLama];
       for (final f in _foto) {
         urls.add(await unggahBerkas(await kompresKeWebp(f)));
       }
-      await sb.from('lf_posts').insert({
-        'user_id': sb.auth.currentUser!.id,
+      final isi = <String, dynamic>{
         'jenis': _jenis,
         'judul': _judul.text.trim(),
         'kategori': _kategori,
@@ -61,21 +83,47 @@ class _LayarBuatState extends State<LayarBuat> {
             ? null
             : _rahasia.text.trim(),
         'penitipan': _jenis == 'temuan' ? _penitipan.text.trim() : null,
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Postingan terkirim. Menunggu moderasi admin sebelum tampil.',
+      };
+      if (_modeUbah) {
+        final statusLama = (widget.post!['status'] ?? '').toString();
+        if (statusLama == 'tampil' || statusLama == 'ditolak') {
+          isi['status'] = 'menunggu';
+        }
+        isi['updated_at'] = DateTime.now().toUtc().toIso8601String();
+        await sb.from('lf_posts').update(isi).eq('id', widget.post!['id']);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                tr(
+                  'Perubahan tersimpan. Menunggu moderasi admin sebelum tampil.',
+                ),
+              ),
             ),
-          ),
-        );
-        _judul.clear();
-        _deskripsi.clear();
-        _lokasi.clear();
-        _penitipan.clear();
-        _rahasia.clear();
-        setState(() => _foto.clear());
+          );
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        isi['user_id'] = sb.auth.currentUser!.id;
+        await sb.from('lf_posts').insert(isi);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Postingan terkirim. Menunggu moderasi admin sebelum tampil.',
+              ),
+            ),
+          );
+          _judul.clear();
+          _deskripsi.clear();
+          _lokasi.clear();
+          _penitipan.clear();
+          _rahasia.clear();
+          setState(() {
+            _foto.clear();
+            _fotoLama.clear();
+          });
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -98,7 +146,9 @@ class _LayarBuatState extends State<LayarBuat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Buat Postingan'))),
+      appBar: AppBar(
+        title: Text(tr(_modeUbah ? 'Ubah Postingan' : 'Buat Postingan')),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -215,6 +265,64 @@ class _LayarBuatState extends State<LayarBuat> {
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
+                      for (var i = 0; i < _fotoLama.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  _fotoLama[i],
+                                  width: 78,
+                                  height: 78,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Container(
+                                    width: 78,
+                                    height: 78,
+                                    color: Colors.grey.shade200,
+                                    child: const Icon(
+                                      Icons.image_not_supported_outlined,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                right: 0,
+                                top: 0,
+                                child: GestureDetector(
+                                  onTap: () =>
+                                      setState(() => _fotoLama.removeAt(i)),
+                                  child: const CircleAvatar(
+                                    radius: 10,
+                                    backgroundColor: Colors.red,
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 12,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (i == 0)
+                                Positioned(
+                                  left: 4,
+                                  bottom: 4,
+                                  child: Chip(
+                                    label: Text(
+                                      tr('Sampul'),
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    backgroundColor: kBiru,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
                       for (var i = 0; i < _foto.length; i++)
                         Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -246,7 +354,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                   ),
                                 ),
                               ),
-                              if (i == 0)
+                              if (i == 0 && _fotoLama.isEmpty)
                                 Positioned(
                                   left: 4,
                                   bottom: 4,
@@ -266,7 +374,9 @@ class _LayarBuatState extends State<LayarBuat> {
                           ),
                         ),
                       InkWell(
-                        onTap: _foto.length >= 5 ? null : _pilihFoto,
+                        onTap: _fotoLama.length + _foto.length >= 5
+                            ? null
+                            : _pilihFoto,
                         child: Container(
                           width: 78,
                           height: 78,
@@ -283,7 +393,7 @@ class _LayarBuatState extends State<LayarBuat> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${tr('Foto')} ${_foto.length}/5',
+                                '${tr('Foto')} ${_fotoLama.length + _foto.length}/5',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey,
@@ -306,7 +416,11 @@ class _LayarBuatState extends State<LayarBuat> {
               child: FilledButton(
                 onPressed: _sibuk ? null : _kirim,
                 child: Text(
-                  _sibuk ? tr('Mengirim...') : tr('Kirim untuk Moderasi'),
+                  _sibuk
+                      ? tr('Mengirim...')
+                      : _modeUbah
+                      ? tr('Simpan Perubahan')
+                      : tr('Kirim untuk Moderasi'),
                 ),
               ),
             ),
