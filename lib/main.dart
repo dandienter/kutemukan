@@ -9,6 +9,9 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:record/record.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -53,8 +56,9 @@ part 'bagian/sandi.dart';
 part 'bagian/kritik.dart';
 part 'bagian/pahlawan.dart';
 part 'bagian/statistik.dart';
-part 'bagian/moderasi.dart';
 part 'bagian/laporan.dart';
+part 'bagian/moderasi.dart';
+part 'bagian/laporanpdf.dart';
 part 'bagian/info.dart';
 
 Future<void> _fcmLatar(RemoteMessage pesan) async {
