@@ -81,7 +81,9 @@ jobs:
           s2 = open(p2).read()
           if 'google-services' not in s2:
               s2 = s2.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
-              open(p2, 'w').write(s2)
+          if 'abiFilters' not in s2:
+              s2 = s2.replace('defaultConfig {', 'defaultConfig {\n        ndk { abiFilters.add("arm64-v8a") }', 1)
+          open(p2, 'w').write(s2)
           print('firebase terpasang')
           PYEOF
 
