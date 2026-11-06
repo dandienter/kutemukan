@@ -15,6 +15,7 @@ class _LayarProfilState extends State<LayarProfil> {
   final _nama = TextEditingController();
   final _wa = TextEditingController();
   bool _sibuk = false;
+  bool _fotoDihapus = false;
   String? _fotoUrl;
   File? _fotoBaru;
 
@@ -40,15 +41,46 @@ class _LayarProfilState extends State<LayarProfil> {
   Future<void> _pilihFoto() async {
     final sumber = await pilihSumberFoto(context);
     if (sumber == null || !mounted) return;
-    final x = await ImagePicker().pickImage(
-      source: sumber,
-      imageQuality: 85,
+    final x = await ImagePicker().pickImage(source: sumber, imageQuality: 85);
+    if (x != null) {
+      setState(() {
+        _fotoBaru = File(x.path);
+        _fotoDihapus = false;
+      });
+    }
+  }
+
+  Future<void> _hapusFoto() async {
+    final jadi = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Hapus Foto')),
+        content: Text(
+          tr('Foto profil akan dihapus dan diganti avatar inisial.'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Hapus')),
+          ),
+        ],
+      ),
     );
-    if (x != null) setState(() => _fotoBaru = File(x.path));
+    if (jadi == true) {
+      setState(() {
+        _fotoBaru = null;
+        _fotoDihapus = true;
+      });
+    }
   }
 
   ImageProvider? _fotoProfilTampil() {
     if (_fotoBaru != null) return FileImage(_fotoBaru!);
+    if (_fotoDihapus) return null;
     if (_fotoUrl != null && _fotoUrl!.isNotEmpty) {
       return NetworkImage(_fotoUrl!);
     }
@@ -67,7 +99,7 @@ class _LayarProfilState extends State<LayarProfil> {
     if (wa.startsWith('0')) wa = '62${wa.substring(1)}';
     setState(() => _sibuk = true);
     try {
-      var fotoUrl = _fotoUrl;
+      var fotoUrl = _fotoDihapus ? null : _fotoUrl;
       if (_fotoBaru != null) {
         fotoUrl = await unggahBerkas(await kompresKeWebp(_fotoBaru!));
       }
@@ -126,9 +158,7 @@ class _LayarProfilState extends State<LayarProfil> {
               child: CircleAvatar(
                 radius: 46,
                 backgroundImage: _fotoProfilTampil(),
-                child:
-                    (_fotoBaru == null &&
-                        (_fotoUrl == null || _fotoUrl!.isEmpty))
+                child: _fotoProfilTampil() == null
                     ? const Icon(Icons.add_a_photo_outlined, size: 30)
                     : null,
               ),
@@ -138,6 +168,19 @@ class _LayarProfilState extends State<LayarProfil> {
               tr('Ketuk untuk pasang foto profil'),
               style: TextStyle(color: Colors.grey, fontSize: 12),
             ),
+            if (_fotoProfilTampil() != null)
+              TextButton.icon(
+                onPressed: _hapusFoto,
+                icon: const Icon(
+                  Icons.delete_outline,
+                  size: 18,
+                  color: Colors.red,
+                ),
+                label: Text(
+                  tr('Hapus Foto'),
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
             const SizedBox(height: 18),
             Text(
               tr(
