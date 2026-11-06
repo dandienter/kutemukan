@@ -105,8 +105,7 @@ class _LayarDetailState extends State<LayarDetail> {
       if (uidSaya != null && !_punyaSaya) {
         try {
           final now = DateTime.now();
-          final tgl =
-              '${now.year.toString().padLeft(4, '0')}-'
+          final tgl = '${now.year.toString().padLeft(4, '0')}-'
               '${now.month.toString().padLeft(2, '0')}-'
               '${now.day.toString().padLeft(2, '0')}';
           final upRows = await sb
@@ -240,18 +239,82 @@ class _LayarDetailState extends State<LayarDetail> {
   }
 
   Future<void> _putuskanKlaim(Map<String, dynamic> klaim, String status) async {
-    await sb.from('lf_claims').update({'status': status}).eq('id', klaim['id']);
+    String? alasan;
+    if (status == 'ditolak') {
+      final kontrol = TextEditingController();
+      final jadi = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('Tolak Klaim')),
+          content: TextField(
+            controller: kontrol,
+            maxLines: 3,
+            decoration: InputDecoration(
+              labelText: tr('Alasan penolakan'),
+              hintText: tr(
+                'Misalnya ciri khusus tidak cocok. Alasan ini tampil ke pengklaim.',
+              ),
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Batal')),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(tr('Tolak Klaim')),
+            ),
+          ],
+        ),
+      );
+      if (jadi != true || !mounted) return;
+      alasan = kontrol.text.trim().isEmpty ? null : kontrol.text.trim();
+    }
+    final update = <String, dynamic>{'status': status, 'alasan_tolak': alasan};
+    if (status == 'disetujui' &&
+        (klaim['kode_serah_terima'] ?? '').toString().isEmpty) {
+      update['kode_serah_terima'] =
+          (100000 + Random.secure().nextInt(900000)).toString();
+    }
+    await sb.from('lf_claims').update(update).eq('id', klaim['id']);
     await _muat();
   }
 
+  Future<void> _ajukanSengketa(Map<String, dynamic> klaim) async {
+    try {
+      final ok = await sb.rpc(
+        'lf_ajukan_sengketa',
+        params: {'p_claim_id': klaim['id']},
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              ok == true
+                  ? 'Sengketa diajukan. Admin akan meninjau klaim ini.'
+                  : 'Sengketa belum bisa diajukan.',
+            ),
+          ),
+        ),
+      );
+      if (ok == true) await _muat();
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Sengketa gagal diajukan, coba lagi.'))),
+        );
+      }
+    }
+  }
+
   Future<void> _tandaiSelesai() async {
-    await sb
-        .from('lf_posts')
-        .update({
-          'status': 'kembali',
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        })
-        .eq('id', _post['id']);
+    await sb.from('lf_posts').update({
+      'status': 'kembali',
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', _post['id']);
     await _muat();
   }
 
@@ -350,53 +413,53 @@ class _LayarDetailState extends State<LayarDetail> {
         InkWell(
           onTap: onTap,
           child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 9),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(ikon, size: 20, color: kBiru),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 118,
-                child: Text(
-                  label,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+            padding: const EdgeInsets.symmetric(vertical: 9),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(ikon, size: 20, color: kBiru),
+                const SizedBox(width: 12),
+                SizedBox(
+                  width: 118,
+                  child: Text(
+                    label,
+                    style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            (nilai ?? '').toString(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              (nilai ?? '').toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
-                        ),
-                        if (verified) ...[
-                          const SizedBox(width: 5),
-                          const Icon(Icons.verified, size: 15, color: kBiru),
+                          if (verified) ...[
+                            const SizedBox(width: 5),
+                            const Icon(Icons.verified, size: 15, color: kBiru),
+                          ],
                         ],
-                      ],
-                    ),
-                    if (sub != null && sub.isNotEmpty)
-                      Text(
-                        sub,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
                       ),
-                  ],
+                      if (sub != null && sub.isNotEmpty)
+                        Text(
+                          sub,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
         ),
         if (!terakhir) const Divider(height: 1),
@@ -542,18 +605,17 @@ class _LayarDetailState extends State<LayarDetail> {
                     sub: (_post['prodi_pemilik'] ?? '').toString().isEmpty
                         ? null
                         : (_post['prodi_pemilik'] ?? '').toString(),
-                    onTap:
-                        (_post['nama_disamarkan'] == true ||
+                    onTap: (_post['nama_disamarkan'] == true ||
                             (_post['user_id'] ?? '').toString() ==
                                 (sb.auth.currentUser?.id ?? ''))
                         ? null
                         : () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => LayarProfilPublik(
-                                userId: (_post['user_id'] ?? '').toString(),
+                              MaterialPageRoute(
+                                builder: (_) => LayarProfilPublik(
+                                  userId: (_post['user_id'] ?? '').toString(),
+                                ),
                               ),
                             ),
-                          ),
                   ),
                   _barisInfo(
                     Icons.publish_outlined,
@@ -594,8 +656,8 @@ class _LayarDetailState extends State<LayarDetail> {
                             fontSize: 12,
                             color:
                                 Theme.of(context).brightness == Brightness.dark
-                                ? Colors.green.shade300
-                                : Colors.green.shade700,
+                                    ? Colors.green.shade300
+                                    : Colors.green.shade700,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -908,9 +970,8 @@ class _LayarDetailState extends State<LayarDetail> {
   }
 
   List<Widget> _bagianPemilik() {
-    final menunggu = _klaimMasuk
-        .where((k) => k['status'] == 'menunggu')
-        .toList();
+    final menunggu =
+        _klaimMasuk.where((k) => k['status'] == 'menunggu').toList();
     return [
       if (_post['status'] == 'tampil') ...[
         if (menunggu.isNotEmpty)
@@ -983,8 +1044,8 @@ class _LayarDetailState extends State<LayarDetail> {
                   backgroundColor: status == 'disetujui'
                       ? Colors.green
                       : status == 'ditolak'
-                      ? Colors.red
-                      : Colors.orange,
+                          ? Colors.red
+                          : Colors.orange,
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -1003,6 +1064,15 @@ class _LayarDetailState extends State<LayarDetail> {
               fmtTanggal(k['created_at']),
               style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () =>
+                    bukaChatKlaim(context, k, (_post['judul'] ?? '').toString()),
+                icon: const Icon(Icons.forum_outlined, size: 18),
+                label: Text(tr('Chat')),
+              ),
+            ),
             if (status == 'menunggu')
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -1020,7 +1090,7 @@ class _LayarDetailState extends State<LayarDetail> {
                   ),
                 ],
               ),
-            if (status == 'disetujui')
+            if (status == 'disetujui') ...[
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
@@ -1028,6 +1098,14 @@ class _LayarDetailState extends State<LayarDetail> {
                   icon: const Icon(Icons.chat, size: 18),
                   label: Text(tr('Hubungi Pengklaim')),
                 ),
+              ),
+              const SizedBox(height: 8),
+              _FormVerifikasiKode(klaim: k, onSelesai: _muat),
+            ],
+            if (status == 'selesai')
+              Chip(
+                avatar: const Icon(Icons.verified, size: 16),
+                label: Text(tr('Serah terima selesai')),
               ),
           ],
         ),
@@ -1086,30 +1164,197 @@ class _LayarDetailState extends State<LayarDetail> {
       ];
     }
     if (status == 'ditolak') {
+      final alasan = (k['alasan_tolak'] ?? '').toString().trim();
+      final sengketa = k['sengketa'] == true;
       return [
         Card(
           color: Colors.red,
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Text(
-              tr(
-                'Klaimmu belum bisa disetujui. Pastikan ciri khusus yang kamu sebutkan benar-benar hanya diketahui pemilik aslinya.',
-              ),
-              style: const TextStyle(color: Colors.white),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tr(
+                    'Klaimmu belum bisa disetujui. Pastikan ciri khusus yang kamu sebutkan benar-benar hanya diketahui pemilik aslinya.',
+                  ),
+                  style: const TextStyle(color: Colors.white),
+                ),
+                if (alasan.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    '${tr('Alasan penolakan')}: $alasan',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        if (sengketa)
+          Card(
+            color: Colors.orange.shade100,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                tr(
+                  'Sengketa sudah kamu ajukan dan sedang menunggu tinjauan admin.',
+                ),
+                style: const TextStyle(color: Colors.black87),
+              ),
+            ),
+          )
+        else
+          OutlinedButton.icon(
+            onPressed: () => _ajukanSengketa(k),
+            icon: const Icon(Icons.gavel_outlined),
+            label: Text(tr('Ajukan Sengketa ke Admin')),
+          ),
       ];
     }
+    final kodeSaya = (k['kode_serah_terima'] ?? '').toString();
     return [
+      if (kodeSaya.isNotEmpty) ...[
+        Card(
+          color: const Color(0xFFE6F4F1),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              children: [
+                Text(
+                  tr('Kode Serah Terima'),
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  kodeSaya,
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 6,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    'Tunjukkan kode ini ke pemilik postingan saat barang diserahkan. Jangan bagikan ke orang lain.',
+                  ),
+                  style: const TextStyle(color: Colors.black87, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+      ],
       SizedBox(
         width: double.infinity,
         child: FilledButton.icon(
+          onPressed: () =>
+              bukaChatKlaim(context, k, (_post['judul'] ?? '').toString()),
+          icon: const Icon(Icons.forum_outlined),
+          label: Text(tr('Chat di Aplikasi')),
+        ),
+      ),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
           onPressed: _hubungiPemilik,
           icon: const Icon(Icons.chat),
           label: Text(tr('Hubungi via WhatsApp')),
         ),
       ),
     ];
+  }
+}
+
+// ===========================================================================
+// Verifikasi kode serah terima oleh pemilik postingan
+// ===========================================================================
+
+class _FormVerifikasiKode extends StatefulWidget {
+  final Map<String, dynamic> klaim;
+  final Future<void> Function() onSelesai;
+  const _FormVerifikasiKode({required this.klaim, required this.onSelesai});
+  @override
+  State<_FormVerifikasiKode> createState() => _FormVerifikasiKodeState();
+}
+
+class _FormVerifikasiKodeState extends State<_FormVerifikasiKode> {
+  final _kode = TextEditingController();
+  bool _proses = false;
+
+  Future<void> _verifikasi() async {
+    final benar = _kode.text.trim();
+    final simpan = (widget.klaim['kode_serah_terima'] ?? '').toString();
+    if (simpan.isEmpty || benar != simpan) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Kode tidak cocok. Periksa lagi.'))),
+      );
+      return;
+    }
+    setState(() => _proses = true);
+    try {
+      await sb
+          .from('lf_claims')
+          .update({'status': 'selesai'})
+          .eq('id', widget.klaim['id']);
+      await sb
+          .from('lf_posts')
+          .update({
+            'status': 'kembali',
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', widget.klaim['post_id']);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Serah terima selesai. Barang kembali.'))),
+        );
+      }
+      await widget.onSelesai();
+    } catch (_) {
+      if (mounted) {
+        setState(() => _proses = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Gagal menyelesaikan, coba lagi.'))),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _kode,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            decoration: InputDecoration(
+              labelText: tr('Kode dari pengklaim'),
+              border: const OutlineInputBorder(),
+              isDense: true,
+              counterText: '',
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton(
+          onPressed: _proses ? null : _verifikasi,
+          child: Text(tr('Selesaikan')),
+        ),
+      ],
+    );
   }
 }
