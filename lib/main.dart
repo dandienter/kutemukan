@@ -1199,6 +1199,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
   void _segarkan() {
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
+    _muatUpHariIni();
     if (mounted) setState(() {});
   }
 
@@ -1207,6 +1208,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
     super.initState();
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
+    _muatUpHariIni();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cekUpdate(context);
     });
@@ -1284,6 +1286,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Terima kasih sudah bantu UP.'))));
       } else {
+        setState(() => _upHariIni.add((p['id'] ?? '').toString()));
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content:
                 Text(tr('Kamu sudah bantu UP postingan ini hari ini.'))));
@@ -1293,6 +1296,30 @@ class _LayarBerandaState extends State<LayarBeranda> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(tr('Bantu UP gagal, coba lagi sebentar.'))));
       }
+    }
+  }
+
+  Future<void> _muatUpHariIni() async {
+    final uid = sb.auth.currentUser?.id;
+    if (uid == null) return;
+    try {
+      final now = DateTime.now();
+      final tgl = '${now.year.toString().padLeft(4, '0')}-'
+          '${now.month.toString().padLeft(2, '0')}-'
+          '${now.day.toString().padLeft(2, '0')}';
+      final rows = await sb
+          .from('lf_ups')
+          .select('post_id')
+          .eq('user_id', uid)
+          .eq('tanggal', tgl);
+      if (!mounted) return;
+      setState(() {
+        _upHariIni
+          ..clear()
+          ..addAll(rows.map((r) => (r['post_id'] ?? '').toString()));
+      });
+    } catch (_) {
+      // gagal memuat daftar UP tidak menghalangi beranda tampil
     }
   }
 
@@ -1666,6 +1693,24 @@ class _LayarDetailState extends State<LayarDetail> {
         final saya = daftar.where(
             (k) => k['user_id'] == sb.auth.currentUser?.id);
         _klaimSaya = saya.isEmpty ? null : saya.first;
+      }
+      // Cek apakah saya sudah bantu UP postingan ini hari ini, supaya
+      // tombolnya langsung tidak tampil sejak halaman dibuka.
+      final uidSaya = sb.auth.currentUser?.id;
+      if (uidSaya != null && !_punyaSaya) {
+        try {
+          final now = DateTime.now();
+          final tgl = '${now.year.toString().padLeft(4, '0')}-'
+              '${now.month.toString().padLeft(2, '0')}-'
+              '${now.day.toString().padLeft(2, '0')}';
+          final upRows = await sb
+              .from('lf_ups')
+              .select('id')
+              .eq('post_id', _post['id'])
+              .eq('user_id', uidSaya)
+              .eq('tanggal', tgl);
+          if (upRows.isNotEmpty) _sudahUp = true;
+        } catch (_) {}
       }
     } catch (_) {
       // klaim gagal dimuat, detail tetap tampil
@@ -4020,7 +4065,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.3.3'),
+                  label: Text(tr('Versi 1.3.4'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
