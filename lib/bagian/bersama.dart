@@ -33,6 +33,20 @@ Future<String> unggahBerkas(File f) async {
   return data['url'] as String;
 }
 
+/// Unggah satu berkas audio (pesan suara) ke API MySIKA, kembalikan
+/// URL publiknya.
+Future<String> unggahAudio(File f) async {
+  final req = http.MultipartRequest('POST', Uri.parse(kUploadAudioUrl));
+  final token = sb.auth.currentSession?.accessToken ?? '';
+  req.headers['Authorization'] = 'Bearer $token';
+  req.files.add(await http.MultipartFile.fromPath('audio', f.path));
+  final res = await req.send();
+  final body = await res.stream.bytesToString();
+  if (res.statusCode != 200) throw 'Unggah audio gagal: $body';
+  final data = jsonDecode(body) as Map<String, dynamic>;
+  return data['url'] as String;
+}
+
 /// Tampilkan pilihan sumber foto: ambil langsung dari kamera atau pilih
 /// dari galeri. Mengembalikan null bila pengguna membatalkan pilihan.
 Future<ImageSource?> pilihSumberFoto(BuildContext context) {
@@ -63,7 +77,7 @@ Future<ImageSource?> pilihSumberFoto(BuildContext context) {
 
 SupabaseClient get sb => Supabase.instance.client;
 
-const Color kBiru = Color(0xFF0057A8);
+const Color kBiru = Color(0xFF0061C9);
 const List<String> kKategori = [
   'Dompet & Uang',
   'KTM & Dokumen',
@@ -402,4 +416,46 @@ Future<bool> konfirmasiHapusPost(BuildContext context) async {
     ),
   );
   return jadi == true;
+}
+
+/// Tombol akun berbentuk foto profil di kanan atas AppBar.
+/// Bila profil tidak diberikan, diambil sendiri dari database.
+class TombolAkun extends StatelessWidget {
+  final Map<String, dynamic>? profil;
+  const TombolAkun({super.key, this.profil});
+
+  Future<void> _buka(BuildContext context) async {
+    var p = profil;
+    if (p == null) {
+      final id = sb.auth.currentUser?.id;
+      if (id == null) return;
+      final rows = await sb.from('lf_profiles').select().eq('id', id);
+      if (rows.isEmpty || !context.mounted) return;
+      p = rows.first;
+    }
+    if (!context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LayarAkun(profil: p!)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final foto = (profil?['foto_url'] ?? '').toString();
+    final nama = (profil?['nama'] ?? 'A').toString();
+    return IconButton(
+      tooltip: tr('Akun'),
+      onPressed: () => _buka(context),
+      icon: CircleAvatar(
+        radius: 15,
+        backgroundImage: foto.isNotEmpty ? NetworkImage(foto) : null,
+        child: foto.isEmpty
+            ? Text(
+                nama.isNotEmpty ? nama[0].toUpperCase() : 'A',
+                style: const TextStyle(fontSize: 13),
+              )
+            : null,
+      ),
+    );
+  }
 }
