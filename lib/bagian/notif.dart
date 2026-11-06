@@ -61,6 +61,15 @@ class _LayarNotifState extends State<LayarNotif> {
     }
   }
 
+  Future<void> _tandaiSemuaDibaca() async {
+    await sb
+        .from('lf_notif')
+        .update({'dibaca': true})
+        .eq('user_id', sb.auth.currentUser!.id)
+        .eq('dibaca', false);
+    _segarkanNotif();
+  }
+
   Future<void> _buka(Map<String, dynamic> n) async {
     await sb.from('lf_notif').update({'dibaca': true}).eq('id', n['id']);
     if (n['jenis'] == 'moderasi' && mounted) {
@@ -85,7 +94,16 @@ class _LayarNotifState extends State<LayarNotif> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Notifikasi'))),
+      appBar: AppBar(
+        title: Text(tr('Notifikasi')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.done_all),
+            tooltip: tr('Tandai semua dibaca'),
+            onPressed: _tandaiSemuaDibaca,
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _fNotif,
         builder: (context, snap) {
