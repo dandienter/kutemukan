@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Pengaturan tampilan dan bahasa yang hidup di seluruh aplikasi.
-final ValueNotifier<ThemeMode> kTemaMode = ValueNotifier(ThemeMode.system);
+final ValueNotifier<ThemeMode> kTemaMode = ValueNotifier(ThemeMode.light);
 final ValueNotifier<String> kBahasa = ValueNotifier('id');
 
 Future<void> muatPreferensi() async {
   final p = await SharedPreferences.getInstance();
-  final tema = p.getString('tema') ?? 'sistem';
-  kTemaMode.value = tema == 'terang'
-      ? ThemeMode.light
-      : tema == 'gelap'
+  final tema = p.getString('tema') ?? 'terang';
+  kTemaMode.value = tema == 'gelap'
       ? ThemeMode.dark
-      : ThemeMode.system;
+      : tema == 'sistem'
+      ? ThemeMode.system
+      : ThemeMode.light;
   kBahasa.value = p.getString('bahasa') ?? 'id';
 }
 
@@ -126,6 +126,8 @@ const Map<String, String> _idKeEn = {
       'Informatics Engineering student, Universitas Indraprasta PGRI',
   'Masuk': 'Sign In',
   'Masuk dengan Google': 'Continue with Google',
+  'Masuk dengan SIKA': 'Sign in with SIKA',
+  'Pakai email saja': 'Use email instead',
   'Sistem Informasi Akademik Unindra': 'Unindra Academic Information System',
   'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.': 'Unindra student? Use your NPM and SIKA password and your status is verified right away.',
   'Kata sandi SIKA': 'SIKA password',
@@ -212,7 +214,7 @@ const Map<String, String> _idKeEn = {
   'Ulasanku sebelumnya': 'My previous reviews',
   'Unduh Sekarang': 'Download Now',
   'Urutkan dan saring waktu': 'Sort and filter by time',
-  'Versi 1.6.0': 'Version 1.6.0',
+  'Versi 1.6.1': 'Version 1.6.1',
   'atau': 'or',
   'Buat akun baru': 'Create a new account',
   'Selamat datang kembali': 'Welcome back',
