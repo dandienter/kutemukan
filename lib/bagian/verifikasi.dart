@@ -60,13 +60,17 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
             width: 110,
             child: Text(
               label,
-              style: const TextStyle(color: Colors.black54, fontSize: 13),
+              style: const TextStyle(color: Colors.white60, fontSize: 13),
             ),
           ),
           Expanded(
             child: Text(
               teks,
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -114,8 +118,12 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: skema.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF0061C9), Color(0xFF003E73)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,22 +155,23 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
                                     (widget.profil['nama'] ?? '').toString(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 16,
+                                      fontSize: 17,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 6),
                                 const Icon(
                                   Icons.verified,
-                                  color: kBiru,
-                                  size: 18,
+                                  color: Colors.white,
+                                  size: 19,
                                 ),
                               ],
                             ),
                             Text(
                               tr('Mahasiswa Terverifikasi'),
-                              style: TextStyle(
-                                color: skema.onPrimaryContainer,
+                              style: const TextStyle(
+                                color: Colors.white70,
                                 fontSize: 12,
                               ),
                             ),
@@ -171,7 +180,7 @@ class _LayarVerifikasiSikaState extends State<LayarVerifikasiSika> {
                       ),
                     ],
                   ),
-                  const Divider(height: 22),
+                  const Divider(height: 22, color: Colors.white24),
                   _barisBiodata('NPM', widget.profil['npm']),
                   _barisBiodata(tr('Program Studi'), widget.profil['prodi']),
                   _barisBiodata(tr('Fakultas'), widget.profil['fakultas']),
