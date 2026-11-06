@@ -132,6 +132,44 @@ String fmtTanggal(dynamic v) {
   return DateFormat('d MMM yyyy, HH:mm', kBahasa.value).format(d.toLocal());
 }
 
+/// Tampilkan satu foto layar penuh di dalam aplikasi (bisa dicubit
+/// untuk memperbesar), tanpa melempar pengguna ke peramban.
+void lihatFotoBesar(BuildContext context, String url) {
+  showDialog<void>(
+    context: context,
+    builder: (_) => Dialog(
+      backgroundColor: Colors.black,
+      insetPadding: EdgeInsets.zero,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: InteractiveViewer(
+              child: Image.network(
+                url,
+                fit: BoxFit.contain,
+                loadingBuilder: (_, anak, progres) => progres == null
+                    ? anak
+                    : const Center(child: CircularProgressIndicator()),
+                errorBuilder: (_, __, ___) => const Center(
+                    child: Icon(Icons.image_not_supported_outlined,
+                        color: Colors.white54, size: 40)),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 8,
+            right: 8,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 String fmtBulan(dynamic v) {
   if (v == null) return '-';
   final d = DateTime.tryParse(v.toString());
@@ -547,6 +585,8 @@ class Gerbang extends StatefulWidget {
 
 class _GerbangState extends State<Gerbang> {
   StreamSubscription<AuthState>? _sub;
+  Future<Map<String, dynamic>?>? _fProfil;
+  String? _uid;
 
   @override
   void initState() {
@@ -567,16 +607,34 @@ class _GerbangState extends State<Gerbang> {
   @override
   Widget build(BuildContext context) {
     final user = sb.auth.currentUser;
-    if (user == null) return const LayarLogin();
+    if (user == null) {
+      _fProfil = null;
+      _uid = null;
+      return const LayarLogin();
+    }
+    // Future profil disimpan per pengguna. Membuat future baru pada setiap
+    // build akan me-reset FutureBuilder, membongkar LayarUtama, dan membuat
+    // Beranda memuat ulang dari nol setiap ada peristiwa auth atau tema.
+    if (_uid != user.id) {
+      _uid = user.id;
+      _fProfil = _ambilProfil(user.id);
+    }
     return FutureBuilder<Map<String, dynamic>?>(
-      future: _ambilProfil(user.id),
+      future: _fProfil,
       builder: (context, snap) {
-        if (snap.connectionState != ConnectionState.done) {
+        if (snap.connectionState != ConnectionState.done &&
+            !snap.hasData) {
           return const Scaffold(
               body: Center(child: CircularProgressIndicator()));
         }
         final profil = snap.data;
-        if (profil == null) return const LayarProfil();
+        if (profil == null) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Scaffold(
+                body: Center(child: CircularProgressIndicator()));
+          }
+          return const LayarProfil();
+        }
         return LayarUtama(profil: profil);
       },
     );
@@ -632,11 +690,8 @@ class _LayarLoginState extends State<LayarLogin> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Image.asset('assets/maskot.png', height: 180),
-              const SizedBox(height: 10),
-              const Text('KutemuKan',
-                  style:
-                      TextStyle(fontSize: 30, fontWeight: FontWeight.bold)),
+              Image.asset('assets/maskot.png', height: 200),
+              const SizedBox(height: 6),
               Text(tr('Lost and Found Kampus Unindra'),
                   textAlign: TextAlign.center),
               const SizedBox(height: 28),
@@ -1332,23 +1387,12 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 for (final j in ['semua', 'hilang', 'temuan'])
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
-                    child: IconButton(
-                      tooltip: tr(j == 'semua'
+                    child: ChoiceChip(
+                      label: Text(tr(j == 'semua'
                           ? 'Semua'
-                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan')),
-                      icon: Icon(j == 'semua'
-                          ? Icons.grid_view_outlined
-                          : (j == 'hilang'
-                              ? Icons.search_off
-                              : Icons.find_in_page_outlined)),
-                      style: IconButton.styleFrom(
-                        backgroundColor: _jenis == j
-                            ? kTeal
-                            : Colors.grey.shade200,
-                        foregroundColor:
-                            _jenis == j ? Colors.white : Colors.black54,
-                      ),
-                      onPressed: () => setState(() => _jenis = j),
+                          : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan'))),
+                      selected: _jenis == j,
+                      onSelected: (_) => setState(() => _jenis = j),
                     ),
                   ),
                 const Spacer(),
@@ -1963,10 +2007,11 @@ class _LayarDetailState extends State<LayarDetail> {
         if (menunggu.isNotEmpty)
           Card(
             color: Colors.orange.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
               child: Text(
-                  'Ada klaim menunggu keputusanmu. Periksa ciri khususnya baik-baik sebelum menyetujui.'),
+                  tr('Ada klaim menunggu keputusanmu. Periksa ciri khususnya baik-baik sebelum menyetujui.'),
+                  style: const TextStyle(color: Colors.black87)),
             ),
           ),
         SizedBox(
@@ -2022,8 +2067,8 @@ class _LayarDetailState extends State<LayarDetail> {
             Text('"${k['pesan'] ?? ''}"'),
             if (k['bukti_url'] != null)
               TextButton.icon(
-                onPressed: () => launchUrl(Uri.parse(k['bukti_url']),
-                    mode: LaunchMode.externalApplication),
+                onPressed: () =>
+                    lihatFotoBesar(context, (k['bukti_url']).toString()),
                 icon: const Icon(Icons.image_outlined, size: 18),
                 label: Text(tr('Lihat foto bukti')),
               ),
@@ -2068,8 +2113,9 @@ class _LayarDetailState extends State<LayarDetail> {
           color: const Color(0xFFE6F4F1),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Text(tr(
-                'Ini barangmu? Ajukan klaim dan sebutkan ciri khususnya. Nomor WhatsApp baru terbuka sesudah klaimmu disetujui yang memposting.')),
+            child: Text(
+                tr('Ini barangmu? Ajukan klaim dan sebutkan ciri khususnya. Nomor WhatsApp baru terbuka sesudah klaimmu disetujui yang memposting.'),
+                style: const TextStyle(color: Colors.black87)),
           ),
         ),
         const SizedBox(height: 12),
@@ -3910,7 +3956,7 @@ class LayarInfo extends StatelessWidget {
                             Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 Chip(
-                  label: Text(tr('Versi 1.3.2'),
+                  label: Text(tr('Versi 1.3.3'),
                       style: const TextStyle(fontSize: 11)),
                   visualDensity: VisualDensity.compact,
                 ),
