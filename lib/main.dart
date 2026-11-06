@@ -1155,12 +1155,12 @@ class KartuPostingan extends StatelessWidget {
                     style:
                         const TextStyle(fontSize: 12, color: Colors.grey)),
                 const Spacer(),
-                if (onUp != null)
+                if (onUp != null && !sudahUp)
                   TextButton.icon(
-                    onPressed: sudahUp ? null : onUp,
+                    onPressed: onUp,
                     icon: const Icon(Icons.arrow_circle_up_outlined,
                         size: 18),
-                    label: Text(sudahUp ? 'Sudah di-UP' : 'Bantu UP'),
+                    label: Text(tr('Bantu UP')),
                     style: TextButton.styleFrom(
                       visualDensity: VisualDensity.compact,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -1228,10 +1228,16 @@ class _LayarBerandaState extends State<LayarBeranda> {
   }
 
   void _dariRealtime(PostgresChangePayload payload) {
+    if (!mounted) return;
     final rec = payload.newRecord;
-    if (rec['status'] == 'tampil' && mounted) {
-      setState(() => _baru++);
-    }
+    // Hanya postingan yang BARU tampil yang dihitung sebagai postingan
+    // baru: terbit pertama kali (insert) atau baru disetujui admin
+    // (status berubah menjadi tampil). Perubahan lain seperti Bantu UP
+    // dan jumlah dilihat tidak boleh memicu pil postingan baru.
+    final baruTampil = rec['status'] == 'tampil' &&
+        (payload.eventType == PostgresChangeEvent.insert ||
+            payload.oldRecord['status'] != 'tampil');
+    if (baruTampil) setState(() => _baru++);
   }
 
   @override
@@ -1513,6 +1519,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                         await (saya ? _fSaya : _fSemua);
                       },
                       child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         controller: _gulir,
                         itemCount: data.length,
                         itemBuilder: (_, i) => KartuPostingan(
@@ -1921,12 +1928,12 @@ class _LayarDetailState extends State<LayarDetail> {
               Text('$ups UP',
                   style: const TextStyle(color: Colors.grey)),
               const Spacer(),
-              if (!_punyaSaya && _post['status'] == 'tampil')
+              if (!_punyaSaya && _post['status'] == 'tampil' && !_sudahUp)
                 FilledButton.tonalIcon(
-                  onPressed: _sudahUp ? null : _bantuUpDetail,
+                  onPressed: _bantuUpDetail,
                   icon: const Icon(Icons.arrow_circle_up_outlined,
                       size: 18),
-                  label: Text(_sudahUp ? 'Sudah di-UP' : 'Bantu UP'),
+                  label: Text(tr('Bantu UP')),
                 ),
             ],
           ),
@@ -1957,39 +1964,87 @@ class _LayarDetailState extends State<LayarDetail> {
         Text(tr(
             'Belum ada komentar. Tanya ciri barang di sini dulu sebelum mengajukan klaim juga boleh.')),
       for (final k in _komentar)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: CircleAvatar(
-            radius: 16,
-            child: Text(
-                ((k['nama_pemilik'] ?? '?').toString().isNotEmpty
-                        ? (k['nama_pemilik'] ?? '?').toString()[0]
-                        : '?')
-                    .toUpperCase(),
-                style: const TextStyle(fontSize: 13)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 16,
+                child: Text(
+                    ((k['nama_pemilik'] ?? '?').toString().isNotEmpty
+                            ? (k['nama_pemilik'] ?? '?').toString()[0]
+                            : '?')
+                        .toUpperCase(),
+                    style: const TextStyle(fontSize: 13)),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                              k['nama_pemilik'] ?? tr('Pengguna'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13)),
+                        ),
+                        Text(fmtTanggal(k['created_at']),
+                            style: const TextStyle(
+                                fontSize: 11, color: Colors.grey)),
+                        if (k['user_id'] == saya)
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                size: 18),
+                            visualDensity: VisualDensity.compact,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () => _hapusKomentar(k),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text((k['isi'] ?? '').toString()),
+                  ],
+                ),
+              ),
+            ],
           ),
-          title: Text(k['nama_pemilik'] ?? 'Pengguna',
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13)),
-          subtitle: Text('${k['isi'] ?? ''}\n${fmtTanggal(k['created_at'])}'),
-          isThreeLine: true,
-          trailing: k['user_id'] == saya
-              ? IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 19),
-                  onPressed: () => _hapusKomentar(k),
-                )
-              : null,
         ),
-      if (_post['status'] == 'tampil')
+      if (_post['status'] == 'tampil') ...[
+        const SizedBox(height: 2),
         Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Expanded(
               child: TextField(
                 controller: _isiKomentar,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   hintText: tr('Tulis komentar...'),
-                  border: OutlineInputBorder(),
+                  filled: true,
                   isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 11),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(24),
+                    borderSide: const BorderSide(color: kTeal),
+                  ),
                 ),
               ),
             ),
@@ -2000,6 +2055,8 @@ class _LayarDetailState extends State<LayarDetail> {
             ),
           ],
         ),
+        const SizedBox(height: 6),
+      ],
     ];
   }
 
@@ -3033,6 +3090,7 @@ class _LayarModerasiState extends State<LayarModerasi> {
                 child: Text(tr('Tidak ada postingan menunggu moderasi.')));
           }
           return ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
             itemCount: data.length,
             itemBuilder: (_, i) {
               final p = data[i];
@@ -3165,6 +3223,7 @@ class _LayarLaporanState extends State<LayarLaporan> {
           return RefreshIndicator(
             onRefresh: () async => setState(() {}),
             child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
               itemCount: data.length,
               itemBuilder: (_, i) {
                 final r = data[i];
@@ -3844,6 +3903,7 @@ class _LayarNotifState extends State<LayarNotif> {
               await _fNotif;
             },
             child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
               itemCount: data.length,
               itemBuilder: (_, i) {
                 final n = data[i];
