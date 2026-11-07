@@ -50,9 +50,18 @@ class _LayarLoginState extends State<LayarLogin> {
         accessToken: auth.accessToken,
       );
       return; // sesi terbuka, Gerbang akan mengarahkan masuk
-    } catch (_) {
-      // Perangkat tanpa layanan Google atau token ditolak: jatuh ke
-      // alur OAuth peramban yang sudah terbukti di bawah ini.
+    } catch (e) {
+      // Jalur native gagal (layanan Google tidak ada atau token
+      // ditolak): tampilkan sebabnya sebentar supaya bisa dilaporkan,
+      // lalu jatuh ke alur OAuth peramban yang sudah terbukti.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${tr('Login Google di aplikasi gagal')}: $e'),
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
     }
     try {
       await sb.auth.signInWithOAuth(
