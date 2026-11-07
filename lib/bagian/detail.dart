@@ -538,11 +538,11 @@ class _LayarDetailState extends State<LayarDetail> {
                   onTap: () => lihatFotoBesar(context, foto[i]),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      foto[i],
+                    child: CachedNetworkImage(
+                      imageUrl: foto[i],
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
+                      errorWidget: (_, __, ___) => const Center(
                         child: Icon(Icons.image_not_supported_outlined),
                       ),
                     ),
@@ -853,8 +853,8 @@ class _LayarDetailState extends State<LayarDetail> {
                       ? const CircleAvatar(child: Icon(Icons.search, size: 18))
                       : ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            daftarFoto(h.post).first,
+                          child: CachedNetworkImage(
+                            imageUrl: daftarFoto(h.post).first,
                             width: 44,
                             height: 44,
                             fit: BoxFit.cover,
