@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.7.4** (Android, arm64)
+Versi saat ini: **1.7.5** (Android, arm64)
 
 ## Unduh
 
@@ -28,7 +28,7 @@ Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sa
 
 ### Papan dan pencarian
 
-- **Papan hilang dan temuan** dengan kategori Dompet dan Uang, KTM dan Dokumen, Kunci, HP dan Elektronik, Helm dan Kendaraan, Tas dan Pakaian, Buku dan Alat Tulis, dan Lainnya. Dilengkapi pencarian, saringan jenis dan kategori, urutan terbaru atau terlama, dan saringan rentang tanggal.
+- **Papan hilang dan temuan** dengan kategori Dompet dan Uang, KTM dan Dokumen, Kunci, HP dan Elektronik, Helm dan Kendaraan, Tas dan Pakaian, Buku dan Alat Tulis, dan Lainnya. Dilengkapi pencarian, saringan jenis dan kategori, urutan terbaru atau terlama, dan saringan rentang tanggal. Seluruh kepala beranda (sapaan, statistik komunitas, pencarian, dan saringan) ikut menggulir bersama daftar supaya ruang baca lega, statistik komunitas menyatu di dalam kartu sapaan, dan berpindah antara Semua dan Saya bisa dengan menggeser layar ke samping. Sapaan di beranda memakai nama lengkap pengguna.
 - **Lapor Cepat**: tulis satu kalimat bebas, misalnya "kehilangan dompet coklat di sekitar parkiran motor kemarin sore", dan aplikasi menguraikannya menjadi kategori, warna, lokasi, dan perkiraan waktu, lalu langsung menampilkan kandidat postingan yang mirip. Formulir Buat Postingan terisi otomatis dari kalimat itu dan tetap bisa diubah sebelum diterbitkan.
 - **Papan offline**: papan terakhir yang kamu lihat tersimpan di HP. Saat tidak ada internet, papan tetap bisa dibuka dari simpanan itu dengan penanda bahwa datanya adalah data terakhir, bukan data live.
 - **Pantau Kategori**: nyalakan kategori yang dicari dan terima kabar setiap ada postingan baru di kategori itu.
@@ -57,7 +57,7 @@ Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sa
 ### Pengalaman pakai
 
 - **Panduan interaktif bermaskot**: pengguna baru diajak tur keliling tombol penting aplikasi (Cari, Pantau, Lapor Cepat, Notifikasi, Chat, dan navigasi) dengan maskot KutemuKan sebagai pemandu. Panduan bisa diulang kapan saja dari tab Akun.
-- **Ringan dan responsif**: animasi transisi antar halaman yang halus, rangka shimmer saat beranda dimuat, dan getaran sentuh (haptic) pada aksi penting seperti menerbitkan postingan dan mengirim klaim.
+- **Ringan dan responsif**: animasi transisi antar halaman yang halus, rangka shimmer saat beranda dimuat, getaran sentuh (haptic) pada aksi penting seperti menerbitkan postingan dan mengirim klaim, serta ikon bilah status yang menyesuaikan terang gelap halaman supaya selalu terbaca.
 - **Mode gelap dan terang** mengikuti sistem atau dipilih manual, serta **dwibahasa Indonesia dan Inggris** di seluruh aplikasi, dengan pilihan sapaan dan teks yang ramah mahasiswa.
 - **Gamifikasi ringan**: badge otomatis berdasarkan aktivitas (termasuk Kontributor Tepercaya) dan Papan Pahlawan bulanan untuk penemu paling berjasa.
 - **Panel admin**: moderasi postingan, laporan pengguna, statistik kampus, pengelolaan pengguna, dan ekspor Laporan Barang dalam PDF.
@@ -112,6 +112,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.7.5**: maskot dan logo diwarnai ulang bersih ke biru Unindra cerah, beranda dipadatkan jadi satu aliran scroll (statistik menyatu di kartu sapaan, kepala beranda ikut menggulir, Semua dan Saya bisa digeser), sapaan nama lengkap, ikon bilah status adaptif, dan perbaikan cek update yang sebelumnya tidak pernah mendeteksi versi baru.
 - **1.7.4**: login Google native satu ketuk, pencocokan AI semantik (embedding + pgvector), Lapor Cepat satu kalimat, panduan interaktif bermaskot, papan offline, notifikasi dan beranda realtime, unduh data dan hapus akun mandiri, deep link postingan, pengingat arsip H-3, ikon Google resmi dan maskot biru pekat.
 - **1.7.3**: pemindaian QR serah terima tertanam di aplikasi (tanpa Google Lens), desain berwarna biru kampus, perbaikan hapus notifikasi.
 - **1.7.2 dan 1.7.1**: lima tab utama, chat dengan media dan lokasi live, serah terima kode 6 digit dan QR, Laporan Barang PDF untuk admin, profil publik, Watchlist, Secure Contact, Smart Claim dan sengketa, perpanjang dan arsip postingan, pengumuman admin, badge Kontributor Tepercaya.
