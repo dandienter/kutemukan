@@ -15,11 +15,37 @@ class _LayarNotifState extends State<LayarNotif> {
   List<Map<String, dynamic>> _terbaru = [];
   bool _modePilih = false;
   final Set<String> _dipilih = {};
+  RealtimeChannel? _kanalRt;
 
   @override
   void initState() {
     super.initState();
     _fNotif = _ambil();
+    // Pembaruan instan: notifikasi baru, terbaca, atau terhapus di
+    // perangkat lain langsung tercermin di layar ini.
+    final id = sb.auth.currentUser?.id;
+    if (id != null) {
+      _kanalRt = sb
+          .channel('notif-layar')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'lf_notif',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'user_id',
+              value: id,
+            ),
+            callback: (_) => _segarkanNotif(),
+          )
+          .subscribe();
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_kanalRt != null) sb.removeChannel(_kanalRt!);
+    super.dispose();
   }
 
   void _segarkanNotif() {
@@ -161,12 +187,31 @@ class _LayarNotifState extends State<LayarNotif> {
   }
 
   Future<void> _hapus(Map<String, dynamic> n) async {
-    await sb.from('lf_notif').delete().eq('id', n['id']);
-    if (mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(tr('Notifikasi dihapus.'))));
+    // Optimistis: hilang dari layar seketika, server menyusul. Bila
+    // server gagal, daftar dipulihkan seperti semula.
+    final cadangan = List<Map<String, dynamic>>.from(_terbaru);
+    setState(() {
+      _terbaru = _terbaru.where((x) => x['id'] != n['id']).toList();
+      _fNotif = Future.value(_terbaru);
+    });
+    try {
+      await sb.from('lf_notif').delete().eq('id', n['id']);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(tr('Notifikasi dihapus.'))));
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _terbaru = cadangan;
+          _fNotif = Future.value(_terbaru);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(tr('Gagal menghapus, coba lagi.'))),
+        );
+      }
     }
-    _segarkanNotif();
   }
 
   Future<void> _buka(Map<String, dynamic> n) async {
@@ -220,6 +265,7 @@ class _LayarNotifState extends State<LayarNotif> {
             ),
           ] else ...[
             IconButton(
+              key: kunciPanduanNotif,
               icon: const Icon(Icons.done_all),
               tooltip: tr('Tandai semua dibaca'),
               onPressed: _tandaiSemuaDibaca,
@@ -244,7 +290,7 @@ class _LayarNotifState extends State<LayarNotif> {
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return Center(child: Text(tr('Belum ada notifikasi.')));
+            return Center(child: Text(tr('Belum ada notifikasi nih. Nanti kalau ada kabar, muncul di sini.')));
           }
           return RefreshIndicator(
             onRefresh: () async {

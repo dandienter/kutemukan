@@ -28,6 +28,70 @@ class _LayarBuatState extends State<LayarBuat> {
 
   bool get _modeUbah => widget.post != null;
 
+  // Lapor Cepat: satu kalimat cerita diuraikan menjadi isian formulir.
+  final _cepat = TextEditingController();
+  HasilLaporCepat? _hasilCepat;
+  List<HasilCocok> _kandidatCepat = [];
+  bool _sibukCepat = false;
+
+  Future<void> _prosesCepat() async {
+    final teks = _cepat.text.trim();
+    if (teks.length < 8) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(tr('Ceritakan sedikit lebih panjang dulu ya.')),
+        ),
+      );
+      return;
+    }
+    final hasil = uraikanLaporCepat(teks);
+    setState(() {
+      _hasilCepat = hasil;
+      _jenis = hasil.jenis;
+      if (hasil.kategori != null && kKategori.contains(hasil.kategori)) {
+        _kategori = hasil.kategori!;
+      }
+      if (hasil.judulUsulan != null && _judul.text.trim().isEmpty) {
+        _judul.text = hasil.judulUsulan!;
+      }
+      if (hasil.lokasi != null && _lokasi.text.trim().isEmpty) {
+        _lokasi.text = hasil.lokasi!;
+      }
+      if (_deskripsi.text.trim().isEmpty) _deskripsi.text = teks;
+      if (hasil.waktu != null) _waktu = hasil.waktu!;
+      _sibukCepat = true;
+    });
+    getarRingan();
+    // Langsung carikan kandidat dari papan yang sedang tampil.
+    try {
+      final rows = await sb
+          .from('lf_posts')
+          .select(
+            'id, user_id, jenis, status, judul, deskripsi, kategori, lokasi, created_at, foto_urls, foto_url',
+          )
+          .eq('status', 'tampil')
+          .limit(200);
+      final korpus = List<Map<String, dynamic>>.from(rows);
+      final semu = <String, dynamic>{
+        'jenis': hasil.jenis,
+        'judul': hasil.judulUsulan ?? teks,
+        'deskripsi': teks,
+        'kategori': hasil.kategori ?? '',
+        'lokasi': hasil.lokasi ?? '',
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      };
+      final mesin = MesinCocok(korpus);
+      if (mounted) {
+        setState(() {
+          _kandidatCepat = mesin.cariCocok(semu, korpus);
+          _sibukCepat = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _sibukCepat = false);
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -113,7 +177,7 @@ class _LayarBuatState extends State<LayarBuat> {
             SnackBar(
               content: Text(
                 tr(
-                  'Perubahan tersimpan. Menunggu moderasi admin sebelum tampil.',
+                  'Perubahan tersimpan! Tunggu moderasi admin sebentar ya.',
                 ),
               ),
             ),
@@ -124,10 +188,11 @@ class _LayarBuatState extends State<LayarBuat> {
         isi['user_id'] = sb.auth.currentUser!.id;
         await sb.from('lf_posts').insert(isi);
         if (mounted) {
+          getarSedang();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                'Postingan terkirim. Menunggu moderasi admin sebelum tampil.',
+                'Postinganmu terkirim! Tunggu moderasi admin sebentar ya, habis itu langsung tampil.',
               ),
             ),
           );
@@ -172,6 +237,186 @@ class _LayarBuatState extends State<LayarBuat> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(14, 12, 14, 6),
               children: [
+                if (!_modeUbah) ...[
+                  Card(
+                    key: kunciPanduanCepat,
+                    color: kBiru.withOpacity(0.07),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      side: BorderSide(color: kBiru.withOpacity(0.35)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.bolt,
+                                size: 19,
+                                color: kBiru,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                tr('Lapor Cepat'),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            tr(
+                              'Ceritakan aja kejadiannya, nanti formulirnya kami isikan otomatis.',
+                            ),
+                            style: const TextStyle(fontSize: 12.5),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _cepat,
+                            maxLines: 3,
+                            decoration: _rapat(
+                              tr(
+                                'Contoh: Gue kehilangan dompet warna cokelat kayaknya di sekitar kantin kemarin sore',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _sibukCepat ? null : _prosesCepat,
+                              icon: const Icon(Icons.auto_fix_high, size: 18),
+                              label: Text(tr('Isi Otomatis')),
+                            ),
+                          ),
+                          if (_hasilCepat != null) ...[
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 6,
+                              children: [
+                                Chip(
+                                  avatar: const Icon(Icons.flag, size: 15),
+                                  label: Text(
+                                    _hasilCepat!.jenis == 'hilang'
+                                        ? tr('Kehilangan')
+                                        : tr('Temuan'),
+                                  ),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                if (_hasilCepat!.barang != null)
+                                  Chip(
+                                    avatar: const Icon(
+                                      Icons.inventory_2,
+                                      size: 15,
+                                    ),
+                                    label: Text(_hasilCepat!.barang!),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (_hasilCepat!.warna != null)
+                                  Chip(
+                                    avatar: const Icon(
+                                      Icons.palette,
+                                      size: 15,
+                                    ),
+                                    label: Text(_hasilCepat!.warna!),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (_hasilCepat!.lokasi != null)
+                                  Chip(
+                                    avatar: const Icon(
+                                      Icons.place,
+                                      size: 15,
+                                    ),
+                                    label: Text(_hasilCepat!.lokasi!),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                if (_hasilCepat!.waktuTeks != null)
+                                  Chip(
+                                    avatar: const Icon(
+                                      Icons.schedule,
+                                      size: 15,
+                                    ),
+                                    label: Text(_hasilCepat!.waktuTeks!),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                              ],
+                            ),
+                            Text(
+                              tr(
+                                'Hasil tebakannya sudah masuk ke formulir di bawah. Cek dan ubah kalau ada yang kurang pas.',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                          if (_kandidatCepat.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              tr('Kayaknya salah satu ini yang kamu maksud:'),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                            ),
+                            for (final h in _kandidatCepat)
+                              ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: daftarFoto(h.post).isEmpty
+                                    ? const CircleAvatar(
+                                        child: Icon(Icons.search, size: 17),
+                                      )
+                                    : ClipRRect(
+                                        borderRadius:
+                                            BorderRadius.circular(8),
+                                        child: Image.network(
+                                          daftarFoto(h.post).first,
+                                          width: 40,
+                                          height: 40,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                title: Text(
+                                  (h.post['judul'] ?? '').toString(),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  '${h.post['kategori'] ?? ''} - ${h.post['lokasi'] ?? ''}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                trailing: Chip(
+                                  label: Text(
+                                    '${(h.skor * 100).round()}%',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  backgroundColor: kBiru,
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                                onTap: () => Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => LayarDetail(post: h.post),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 SegmentedButton<String>(
                   segments: [
                     ButtonSegment(

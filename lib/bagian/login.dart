@@ -21,6 +21,53 @@ class _LayarLoginState extends State<LayarLogin> {
   bool _sibukSika = false;
   String? _galat;
   String? _galatSika;
+  String? _versiApp;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _versiApp = info.version);
+    });
+  }
+
+  Future<void> _masukGoogle() async {
+    // Jalur utama: pemilih akun Google native di dalam aplikasi,
+    // tanpa membuka peramban. Token ID ditukar menjadi sesi Supabase.
+    try {
+      final google = GoogleSignIn(
+        serverClientId: kGoogleWebClientId,
+        scopes: const ['email', 'profile'],
+      );
+      final akun = await google.signIn();
+      if (akun == null) return; // pengguna membatalkan pilihan akun
+      final auth = await akun.authentication;
+      final idToken = auth.idToken;
+      if (idToken == null) throw Exception('Token Google kosong');
+      await sb.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: auth.accessToken,
+      );
+      return; // sesi terbuka, Gerbang akan mengarahkan masuk
+    } catch (_) {
+      // Perangkat tanpa layanan Google atau token ditolak: jatuh ke
+      // alur OAuth peramban yang sudah terbukti di bawah ini.
+    }
+    try {
+      await sb.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'kutemukan://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${tr('Login Google gagal')}: $e')),
+        );
+      }
+    }
+  }
 
   Future<void> _masukSika() async {
     final npm = _npm.text.trim();
@@ -108,7 +155,7 @@ class _LayarLoginState extends State<LayarLogin> {
                       ),
                     ),
                     onPressed: () => setState(() => _formSika = true),
-                    icon: const Icon(Icons.school, size: 22),
+                    icon: const Icon(Icons.school, size: 22, color: kBiru),
                     label: Text(tr('Masuk dengan SIKA')),
                   ),
                   const SizedBox(height: 12),
@@ -120,26 +167,30 @@ class _LayarLoginState extends State<LayarLogin> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  onPressed: () async {
-                    try {
-                      await sb.auth.signInWithOAuth(
-                        OAuthProvider.google,
-                        redirectTo: 'kutemukan://login-callback',
-                        authScreenLaunchMode: LaunchMode.externalApplication,
-                      );
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${tr('Login Google gagal')}: $e'),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
+                  onPressed: _masukGoogle,
+                  icon: Image.asset(
+                    'assets/icons/google.png',
+                    width: 22,
+                    height: 22,
+                  ),
                   label: Text(tr('Masuk dengan Google')),
                 ),
+                const SizedBox(height: 26),
+                Text(
+                  '© 2026 KutemuKan',
+                  style: TextStyle(
+                    color: skema.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                ),
+                if (_versiApp != null)
+                  Text(
+                    'v$_versiApp',
+                    style: TextStyle(
+                      color: skema.onSurfaceVariant.withValues(alpha: 0.7),
+                      fontSize: 10.5,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -159,14 +210,14 @@ class _LayarLoginState extends State<LayarLogin> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              _modeDaftar ? tr('Buat akun baru') : tr('Selamat datang kembali'),
+              _modeDaftar ? tr('Yuk, bikin akun baru') : tr('Halo, selamat datang lagi'),
               style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
               _modeDaftar
-                  ? tr('Daftar supaya bisa posting dan klaim barang.')
-                  : tr('Masuk untuk melanjutkan.'),
+                  ? tr('Daftar dulu biar bisa posting dan klaim barang.')
+                  : tr('Masuk dulu yuk, buat lanjut.'),
               style: TextStyle(color: skema.onSurfaceVariant),
             ),
             const SizedBox(height: 18),
@@ -226,8 +277,8 @@ class _LayarLoginState extends State<LayarLogin> {
               onPressed: () => setState(() => _modeDaftar = !_modeDaftar),
               child: Text(
                 _modeDaftar
-                    ? tr('Sudah punya akun? Masuk')
-                    : tr('Belum punya akun? Daftar'),
+                    ? tr('Sudah punya akun? Masuk aja')
+                    : tr('Belum punya akun? Daftar yuk'),
               ),
             ),
           ],
@@ -264,7 +315,7 @@ class _LayarLoginState extends State<LayarLogin> {
             const SizedBox(height: 4),
             Text(
               tr(
-                'Mahasiswa Unindra? Pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.',
+                'Anak Unindra? Masuk pakai NPM dan kata sandi SIKA, statusmu langsung terverifikasi.',
               ),
               style: const TextStyle(color: Colors.white70, fontSize: 12.5),
             ),
@@ -331,7 +382,7 @@ class _LayarLoginState extends State<LayarLogin> {
             const SizedBox(height: 6),
             Text(
               tr(
-                'Kata sandi SIKA hanya diteruskan ke server kampus, tidak disimpan.',
+                'Tenang, kata sandi SIKA kamu cuma diteruskan ke server kampus, tidak disimpan di sini.',
               ),
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white60, fontSize: 11),

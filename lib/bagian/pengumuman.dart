@@ -136,7 +136,7 @@ class _LayarPengumumanState extends State<LayarPengumuman> {
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return Center(child: Text(tr('Belum ada pengumuman.')));
+            return Center(child: Text(tr('Belum ada pengumuman baru nih.')));
           }
           return ListView.builder(
             itemCount: data.length,

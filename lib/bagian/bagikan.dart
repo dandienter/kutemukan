@@ -32,8 +32,11 @@ class _LayarBagikanState extends State<LayarBagikan> {
         ..writeln('Kategori: ${p['kategori']} - Lokasi: ${p['lokasi']}')
         ..writeln('Waktu: ${fmtTanggal(p['waktu_kejadian'])}')
         ..writeln()
-        ..write(
+        ..writeln(
           'Kenali barang ini? Klaim atau bantu sebarkan lewat aplikasi KutemuKan, Lost and Found Kampus Unindra.',
+        )
+        ..write(
+          'Lihat detailnya: http://demo.43-130-228-96.sslip.io/kutemukan-web/?post=${p['id']}',
         );
       await Share.shareXFiles([
         XFile.fromData(

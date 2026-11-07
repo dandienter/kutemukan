@@ -79,6 +79,122 @@ SupabaseClient get sb => Supabase.instance.client;
 
 const Color kBiru = Color(0xFF0061C9);
 
+/// Kunci target panduan interaktif, dipasang di widget aslinya masing
+/// masing layar agar tur bisa menyorot posisinya.
+final kunciPanduanCari = GlobalKey();
+final kunciPanduanCepat = GlobalKey();
+final kunciPanduanPantau = GlobalKey();
+final kunciPanduanNotif = GlobalKey();
+final kunciPanduanNav = GlobalKey();
+
+/// Pemicu panduan interaktif, didaftarkan layar utama saat aktif agar
+/// menu Akun bisa memulai tur dari halaman mana pun.
+VoidCallback? pemicuPanduan;
+
+/// Transisi halaman halus untuk semua layar: memudar masuk sambil
+/// bergeser ringan dari kanan, kurva lembut 260 ms.
+class TransisiHalus extends PageTransitionsBuilder {
+  const TransisiHalus();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    final kurva = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: kurva,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0.05, 0),
+          end: Offset.zero,
+        ).animate(kurva),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// Getar halus untuk momen penting (klaim disetujui, postingan terbit,
+/// serah terima selesai) supaya terasa nyata tanpa mengganggu.
+void getarRingan() => HapticFeedback.lightImpact();
+void getarSedang() => HapticFeedback.mediumImpact();
+
+/// Rangka berkilau saat daftar postingan dimuat, pengganti lingkaran
+/// putar agar Beranda terasa hidup sejak detik pertama.
+class DaftarKerangka extends StatefulWidget {
+  const DaftarKerangka({super.key});
+
+  @override
+  State<DaftarKerangka> createState() => _DaftarKerangkaState();
+}
+
+class _DaftarKerangkaState extends State<DaftarKerangka>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _kendali = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _kendali.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final gelap = Theme.of(context).brightness == Brightness.dark;
+    return AnimatedBuilder(
+      animation: _kendali,
+      builder: (context, _) {
+        final dasar = gelap ? Colors.white : Colors.black;
+        final warna = dasar.withOpacity(0.05 + 0.06 * _kendali.value);
+        Widget kotak(double w, double h) => Container(
+          width: w,
+          height: h,
+          decoration: BoxDecoration(
+            color: warna,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        );
+        return ListView.builder(
+          padding: const EdgeInsets.all(12),
+          itemCount: 5,
+          itemBuilder: (context, i) => Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  kotak(64, 64),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        kotak(160, 14),
+                        const SizedBox(height: 8),
+                        kotak(110, 12),
+                        const SizedBox(height: 8),
+                        kotak(80, 12),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 /// Warna khas tiap kategori barang, dipakai di kartu, chip, dan ikon
 /// supaya tampilan tidak monoton.
 Color warnaKategori(String k) => switch (k) {

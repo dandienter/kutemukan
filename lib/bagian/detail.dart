@@ -769,7 +769,45 @@ class _LayarDetailState extends State<LayarDetail> {
           .limit(200);
       final korpus = List<Map<String, dynamic>>.from(rows);
       final mesin = MesinCocok(korpus);
-      return mesin.cariCocok(_post, korpus);
+      final dasar = mesin.cariCocok(_post, korpus);
+      // Gabungkan pencocokan AI semantik dari server (embedding teks dan
+      // foto). Pasangan yang sama diperkuat skornya, pasangan baru yang
+      // hanya ketemu lewat makna ikut ditampilkan dengan tanda AI.
+      try {
+        final ai = await sb.rpc(
+          'lf_cocok_ai',
+          params: {'p_post_id': _post['id'], 'p_limit': 10},
+        );
+        final perId = <String, HasilCocok>{
+          for (final h in dasar) (h.post['id'] ?? '').toString(): h,
+        };
+        final korpusPerId = <String, Map<String, dynamic>>{
+          for (final p in korpus) (p['id'] ?? '').toString(): p,
+        };
+        for (final baris in List<Map<String, dynamic>>.from(ai ?? [])) {
+          final pid = (baris['post_id'] ?? '').toString();
+          final skorAi = (baris['skor_gabungan'] as num?)?.toDouble() ?? 0;
+          if (pid.isEmpty || skorAi <= 0) continue;
+          final lama = perId[pid];
+          if (lama != null) {
+            perId[pid] = HasilCocok(
+              lama.post,
+              (0.5 * lama.skor + 0.5 * skorAi).clamp(0.0, 1.0),
+              dariAi: true,
+            );
+          } else {
+            final p = korpusPerId[pid];
+            if (p != null && skorAi >= 0.45) {
+              perId[pid] = HasilCocok(p, skorAi * 0.95, dariAi: true);
+            }
+          }
+        }
+        final gabung = perId.values.toList()
+          ..sort((a, b) => b.skor.compareTo(a.skor));
+        return gabung.take(8).toList();
+      } catch (_) {
+        return dasar;
+      }
     } catch (_) {
       return [];
     }
@@ -802,7 +840,7 @@ class _LayarDetailState extends State<LayarDetail> {
             const SizedBox(height: 4),
             Text(
               tr(
-                'Dihitung otomatis dari kemiripan isi, kategori, lokasi, dan waktu.',
+                'Dihitung otomatis memakai AI dari kemiripan makna dan foto, plus kata kunci, kategori, lokasi, dan waktu.',
               ),
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
@@ -822,10 +860,37 @@ class _LayarDetailState extends State<LayarDetail> {
                             fit: BoxFit.cover,
                           ),
                         ),
-                  title: Text(
-                    (h.post['judul'] ?? '').toString(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          (h.post['judul'] ?? '').toString(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (h.dariAi) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF7C3AED),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'AI',
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                   subtitle: Text(
                     '${h.post['kategori'] ?? ''} - ${h.post['lokasi'] ?? ''}',
@@ -1039,7 +1104,7 @@ class _LayarDetailState extends State<LayarDetail> {
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
       ),
       const SizedBox(height: 8),
-      if (_klaimMasuk.isEmpty) Text(tr('Belum ada klaim untuk postingan ini.')),
+      if (_klaimMasuk.isEmpty) Text(tr('Belum ada klaim masuk nih buat postingan ini.')),
       for (final k in _klaimMasuk) _kartuKlaim(k),
     ];
   }

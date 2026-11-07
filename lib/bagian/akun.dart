@@ -362,6 +362,36 @@ class LayarAkun extends StatelessWidget {
                 Navigator.of(context)
                     .push(MaterialPageRoute(builder: (_) => const LayarInfo())),
           ),
+          ListTile(
+            leading: const Icon(Icons.explore_outlined),
+            title: Text(tr('Panduan Interaktif')),
+            subtitle: Text(tr('Tur keliling fitur ditemani maskot')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.of(context).pop();
+              Future<void>.delayed(
+                const Duration(milliseconds: 350),
+                () => pemicuPanduan?.call(),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.download_outlined),
+            title: Text(tr('Unduh Data Saya')),
+            subtitle: Text(tr('Profil, postingan, klaim, dan notifikasi dalam satu berkas')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => unduhDataSaya(context, profil),
+          ),
+          ListTile(
+            leading: const Icon(Icons.delete_forever_outlined, color: Colors.red),
+            title: Text(
+              tr('Hapus Akun Saya'),
+              style: const TextStyle(color: Colors.red),
+            ),
+            subtitle: Text(tr('Hapus permanen akun dan semua datamu')),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => mintaHapusAkun(context),
+          ),
           const Divider(),
           Padding(
             padding: const EdgeInsets.all(16),
@@ -382,5 +412,139 @@ class LayarAkun extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Unduh semua data milik pengguna (profil, postingan, klaim,
+/// notifikasi) sebagai satu berkas JSON yang dibagikan ke aplikasi lain.
+Future<void> unduhDataSaya(
+  BuildContext context,
+  Map<String, dynamic> profil,
+) async {
+  final id = sb.auth.currentUser?.id;
+  if (id == null) return;
+  try {
+    final postingan = await sb
+        .from('lf_posts')
+        .select()
+        .eq('user_id', id)
+        .order('created_at', ascending: false)
+        .limit(500);
+    final klaim = await sb
+        .from('lf_claims')
+        .select()
+        .eq('user_id', id)
+        .order('created_at', ascending: false)
+        .limit(500);
+    final notif = await sb
+        .from('lf_notif')
+        .select()
+        .eq('user_id', id)
+        .order('created_at', ascending: false)
+        .limit(500);
+    final data = {
+      'aplikasi': 'KutemuKan',
+      'diunduh_pada': DateTime.now().toUtc().toIso8601String(),
+      'profil': profil,
+      'postingan': postingan,
+      'klaim': klaim,
+      'notifikasi': notif,
+    };
+    await Share.share(
+      const JsonEncoder.withIndent('  ').convert(data),
+      subject: 'Data KutemuKan saya',
+    );
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${tr('Gagal menyiapkan data')}: $e')),
+      );
+    }
+  }
+}
+
+/// Hapus akun mandiri: konfirmasi ketat (ketik HAPUS), permintaan
+/// dicatat server, lalu pengguna dikeluarkan. Worker memproses
+/// penghapusan permanen dalam beberapa menit.
+Future<void> mintaHapusAkun(BuildContext context) async {
+  final kontrol = TextEditingController();
+  final jadi = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setLocal) => AlertDialog(
+        title: Text(tr('Hapus Akun Saya')),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr(
+                'Akun, profil, postingan, klaim, chat, dan notifikasimu akan dihapus permanen dan tidak bisa dikembalikan. Ketik HAPUS untuk melanjutkan.',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: kontrol,
+              onChanged: (_) => setLocal(() {}),
+              decoration: InputDecoration(
+                hintText: 'HAPUS',
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: kontrol.text.trim() == 'HAPUS'
+                ? () => Navigator.of(ctx).pop(true)
+                : null,
+            child: Text(tr('Hapus Permanen')),
+          ),
+        ],
+      ),
+    ),
+  );
+  if (jadi != true || !context.mounted) return;
+  try {
+    final ok = await sb.rpc('lf_minta_hapus_akun');
+    if (ok != true) throw Exception('ditolak server');
+    await sb.auth.signOut();
+    if (context.mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(tr('Permintaan diterima')),
+          content: Text(
+            tr(
+              'Akunmu sedang diproses untuk dihapus permanen. Terima kasih sudah memakai KutemuKan.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const Gerbang()),
+          (_) => false,
+        );
+      }
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${tr('Gagal meminta hapus akun')}: $e')),
+      );
+    }
   }
 }

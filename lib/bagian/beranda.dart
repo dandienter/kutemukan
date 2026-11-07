@@ -414,7 +414,25 @@ class _LayarBerandaState extends State<LayarBeranda> {
           table: 'lf_posts',
           callback: _dariRealtime,
         )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'lf_posts',
+          callback: (_) => _segarkanTertunda(),
+        )
         .subscribe();
+  }
+
+  Timer? _tundaSegar;
+
+  /// Segarkan papan dengan jeda singkat, untuk perubahan yang harus
+  /// langsung tercermin (postingan saya berubah status, ada yang
+  /// dihapus) tanpa menunggu pengguna menarik layar.
+  void _segarkanTertunda() {
+    _tundaSegar?.cancel();
+    _tundaSegar = Timer(const Duration(milliseconds: 700), () {
+      if (mounted) _segarkan();
+    });
   }
 
   void _dariRealtime(PostgresChangePayload payload) {
@@ -429,25 +447,51 @@ class _LayarBerandaState extends State<LayarBeranda> {
         (payload.eventType == PostgresChangeEvent.insert ||
             payload.oldRecord['status'] != 'tampil');
     if (baruTampil) setState(() => _baru++);
+    // Postingan milik saya yang berubah (disetujui, diarsipkan,
+    // dikembalikan) langsung menyegarkan daftar.
+    final saya = sb.auth.currentUser?.id;
+    if (saya != null && rec['user_id'] == saya) _segarkanTertunda();
   }
 
   @override
   void dispose() {
+    _tundaSegar?.cancel();
     if (_kanal != null) sb.removeChannel(_kanal!);
     _gulir.dispose();
     super.dispose();
   }
 
+  bool _dariCache = false;
+
   Future<List<Map<String, dynamic>>> _ambilSemua() async {
-    final rows = await sb
-        .from('lf_posts')
-        .select()
-        .eq('status', 'tampil')
-        .order('created_at', ascending: false)
-        .limit(100);
-    final data = List<Map<String, dynamic>>.from(rows);
-    await pasangNama(data);
-    return data;
+    try {
+      final rows = await sb
+          .from('lf_posts')
+          .select()
+          .eq('status', 'tampil')
+          .order('created_at', ascending: false)
+          .limit(100);
+      final data = List<Map<String, dynamic>>.from(rows);
+      await pasangNama(data);
+      _dariCache = false;
+      // Simpan salinan terakhir untuk papan offline.
+      try {
+        final p = await SharedPreferences.getInstance();
+        await p.setString('papan_cache_v1', jsonEncode(data));
+      } catch (_) {}
+      return data;
+    } catch (_) {
+      // Tanpa sinyal: tampilkan papan terakhir yang tersimpan di HP.
+      try {
+        final p = await SharedPreferences.getInstance();
+        final mentah = p.getString('papan_cache_v1');
+        if (mentah != null && mentah.isNotEmpty) {
+          _dariCache = true;
+          return List<Map<String, dynamic>>.from(jsonDecode(mentah) as List);
+        }
+      } catch (_) {}
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> _ambilStat() async {
@@ -655,7 +699,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 const SizedBox(height: 4),
                 Text(
                   tr(
-                    'Laporkan barang hilang atau temuanmu, biar cepat kembali ke pemiliknya.',
+                    'Kehilangan barang atau nemu sesuatu? Laporkan di sini, biar cepat balik ke pemiliknya.',
                   ),
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                 ),
@@ -676,9 +720,10 @@ class _LayarBerandaState extends State<LayarBeranda> {
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: TextField(
+              key: kunciPanduanCari,
               onChanged: (v) => setState(() => _cari = v.trim().toLowerCase()),
               decoration: InputDecoration(
-                hintText: tr('Cari barang...'),
+                hintText: tr('Cari dompet, kunci, KTM...'),
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
                 isDense: true,
@@ -814,6 +859,18 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 );
               },
             ),
+          if (_dariCache)
+            Container(
+              width: double.infinity,
+              color: Colors.orange.shade100,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Text(
+                tr(
+                  'Kamu sedang offline. Ini data terakhir yang tersimpan di HP.',
+                ),
+                style: const TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ),
           Expanded(
             child: FutureBuilder<List<Map<String, dynamic>>>(
               future: saya ? _fSaya : _fSemua,
@@ -824,7 +881,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                   );
                 }
                 if (snap.data == null) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const DaftarKerangka();
                 }
                 final data = (snap.data ?? []).where(_lolos).toList();
                 DateTime dibuat(Map<String, dynamic> p) =>
@@ -854,7 +911,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                           tr(
                             saya
                                 ? 'Kamu belum punya postingan.'
-                                : 'Belum ada postingan yang cocok.',
+                                : 'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.',
                           ),
                         ),
                       ],

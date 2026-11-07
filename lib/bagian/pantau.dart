@@ -312,6 +312,7 @@ class _LayarPantauState extends State<LayarPantau> {
                         ),
                       ),
                       FilledButton.icon(
+                        key: kunciPanduanPantau,
                         onPressed: () => _formWatchlist(),
                         icon: const Icon(Icons.add, size: 18),
                         label: Text(tr('Baru')),
@@ -332,7 +333,7 @@ class _LayarPantauState extends State<LayarPantau> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      tr('Belum ada watchlist.'),
+                      tr('Watchlist kamu masih kosong nih.'),
                       style: const TextStyle(color: Colors.grey),
                     ),
                   ),

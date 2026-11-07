@@ -41,7 +41,10 @@ class _LayarKlaimState extends State<LayarKlaim> {
         'pesan': _pesan.text.trim(),
         'bukti_url': buktiUrl,
       });
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted) {
+        getarSedang();
+        Navigator.of(context).pop(true);
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
