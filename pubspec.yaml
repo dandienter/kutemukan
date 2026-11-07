@@ -1,7 +1,7 @@
 name: kutemukan
 description: KutemuKan - Lost and Found Unindra
 publish_to: "none"
-version: 1.7.2+33
+version: 1.7.3+34
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -22,7 +22,7 @@ dependencies:
   share_plus: ^10.1.4
   geolocator: ^13.0.2
   qr_flutter: ^4.1.0
-  mobile_scanner: ^5.2.3
+  flutter_zxing: ^2.2.1
   permission_handler: ^11.3.1
   pdf: ^3.11.1
   printing: ^5.13.4
