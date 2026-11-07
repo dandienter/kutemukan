@@ -383,7 +383,8 @@ class KartuPostingan extends StatelessWidget {
 }
 
 /// Foto postingan lebar penuh yang bisa digeser bila lebih dari satu,
-/// lengkap dengan lencana posisi (mis. 1/3) di pojok kanan bawah.
+/// dengan titik penanda halus di tengah bawah foto. Gambar dimuat
+/// lewat cache disk supaya tidak mengunduh ulang saat digulir.
 class _PagerFoto extends StatefulWidget {
   final List<String> urls;
   final VoidCallback? onTap;
@@ -405,11 +406,11 @@ class _PagerFotoState extends State<_PagerFoto> {
             onPageChanged: (i) => setState(() => _idx = i),
             itemBuilder: (_, i) => GestureDetector(
               onTap: widget.onTap,
-              child: Image.network(
-                widget.urls[i],
+              child: CachedNetworkImage(
+                imageUrl: widget.urls[i],
                 fit: BoxFit.cover,
                 width: double.infinity,
-                errorBuilder: (_, __, ___) => Container(
+                errorWidget: (_, __, ___) => Container(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   alignment: Alignment.center,
                   child: const Icon(
@@ -417,34 +418,37 @@ class _PagerFotoState extends State<_PagerFoto> {
                     size: 40,
                   ),
                 ),
-                loadingBuilder: (_, anak, prog) => prog == null
-                    ? anak
-                    : Container(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerHighest,
-                        alignment: Alignment.center,
-                        child: const CircularProgressIndicator(),
-                      ),
+                placeholder: (_, __) => Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  alignment: Alignment.center,
+                  child: const CircularProgressIndicator(),
+                ),
               ),
             ),
           ),
           if (widget.urls.length > 1)
             Positioned(
-              right: 10,
-              bottom: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.65),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${_idx + 1}/${widget.urls.length}',
-                  style: const TextStyle(color: Colors.white, fontSize: 11),
+              left: 0,
+              right: 0,
+              bottom: 9,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  widget.urls.length,
+                  (i) => Container(
+                    width: 6,
+                    height: 6,
+                    margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i == _idx
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.45),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black38, blurRadius: 3),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1153,11 +1157,17 @@ class _LayarBerandaState extends State<LayarBeranda> {
                               children: [
                                 Image.asset('assets/burung.png', height: 120),
                                 const SizedBox(height: 12),
-                                Text(
-                                  tr(
-                                    saya
-                                        ? 'Kamu belum punya postingan.'
-                                        : 'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.',
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 36,
+                                  ),
+                                  child: Text(
+                                    tr(
+                                      saya
+                                          ? 'Kamu belum punya postingan.'
+                                          : 'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.',
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
                               ],
