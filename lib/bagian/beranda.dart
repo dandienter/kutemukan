@@ -320,6 +320,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
   int _baru = 0;
   RealtimeChannel? _kanal;
   final ScrollController _gulir = ScrollController();
+  final TextEditingController _cariCtrl = TextEditingController();
   final Set<String> _upHariIni = {};
   late Future<List<Map<String, dynamic>>> _fSemua;
   late Future<List<Map<String, dynamic>>> _fSaya;
@@ -458,6 +459,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
     _tundaSegar?.cancel();
     if (_kanal != null) sb.removeChannel(_kanal!);
     _gulir.dispose();
+    _cariCtrl.dispose();
     super.dispose();
   }
 
@@ -654,8 +656,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
       appBar: AppBar(
         leadingWidth: 54,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Image.asset('assets/burung.png'),
+          padding: const EdgeInsets.only(left: 10),
+          child: Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(3),
+            child: Image.asset('assets/burung.png'),
+          ),
         ),
         title: const Text(
           'KutemuKan',
@@ -671,315 +680,405 @@ class _LayarBerandaState extends State<LayarBeranda> {
           TombolAkun(profil: widget.profil),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF0061C9), Color(0xFF00A3FF)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: GestureDetector(
+        onHorizontalDragEnd: (d) {
+          final v = d.primaryVelocity ?? 0;
+          if (v < -350 && _segmen != 1) setState(() => _segmen = 1);
+          if (v > 350 && _segmen != 0) setState(() => _segmen = 0);
+        },
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: saya ? _fSaya : _fSemua,
+          builder: (context, snap) {
+            List<Map<String, dynamic>>? data;
+            if (snap.data != null) {
+              data = (snap.data ?? []).where(_lolos).toList();
+              DateTime dibuat(Map<String, dynamic> p) =>
+                  DateTime.tryParse((p['created_at'] ?? '').toString()) ??
+                  DateTime.fromMillisecondsSinceEpoch(0);
+              if (_urut == 'lama') {
+                data.sort((x, y) => dibuat(x).compareTo(dibuat(y)));
+              } else if (!saya) {
+                DateTime kunci(Map<String, dynamic> p) {
+                  final a = DateTime.tryParse(
+                    (p['last_up_at'] ?? '').toString(),
+                  );
+                  final b = dibuat(p);
+                  return (a != null && a.isAfter(b)) ? a : b;
+                }
+
+                data.sort((x, y) => kunci(y).compareTo(kunci(x)));
+              }
+            }
+            final daftar = data ?? const <Map<String, dynamic>>[];
+            final namaSapaan = namaRapi(
+              (widget.profil['nama'] ?? '').toString(),
+            );
+            return Stack(
               children: [
-                Text(
-                  '${tr('Halo')}, ${(widget.profil['nama'] ?? '').toString().split(' ').first}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  tr(
-                    'Kehilangan barang atau nemu sesuatu? Laporkan di sini, biar cepat balik ke pemiliknya.',
-                  ),
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-            child: SegmentedButton<int>(
-              segments: [
-                ButtonSegment(value: 0, label: Text(tr('Semua'))),
-                ButtonSegment(value: 1, label: Text(tr('Saya'))),
-              ],
-              selected: {_segmen},
-              onSelectionChanged: (s) => setState(() => _segmen = s.first),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: TextField(
-              key: kunciPanduanCari,
-              onChanged: (v) => setState(() => _cari = v.trim().toLowerCase()),
-              decoration: InputDecoration(
-                hintText: tr('Cari dompet, kunci, KTM...'),
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-                isDense: true,
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: Row(
-              children: [
-                for (final j in ['semua', 'hilang', 'temuan'])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: ChoiceChip(
-                      label: Text(
-                        tr(
-                          j == 'semua'
-                              ? 'Semua'
-                              : (j == 'hilang' ? 'Kehilangan' : 'Ditemukan'),
-                        ),
-                      ),
-                      selected: _jenis == j,
-                      onSelected: (_) => setState(() => _jenis = j),
-                    ),
-                  ),
-                const Spacer(),
-                PopupMenuButton<String>(
-                  tooltip: tr('Urutkan dan saring waktu'),
-                  icon: const Icon(Icons.calendar_month_outlined),
-                  onSelected: (v) async {
-                    if (v == 'r_kalender') {
-                      final pilih = await showDateRangePicker(
-                        context: context,
-                        firstDate: DateTime(2025, 1, 1),
-                        lastDate: DateTime.now(),
-                        initialDateRange: _rentangCustom,
-                      );
-                      if (pilih != null) {
-                        setState(() => _rentangCustom = pilih);
-                      }
-                    } else if (v.startsWith('u_')) {
-                      setState(() => _urut = v.substring(2));
-                    } else if (v.startsWith('r_')) {
-                      setState(() {
-                        _rentangCustom = null;
-                        _rentang = v.substring(2);
-                      });
-                    }
+                RefreshIndicator(
+                  onRefresh: () async {
+                    _segarkan();
+                    await (saya ? _fSaya : _fSemua);
                   },
-                  itemBuilder: (_) => [
-                    CheckedPopupMenuItem(
-                      value: 'u_baru',
-                      checked: _urut == 'baru',
-                      child: Text(tr('Terbaru')),
-                    ),
-                    CheckedPopupMenuItem(
-                      value: 'u_lama',
-                      checked: _urut == 'lama',
-                      child: Text(tr('Terlama')),
-                    ),
-                    const PopupMenuDivider(),
-                    CheckedPopupMenuItem(
-                      value: 'r_semua',
-                      checked: _rentangCustom == null && _rentang == 'semua',
-                      child: Text(tr('Semua waktu')),
-                    ),
-                    CheckedPopupMenuItem(
-                      value: 'r_hari_ini',
-                      checked: _rentangCustom == null && _rentang == 'hari_ini',
-                      child: Text(tr('Hari ini')),
-                    ),
-                    CheckedPopupMenuItem(
-                      value: 'r_7_hari',
-                      checked: _rentangCustom == null && _rentang == '7_hari',
-                      child: Text(tr('7 hari terakhir')),
-                    ),
-                    CheckedPopupMenuItem(
-                      value: 'r_30_hari',
-                      checked: _rentangCustom == null && _rentang == '30_hari',
-                      child: Text(tr('30 hari terakhir')),
-                    ),
-                    CheckedPopupMenuItem(
-                      value: 'r_kalender',
-                      checked: _rentangCustom != null,
-                      child: Text(tr('Pilih dari kalender...')),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (!saya) _bannerPengumuman(),
-          if (!saya)
-            FutureBuilder<Map<String, dynamic>>(
-              future: _fStat,
-              builder: (context, snap) {
-                final s = snap.data ?? const {};
-                if (s.isEmpty) return const SizedBox.shrink();
-                final meta = Theme.of(context).colorScheme.onSurfaceVariant;
-                int angka(String k) => (s[k] as num?)?.toInt() ?? 0;
-                Widget sel(String label, int nilai, Color warna) => Expanded(
-                  child: Column(
-                    children: [
-                      Text(
-                        '$nilai',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          color: warna,
+                  child: CustomScrollView(
+                    controller: _gulir,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF0061C9), Color(0xFF00A3FF)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                namaSapaan.isEmpty
+                                    ? tr('Halo')
+                                    : '${tr('Halo')}, $namaSapaan',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                tr(
+                                  'Kehilangan barang atau nemu sesuatu? Laporkan di sini, biar cepat balik ke pemiliknya.',
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              FutureBuilder<Map<String, dynamic>>(
+                                future: _fStat,
+                                builder: (context, s2) {
+                                  final s = s2.data ?? const {};
+                                  if (s.isEmpty) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  int angka(String k) =>
+                                      (s[k] as num?)?.toInt() ?? 0;
+                                  Widget sel(String label, int nilai) =>
+                                      Expanded(
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              '$nilai',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            Text(
+                                              label,
+                                              style: const TextStyle(
+                                                fontSize: 10.5,
+                                                color: Colors.white70,
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                  return Column(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 10,
+                                        ),
+                                        child: Divider(
+                                          color: Colors.white24,
+                                          height: 1,
+                                        ),
+                                      ),
+                                      Row(
+                                        children: [
+                                          sel(tr('Total Barang'), angka('total')),
+                                          sel(tr('Hilang'), angka('hilang')),
+                                          sel(
+                                            tr('Ditemukan'),
+                                            angka('temuan'),
+                                          ),
+                                          sel(
+                                            tr('Sudah kembali'),
+                                            angka('kembali'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      Text(
-                        label,
-                        style: TextStyle(fontSize: 11, color: meta),
-                        textAlign: TextAlign.center,
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                          child: SegmentedButton<int>(
+                            segments: [
+                              ButtonSegment(
+                                value: 0,
+                                label: Text(tr('Semua')),
+                              ),
+                              ButtonSegment(
+                                value: 1,
+                                label: Text(tr('Saya')),
+                              ),
+                            ],
+                            selected: {_segmen},
+                            onSelectionChanged: (s) =>
+                                setState(() => _segmen = s.first),
+                          ),
+                        ),
                       ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                          child: TextField(
+                            key: kunciPanduanCari,
+                            controller: _cariCtrl,
+                            onChanged: (v) =>
+                                setState(() => _cari = v.trim().toLowerCase()),
+                            decoration: InputDecoration(
+                              hintText: tr('Cari dompet, kunci, KTM...'),
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: Row(
+                            children: [
+                              for (final j in ['semua', 'hilang', 'temuan'])
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: ChoiceChip(
+                                    label: Text(
+                                      tr(
+                                        j == 'semua'
+                                            ? 'Semua'
+                                            : (j == 'hilang'
+                                                  ? 'Kehilangan'
+                                                  : 'Ditemukan'),
+                                      ),
+                                    ),
+                                    selected: _jenis == j,
+                                    onSelected: (_) =>
+                                        setState(() => _jenis = j),
+                                  ),
+                                ),
+                              const Spacer(),
+                              PopupMenuButton<String>(
+                                tooltip: tr('Urutkan dan saring waktu'),
+                                icon: const Icon(
+                                  Icons.calendar_month_outlined,
+                                ),
+                                onSelected: (v) async {
+                                  if (v == 'r_kalender') {
+                                    final pilih = await showDateRangePicker(
+                                      context: context,
+                                      firstDate: DateTime(2025, 1, 1),
+                                      lastDate: DateTime.now(),
+                                      initialDateRange: _rentangCustom,
+                                    );
+                                    if (pilih != null) {
+                                      setState(() => _rentangCustom = pilih);
+                                    }
+                                  } else if (v.startsWith('u_')) {
+                                    setState(() => _urut = v.substring(2));
+                                  } else if (v.startsWith('r_')) {
+                                    setState(() {
+                                      _rentangCustom = null;
+                                      _rentang = v.substring(2);
+                                    });
+                                  }
+                                },
+                                itemBuilder: (_) => [
+                                  CheckedPopupMenuItem(
+                                    value: 'u_baru',
+                                    checked: _urut == 'baru',
+                                    child: Text(tr('Terbaru')),
+                                  ),
+                                  CheckedPopupMenuItem(
+                                    value: 'u_lama',
+                                    checked: _urut == 'lama',
+                                    child: Text(tr('Terlama')),
+                                  ),
+                                  const PopupMenuDivider(),
+                                  CheckedPopupMenuItem(
+                                    value: 'r_semua',
+                                    checked:
+                                        _rentangCustom == null &&
+                                        _rentang == 'semua',
+                                    child: Text(tr('Semua waktu')),
+                                  ),
+                                  CheckedPopupMenuItem(
+                                    value: 'r_hari_ini',
+                                    checked:
+                                        _rentangCustom == null &&
+                                        _rentang == 'hari_ini',
+                                    child: Text(tr('Hari ini')),
+                                  ),
+                                  CheckedPopupMenuItem(
+                                    value: 'r_7_hari',
+                                    checked:
+                                        _rentangCustom == null &&
+                                        _rentang == '7_hari',
+                                    child: Text(tr('7 hari terakhir')),
+                                  ),
+                                  CheckedPopupMenuItem(
+                                    value: 'r_30_hari',
+                                    checked:
+                                        _rentangCustom == null &&
+                                        _rentang == '30_hari',
+                                    child: Text(tr('30 hari terakhir')),
+                                  ),
+                                  CheckedPopupMenuItem(
+                                    value: 'r_kalender',
+                                    checked: _rentangCustom != null,
+                                    child: Text(tr('Pilih dari kalender...')),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      if (!saya)
+                        SliverToBoxAdapter(child: _bannerPengumuman()),
+                      if (_dariCache)
+                        SliverToBoxAdapter(
+                          child: Container(
+                            width: double.infinity,
+                            color: Colors.orange.shade100,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              tr(
+                                'Kamu sedang offline. Ini data terakhir yang tersimpan di HP.',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ),
+                      if (snap.hasError && snap.data == null)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Text('${tr('Gagal memuat')}: ${snap.error}'),
+                          ),
+                        )
+                      else if (snap.data == null)
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 520, child: DaftarKerangka()),
+                        )
+                      else if (daftar.isEmpty)
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Image.asset('assets/burung.png', height: 120),
+                                const SizedBox(height: 12),
+                                Text(
+                                  tr(
+                                    saya
+                                        ? 'Kamu belum punya postingan.'
+                                        : 'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        SliverList.builder(
+                          itemCount: daftar.length,
+                          itemBuilder: (_, i) => KartuPostingan(
+                            post: daftar[i],
+                            tampilStatus: saya,
+                            onAksi: saya
+                                ? (a) => _aksiSaya(daftar[i], a)
+                                : null,
+                            onUp:
+                                (!saya &&
+                                    daftar[i]['user_id'] !=
+                                        sb.auth.currentUser?.id)
+                                ? () => _bantuUp(daftar[i])
+                                : null,
+                            sudahUp: _upHariIni.contains(
+                              (daftar[i]['id'] ?? '').toString(),
+                            ),
+                            onTap: () => Navigator.of(context)
+                                .push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        LayarDetail(post: daftar[i]),
+                                  ),
+                                )
+                                .then((_) => _segarkan()),
+                          ),
+                        ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
                     ],
                   ),
-                );
-                return Card(
-                  margin: const EdgeInsets.fromLTRB(12, 2, 12, 6),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Row(
-                      children: [
-                        sel(tr('Total Barang'), angka('total'), kBiru),
-                        sel(tr('Hilang'), angka('hilang'), Colors.red),
-                        sel(tr('Ditemukan'), angka('temuan'), Colors.green),
-                        sel(tr('Sudah kembali'), angka('kembali'), Colors.blueGrey),
-                      ],
+                ),
+                if (_baru > 0 && !saya)
+                  Positioned(
+                    top: 8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          setState(() => _baru = 0);
+                          _segarkan();
+                          if (_gulir.hasClients) {
+                            _gulir.animateTo(
+                              0,
+                              duration: const Duration(milliseconds: 350),
+                              curve: Curves.easeOut,
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.arrow_upward, size: 16),
+                        label: Text('$_baru ${tr('postingan baru')}'),
+                      ),
                     ),
                   ),
-                );
-              },
-            ),
-          if (_dariCache)
-            Container(
-              width: double.infinity,
-              color: Colors.orange.shade100,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              child: Text(
-                tr(
-                  'Kamu sedang offline. Ini data terakhir yang tersimpan di HP.',
-                ),
-                style: const TextStyle(fontSize: 12, color: Colors.black87),
-              ),
-            ),
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: saya ? _fSaya : _fSemua,
-              builder: (context, snap) {
-                if (snap.hasError && snap.data == null) {
-                  return Center(
-                    child: Text('${tr('Gagal memuat')}: ${snap.error}'),
-                  );
-                }
-                if (snap.data == null) {
-                  return const DaftarKerangka();
-                }
-                final data = (snap.data ?? []).where(_lolos).toList();
-                DateTime dibuat(Map<String, dynamic> p) =>
-                    DateTime.tryParse((p['created_at'] ?? '').toString()) ??
-                    DateTime.fromMillisecondsSinceEpoch(0);
-                if (_urut == 'lama') {
-                  data.sort((x, y) => dibuat(x).compareTo(dibuat(y)));
-                } else if (!saya) {
-                  DateTime kunci(Map<String, dynamic> p) {
-                    final a = DateTime.tryParse(
-                      (p['last_up_at'] ?? '').toString(),
-                    );
-                    final b = dibuat(p);
-                    return (a != null && a.isAfter(b)) ? a : b;
-                  }
-
-                  data.sort((x, y) => kunci(y).compareTo(kunci(x)));
-                }
-                if (data.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset('assets/burung.png', height: 120),
-                        const SizedBox(height: 12),
-                        Text(
-                          tr(
-                            saya
-                                ? 'Kamu belum punya postingan.'
-                                : 'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.',
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return Stack(
-                  children: [
-                    RefreshIndicator(
-                      onRefresh: () async {
-                        _segarkan();
-                        await (saya ? _fSaya : _fSemua);
-                      },
-                      child: ListView.builder(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        controller: _gulir,
-                        itemCount: data.length,
-                        itemBuilder: (_, i) => KartuPostingan(
-                          post: data[i],
-                          tampilStatus: saya,
-                          onAksi: saya ? (a) => _aksiSaya(data[i], a) : null,
-                          onUp:
-                              (!saya &&
-                                  data[i]['user_id'] != sb.auth.currentUser?.id)
-                              ? () => _bantuUp(data[i])
-                              : null,
-                          sudahUp: _upHariIni.contains(
-                            (data[i]['id'] ?? '').toString(),
-                          ),
-                          onTap: () => Navigator.of(context)
-                              .push(
-                                MaterialPageRoute(
-                                  builder: (_) => LayarDetail(post: data[i]),
-                                ),
-                              )
-                              .then((_) => _segarkan()),
-                        ),
-                      ),
-                    ),
-                    if (_baru > 0 && !saya)
-                      Positioned(
-                        top: 8,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              setState(() => _baru = 0);
-                              _segarkan();
-                              if (_gulir.hasClients) {
-                                _gulir.animateTo(
-                                  0,
-                                  duration: const Duration(milliseconds: 350),
-                                  curve: Curves.easeOut,
-                                );
-                              }
-                            },
-                            icon: const Icon(Icons.arrow_upward, size: 16),
-                            label: Text('$_baru ${tr('postingan baru')}'),
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
+              ],
+            );
+          },
+        ),
       ),
     );
   }

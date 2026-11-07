@@ -123,6 +123,18 @@ class TransisiHalus extends PageTransitionsBuilder {
 void getarRingan() => HapticFeedback.lightImpact();
 void getarSedang() => HapticFeedback.mediumImpact();
 
+/// Rapikan nama dari data kampus yang biasanya HURUF BESAR semua
+/// menjadi kapital di awal tiap kata, misal "AHMAD DANDI SUBHANI"
+/// menjadi "Ahmad Dandi Subhani".
+String namaRapi(String nama) {
+  return nama
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((k) => k.isNotEmpty)
+      .map((k) => k[0].toUpperCase() + k.substring(1).toLowerCase())
+      .join(' ');
+}
+
 /// Rangka berkilau saat daftar postingan dimuat, pengganti lingkaran
 /// putar agar Beranda terasa hidup sejak detik pertama.
 class DaftarKerangka extends StatefulWidget {
@@ -477,7 +489,6 @@ bool _sudahCekUpdate = false;
 /// atau manual dari menu Akun (memberi kabar apa pun hasilnya).
 Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
   if (!manual && _sudahCekUpdate) return;
-  _sudahCekUpdate = true;
   try {
     final info = await PackageInfo.fromPlatform();
     final lokal = int.tryParse(info.buildNumber) ?? 0;
@@ -486,7 +497,11 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
         .timeout(const Duration(seconds: 8));
     if (resp.statusCode != 200) throw 'server';
     final data = jsonDecode(resp.body) as Map<String, dynamic>;
-    final terbaru = (data['code'] as num?)?.toInt() ?? 0;
+    _sudahCekUpdate = true;
+    // Berkas penanda memakai kunci "kode"; "code" dibaca juga untuk
+    // berjaga bila formatnya berubah lagi.
+    final terbaru =
+        (data['kode'] as num?)?.toInt() ?? (data['code'] as num?)?.toInt() ?? 0;
     if (!context.mounted) return;
     if (terbaru > lokal) {
       await showDialog<void>(
