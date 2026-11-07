@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.7.8** (Android, arm64)
+Versi saat ini: **1.7.9** (Android, arm64)
 
 ## Unduh
 
@@ -30,7 +30,8 @@ Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sa
 
 - **Papan hilang dan temuan** dengan kategori Dompet dan Uang, KTM dan Dokumen, Kunci, HP dan Elektronik, Helm dan Kendaraan, Tas dan Pakaian, Buku dan Alat Tulis, dan Lainnya. Dilengkapi pencarian, saringan jenis dan kategori, urutan terbaru atau terlama, dan saringan rentang tanggal. Seluruh kepala beranda (sapaan, statistik komunitas, pencarian, dan saringan) ikut menggulir bersama daftar supaya ruang baca lega, statistik komunitas menyatu di dalam kartu sapaan, dan berpindah antara Semua dan Saya bisa dengan menggeser layar ke samping. Sapaan di beranda memakai nama lengkap pengguna.
 - **Lapor Cepat**: tulis satu kalimat bebas, misalnya "kehilangan dompet coklat di sekitar parkiran motor kemarin sore", dan aplikasi menguraikannya menjadi kategori, warna, lokasi, dan perkiraan waktu, lalu langsung menampilkan kandidat postingan yang mirip. Formulir Buat Postingan terisi otomatis dari kalimat itu dan tetap bisa diubah sebelum diterbitkan. Tebakan lokasinya mengutamakan tempat yang paling spesifik: "di tangga sekitar gedung 6" terbaca Gedung 6, "parkiran gedung B" terbaca Parkiran Gedung B, dan pola lantai serta ruang berangka (Lantai 2, Ruang 3.2) dikenali utuh.
-- **Kartu papan foto besar**: postingan berfoto tampil dengan foto lebar penuh ala umpan media sosial. Kepala kartu berisi foto profil, nama, dan status pemilik plus chip Hilang atau Temuan, foto dengan banyak gambar bisa digeser dengan titik penanda halus di bawah foto, dan keterangan barang berada di bawah foto. Semua foto dimuat lewat cache di perangkat supaya tidak mengunduh ulang saat papan digulir. Postingan tanpa foto tetap ringkas memakai ikon kategori supaya papan tidak monoton.
+- **Kartu papan foto besar**: postingan berfoto tampil dengan foto lebar penuh ala umpan media sosial. Kepala kartu bersih berisi foto profil, nama, dan status pemilik tanpa badge apa pun di sebelah nama, foto dengan banyak gambar bisa digeser dengan titik penanda halus di bawah foto, dan keterangan barang berada di bawah foto. Semua foto dimuat lewat cache di perangkat supaya tidak mengunduh ulang saat papan digulir. Postingan tanpa foto tetap ringkas memakai ikon kategori supaya papan tidak monoton.
+- **Stempel Sudah Kembali**: postingan yang barangnya sudah balik ke pemilik tampil dengan foto yang agak diredupkan dan stempel SUDAH KEMBALI miring ala cap karet di tengah foto, berlaku di kartu papan, halaman rincian, dan kartu bagikan, supaya status selesai terbaca sekali lihat tanpa badge tambahan.
 - **Papan offline**: papan terakhir yang kamu lihat tersimpan di HP. Saat tidak ada internet, papan tetap bisa dibuka dari simpanan itu dengan penanda bahwa datanya adalah data terakhir, bukan data live.
 - **Pantau Kategori**: nyalakan kategori yang dicari dan terima kabar setiap ada postingan baru di kategori itu.
 - **Watchlist Barang**: simpan barang yang sedang kamu cari lengkap dengan kategori, ciri, lokasi, dan rentang tanggal. Sistem memeriksa setiap temuan baru dan mengabari bila ada kandidat yang cocok.
@@ -113,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.7.9**: stempel SUDAH KEMBALI ala cap karet untuk postingan yang barangnya sudah kembali (foto diredupkan, tampil di kartu, rincian, dan kartu bagikan), badge Hilang/Temuan di kepala kartu dihapus dan status di Postinganku menjadi teks berwarna polos, dan serah terima yang selesai kini memberi getar sedang sebagai penanda.
 - **1.7.8**: lencana angka posisi foto pada kartu diganti titik penanda halus di bawah foto, semua foto papan dan rincian dimuat lewat cache di perangkat supaya tidak mengunduh ulang saat digulir, form pendaftaran email kini meminta nama lengkap sejak awal, dan tampilan status kosong dirapikan (teks kini rata tengah dengan ruang tepi yang layak).
 - **1.7.7**: kartu papan dirombak jadi umpan foto besar (foto lebar penuh yang bisa digeser dengan penanda posisi, kepala kartu berisi pemilik dan chip status, postingan tanpa foto tetap ringkas), Bantu UP tidak lagi ditawarkan pada postingan yang sudah diklaim, Lapor Cepat lebih pintar membaca lokasi spesifik (Gedung 6, Lantai 2, Ruang 3.2, Parkiran Gedung B), tombol Unduh pada dialog pembaruan diperbaiki sampai benar-benar membuka tautan unduhan, dan masuk SIKA dari halaman depan diperbaiki di server supaya masuk ke akun utama bagi pengguna yang NPM-nya sudah terverifikasi di akun email atau Google. Versi web ikut dirombak tampilannya mengikuti gaya yang sama dan kini berjalan di HTTPS.
 - **1.7.6**: login Google di aplikasi diperbaiki dari akarnya (client OAuth Android di Google Cloud proyeknya kini terdaftar resmi dengan sidik jari rilis), formulir SIKA dirapikan (label di atas kolom), ikon mata di semua kolom kata sandi, foto profil tampil di kartu postingan, komentar, klaim, dan statistik, logo header polos, teks samar ditegaskan, dan login SIKA otomatis mencoba sekali lagi bila server kampus membalas sibuk.
