@@ -123,6 +123,59 @@ class TransisiHalus extends PageTransitionsBuilder {
 void getarRingan() => HapticFeedback.lightImpact();
 void getarSedang() => HapticFeedback.mediumImpact();
 
+/// Filter penurun saturasi untuk foto postingan yang sudah kembali,
+/// supaya tampil agak redup di balik stempel.
+const ColorFilter kFilterFotoRedup = ColorFilter.matrix(<double>[
+  0.7795, 0.2003, 0.0202, 0, 0, //
+  0.0595, 0.9203, 0.0202, 0, 0, //
+  0.0595, 0.2003, 0.7402, 0, 0, //
+  0, 0, 0, 1, 0,
+]);
+
+/// Stempel "SUDAH KEMBALI" miring ala cap karet untuk postingan yang
+/// barangnya sudah balik ke pemiliknya. Menggantikan badge status:
+/// sekali lihat langsung terbaca selesai. [ukuran] = ukuran huruf.
+class StempelKembali extends StatelessWidget {
+  final double ukuran;
+  const StempelKembali({super.key, this.ukuran = 15});
+  @override
+  Widget build(BuildContext context) {
+    const warna = Color(0xFF1E7A34);
+    return Transform.rotate(
+      angle: -0.24,
+      child: Container(
+        padding: EdgeInsets.all(ukuran * 0.2),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: warna.withOpacity(0.9),
+            width: ukuran * 0.16,
+          ),
+          borderRadius: BorderRadius.circular(ukuran * 0.5),
+        ),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: ukuran * 0.7,
+            vertical: ukuran * 0.26,
+          ),
+          decoration: BoxDecoration(
+            border: Border.all(color: warna.withOpacity(0.9), width: 1.3),
+            borderRadius: BorderRadius.circular(ukuran * 0.34),
+          ),
+          child: Text(
+            'SUDAH KEMBALI',
+            style: TextStyle(
+              color: warna.withOpacity(0.95),
+              fontSize: ukuran,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Rapikan nama dari data kampus yang biasanya HURUF BESAR semua
 /// menjadi kapital di awal tiap kata, misal "AHMAD DANDI SUBHANI"
 /// menjadi "Ahmad Dandi Subhani".
