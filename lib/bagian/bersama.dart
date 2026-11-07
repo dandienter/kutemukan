@@ -301,13 +301,12 @@ void lihatFotoBesar(BuildContext context, String url) {
         children: [
           Positioned.fill(
             child: InteractiveViewer(
-              child: Image.network(
-                url,
+              child: CachedNetworkImage(
+                imageUrl: url,
                 fit: BoxFit.contain,
-                loadingBuilder: (_, anak, progres) => progres == null
-                    ? anak
-                    : const Center(child: CircularProgressIndicator()),
-                errorBuilder: (_, __, ___) => const Center(
+                placeholder: (_, __) =>
+                    const Center(child: CircularProgressIndicator()),
+                errorWidget: (_, __, ___) => const Center(
                   child: Icon(
                     Icons.image_not_supported_outlined,
                     color: Colors.white54,
