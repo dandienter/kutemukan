@@ -529,26 +529,62 @@ class _LayarDetailState extends State<LayarDetail> {
         padding: const EdgeInsets.all(16),
         children: [
           if (foto.isNotEmpty) ...[
-            SizedBox(
-              height: 250,
-              child: PageView.builder(
-                itemCount: foto.length,
-                onPageChanged: (i) => setState(() => _fotoKe = i),
-                itemBuilder: (_, i) => GestureDetector(
-                  onTap: () => lihatFotoBesar(context, foto[i]),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: CachedNetworkImage(
-                      imageUrl: foto[i],
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorWidget: (_, __, ___) => const Center(
-                        child: Icon(Icons.image_not_supported_outlined),
+            Stack(
+              children: [
+                if ((_post['status'] ?? '') == 'kembali')
+                  ColorFiltered(
+                    colorFilter: kFilterFotoRedup,
+                    child: SizedBox(
+                      height: 250,
+                      child: PageView.builder(
+                        itemCount: foto.length,
+                        onPageChanged: (i) => setState(() => _fotoKe = i),
+                        itemBuilder: (_, i) => GestureDetector(
+                          onTap: () => lihatFotoBesar(context, foto[i]),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: CachedNetworkImage(
+                              imageUrl: foto[i],
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => const Center(
+                                child: Icon(Icons.image_not_supported_outlined),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SizedBox(
+                    height: 250,
+                    child: PageView.builder(
+                      itemCount: foto.length,
+                      onPageChanged: (i) => setState(() => _fotoKe = i),
+                      itemBuilder: (_, i) => GestureDetector(
+                        onTap: () => lihatFotoBesar(context, foto[i]),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            imageUrl: foto[i],
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            errorWidget: (_, __, ___) => const Center(
+                              child: Icon(Icons.image_not_supported_outlined),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ),
+                if ((_post['status'] ?? '') == 'kembali')
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(child: StempelKembali(ukuran: 21)),
+                    ),
+                  ),
+              ],
             ),
             if (foto.length > 1)
               Padding(
@@ -1449,6 +1485,7 @@ class _FormVerifikasiKodeState extends State<_FormVerifikasiKode> {
             'updated_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('id', widget.klaim['post_id']);
+      getarSedang();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(tr('Serah terima selesai. Barang kembali.'))),
