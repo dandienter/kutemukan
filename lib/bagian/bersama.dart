@@ -519,12 +519,31 @@ Future<void> cekUpdate(BuildContext context, {bool manual = false}) async {
               child: Text(tr('Nanti saja')),
             ),
             FilledButton(
-              onPressed: () {
+              onPressed: () async {
+                // Berkas penanda menaruh tautan di kunci "apk"; "url"
+                // dibaca juga untuk format lama. Dulu tombol ini hanya
+                // membaca "url" sehingga tautannya kosong dan unduhan
+                // tidak pernah terbuka.
+                final tautan = (data['apk'] ?? data['url'] ?? '').toString();
                 Navigator.of(context).pop();
-                launchUrl(
-                  Uri.parse((data['url'] ?? '').toString()),
-                  mode: LaunchMode.externalApplication,
-                );
+                var terkirim = false;
+                if (tautan.isNotEmpty) {
+                  try {
+                    terkirim = await launchUrl(
+                      Uri.parse(tautan),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  } catch (_) {}
+                }
+                if (!terkirim && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        tr('Tidak bisa membuka tautan unduhan, coba lagi.'),
+                      ),
+                    ),
+                  );
+                }
               },
               child: Text(tr('Unduh Sekarang')),
             ),

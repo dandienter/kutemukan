@@ -66,53 +66,78 @@ class KartuPostingan extends StatelessWidget {
     final warnaTitip = Theme.of(context).brightness == Brightness.dark
         ? Colors.green.shade400
         : Colors.green.shade700;
+    final warnaKat = warnaKategori((post['kategori'] ?? '').toString());
+    final bisaProfil =
+        nama.isNotEmpty &&
+        post['nama_disamarkan'] != true &&
+        (post['user_id'] ?? '').toString() !=
+            (sb.auth.currentUser?.id ?? '');
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ListTile(
-            onTap: onTap,
-            leading: foto.isNotEmpty
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      foto.first,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const Icon(Icons.image_not_supported_outlined),
-                    ),
-                  )
-                : CircleAvatar(
-                    backgroundColor: warnaKategori(
-                      (post['kategori'] ?? '').toString(),
-                    ).withOpacity(0.14),
-                    child: Icon(
-                      ikonKategori((post['kategori'] ?? '').toString()),
-                      color: warnaKategori(
-                        (post['kategori'] ?? '').toString(),
-                      ),
-                    ),
-                  ),
-            title: Text(
-              post['judul'] ?? '',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              (post['kategori'] ?? '').toString(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: warnaKategori((post['kategori'] ?? '').toString()),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+          // Kepala kartu: pemilik di kiri, chip status dan menu di kanan.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 10, 6, 10),
+            child: Row(
               children: [
+                InkWell(
+                  onTap: bisaProfil
+                      ? () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => LayarProfilPublik(
+                              userId: (post['user_id'] ?? '').toString(),
+                            ),
+                          ),
+                        )
+                      : null,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 17,
+                        backgroundImage:
+                            ((post['foto_pemilik'] ?? '')
+                                .toString()
+                                .isNotEmpty)
+                            ? NetworkImage(
+                                (post['foto_pemilik']).toString(),
+                              )
+                            : null,
+                        child:
+                            ((post['foto_pemilik'] ?? '')
+                                .toString()
+                                .isEmpty)
+                            ? Text(
+                                nama.isNotEmpty
+                                    ? nama[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(fontSize: 14),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 9),
+                      Flexible(
+                        child: Text(
+                          nama.isEmpty ? tr('Pengguna') : nama,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14.5,
+                          ),
+                        ),
+                      ),
+                      if (post['terverifikasi_pemilik'] == true) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified, size: 16, color: kBiru),
+                      ],
+                    ],
+                  ),
+                ),
+                const Spacer(),
                 if (tampilStatus)
                   Chip(
                     label: Text(
@@ -142,7 +167,8 @@ class KartuPostingan extends StatelessWidget {
                           value: 'kembali',
                           child: Text(tr('Tandai sudah selesai')),
                         ),
-                      if (post['status'] == 'tampil' || post['status'] == 'arsip')
+                      if (post['status'] == 'tampil' ||
+                          post['status'] == 'arsip')
                         PopupMenuItem(
                           value: 'perpanjang',
                           child: Text(
@@ -157,116 +183,152 @@ class KartuPostingan extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
-            child: Row(
-              children: [
-                Icon(Icons.place_outlined, size: 15, color: warnaMeta),
-                const SizedBox(width: 3),
-                Expanded(
-                  child: Text(
-                    (post['lokasi'] ?? '').toString(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13),
-                  ),
+          if (foto.isNotEmpty)
+            _PagerFoto(urls: foto, onTap: onTap)
+          else
+            InkWell(
+              onTap: onTap,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 2),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 27,
+                      backgroundColor: warnaKat.withOpacity(0.14),
+                      child: Icon(
+                        ikonKategori((post['kategori'] ?? '').toString()),
+                        color: warnaKat,
+                        size: 26,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            post['judul'] ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15.5,
+                            ),
+                          ),
+                          Text(
+                            (post['kategori'] ?? '').toString(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: warnaKat,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Icon(Icons.schedule_outlined, size: 14, color: warnaMeta),
-                const SizedBox(width: 3),
-                Text(
-                  fmtRelatif(post['waktu_kejadian'] ?? post['created_at']),
-                  style: TextStyle(fontSize: 12, color: warnaMeta),
-                ),
-              ],
-            ),
-          ),
-          if ((post['deskripsi'] ?? '').toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
-              child: Text(
-                (post['deskripsi'] ?? '').toString(),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13, color: warnaMeta),
               ),
             ),
-          if (nama.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 12, 4),
-              child: InkWell(
-                onTap:
-                    (post['nama_disamarkan'] == true ||
-                        (post['user_id'] ?? '').toString() ==
-                            (sb.auth.currentUser?.id ?? ''))
-                    ? null
-                    : () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => LayarProfilPublik(
-                            userId: (post['user_id'] ?? '').toString(),
-                          ),
-                        ),
-                      ),
-                child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 9,
-                    backgroundImage:
-                        ((post['foto_pemilik'] ?? '').toString().isNotEmpty)
-                        ? NetworkImage((post['foto_pemilik']).toString())
-                        : null,
-                    child: ((post['foto_pemilik'] ?? '').toString().isEmpty)
-                        ? Text(
-                            nama.isNotEmpty ? nama[0].toUpperCase() : '?',
-                            style: const TextStyle(fontSize: 9),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 5),
-                  Flexible(
+          InkWell(
+            onTap: onTap,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (foto.isNotEmpty) ...[
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 10, 14, 0),
                     child: Text(
-                      kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
-                      maxLines: 1,
+                      post['judul'] ?? '',
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: warnaMeta),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                      ),
                     ),
                   ),
-                  if (post['terverifikasi_pemilik'] == true) ...[
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified, size: 14, color: kBiru),
-                  ],
-                ],
-                ),
-              ),
-            ),
-          if ((post['penitipan'] ?? '').toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 12, 6),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.security_outlined,
-                    size: 14,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 2, 14, 0),
                     child: Text(
-                      '${tr('Dititipkan di')}: ${post['penitipan']}',
+                      (post['kategori'] ?? '').toString(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 12,
-                        color: warnaTitip,
+                        color: warnaKat,
                         fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
                   ),
                 ],
-              ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 8, 14, 4),
+                  child: Row(
+                    children: [
+                      Icon(Icons.place_outlined, size: 15, color: warnaMeta),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          (post['lokasi'] ?? '').toString(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.schedule_outlined, size: 14, color: warnaMeta),
+                      const SizedBox(width: 3),
+                      Text(
+                        fmtRelatif(post['waktu_kejadian'] ?? post['created_at']),
+                        style: TextStyle(fontSize: 12, color: warnaMeta),
+                      ),
+                    ],
+                  ),
+                ),
+                if ((post['deskripsi'] ?? '').toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
+                    child: Text(
+                      (post['deskripsi'] ?? '').toString(),
+                      maxLines: foto.isNotEmpty ? 2 : 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, color: warnaMeta),
+                    ),
+                  ),
+                if ((post['penitipan'] ?? '').toString().isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 6),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.security_outlined,
+                          size: 14,
+                          color: Colors.green,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            '${tr('Dititipkan di')}: ${post['penitipan']}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: warnaTitip,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
+          ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
+            padding: const EdgeInsets.fromLTRB(14, 0, 8, 8),
             child: Row(
               children: [
                 Icon(Icons.visibility_outlined, size: 16, color: warnaMeta),
@@ -300,7 +362,8 @@ class KartuPostingan extends StatelessWidget {
                   ),
                 ],
                 const Spacer(),
-                if (onUp != null && !sudahUp)
+                // Postingan yang sudah diklaim tidak perlu didorong lagi.
+                if (onUp != null && !sudahUp && post['diklaim'] != true)
                   TextButton.icon(
                     onPressed: onUp,
                     icon: const Icon(Icons.arrow_circle_up_outlined, size: 18),
@@ -313,6 +376,78 @@ class KartuPostingan extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Foto postingan lebar penuh yang bisa digeser bila lebih dari satu,
+/// lengkap dengan lencana posisi (mis. 1/3) di pojok kanan bawah.
+class _PagerFoto extends StatefulWidget {
+  final List<String> urls;
+  final VoidCallback? onTap;
+  const _PagerFoto({required this.urls, this.onTap});
+  @override
+  State<_PagerFoto> createState() => _PagerFotoState();
+}
+
+class _PagerFotoState extends State<_PagerFoto> {
+  int _idx = 0;
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 300,
+      child: Stack(
+        children: [
+          PageView.builder(
+            itemCount: widget.urls.length,
+            onPageChanged: (i) => setState(() => _idx = i),
+            itemBuilder: (_, i) => GestureDetector(
+              onTap: widget.onTap,
+              child: Image.network(
+                widget.urls[i],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                errorBuilder: (_, __, ___) => Container(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    size: 40,
+                  ),
+                ),
+                loadingBuilder: (_, anak, prog) => prog == null
+                    ? anak
+                    : Container(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        alignment: Alignment.center,
+                        child: const CircularProgressIndicator(),
+                      ),
+              ),
+            ),
+          ),
+          if (widget.urls.length > 1)
+            Positioned(
+              right: 10,
+              bottom: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.65),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${_idx + 1}/${widget.urls.length}',
+                  style: const TextStyle(color: Colors.white, fontSize: 11),
+                ),
+              ),
+            ),
         ],
       ),
     );
