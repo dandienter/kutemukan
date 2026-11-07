@@ -11,6 +11,7 @@ class LayarLogin extends StatefulWidget {
 }
 
 class _LayarLoginState extends State<LayarLogin> {
+  final _nama = TextEditingController();
   final _email = TextEditingController();
   final _sandi = TextEditingController();
   final _npm = TextEditingController();
@@ -108,13 +109,21 @@ class _LayarLoginState extends State<LayarLogin> {
   }
 
   Future<void> _kirim() async {
+    if (_modeDaftar && _nama.text.trim().length < 3) {
+      setState(() => _galat = tr('Isi nama lengkap dulu ya.'));
+      return;
+    }
     setState(() {
       _sibuk = true;
       _galat = null;
     });
     try {
       if (_modeDaftar) {
-        await sb.auth.signUp(email: _email.text.trim(), password: _sandi.text);
+        await sb.auth.signUp(
+          email: _email.text.trim(),
+          password: _sandi.text,
+          data: {'nama': _nama.text.trim()},
+        );
       } else {
         await sb.auth.signInWithPassword(
           email: _email.text.trim(),
@@ -240,6 +249,21 @@ class _LayarLoginState extends State<LayarLogin> {
               style: TextStyle(color: skema.onSurfaceVariant),
             ),
             const SizedBox(height: 18),
+            if (_modeDaftar) ...[
+              TextField(
+                controller: _nama,
+                keyboardType: TextInputType.name,
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: tr('Nama lengkap'),
+                  prefixIcon: const Icon(Icons.person_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+            ],
             TextField(
               controller: _email,
               keyboardType: TextInputType.emailAddress,
