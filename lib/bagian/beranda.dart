@@ -86,12 +86,14 @@ class KartuPostingan extends StatelessWidget {
                     ),
                   )
                 : CircleAvatar(
-                    backgroundColor: hilang
-                        ? Colors.red.withOpacity(0.13)
-                        : Colors.green.withOpacity(0.13),
+                    backgroundColor: warnaKategori(
+                      (post['kategori'] ?? '').toString(),
+                    ).withOpacity(0.14),
                     child: Icon(
-                      hilang ? Icons.search_off : Icons.find_in_page_outlined,
-                      color: hilang ? Colors.red : Colors.green,
+                      ikonKategori((post['kategori'] ?? '').toString()),
+                      color: warnaKategori(
+                        (post['kategori'] ?? '').toString(),
+                      ),
                     ),
                   ),
             title: Text(
@@ -103,6 +105,10 @@ class KartuPostingan extends StatelessWidget {
               (post['kategori'] ?? '').toString(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: warnaKategori((post['kategori'] ?? '').toString()),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -623,6 +629,39 @@ class _LayarBerandaState extends State<LayarBeranda> {
       ),
       body: Column(
         children: [
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0061C9), Color(0xFF00A3FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${tr('Halo')}, ${(widget.profil['nama'] ?? '').toString().split(' ').first}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    'Laporkan barang hilang atau temuanmu, biar cepat kembali ke pemiliknya.',
+                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: SegmentedButton<int>(

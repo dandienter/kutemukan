@@ -92,6 +92,38 @@ class _LayarNotifState extends State<LayarNotif> {
     _segarkanNotif();
   }
 
+  Color _warna(String jenis) {
+    switch (jenis) {
+      case 'cocok':
+        return const Color(0xFFEA580C);
+      case 'disetujui':
+      case 'klaim_disetujui':
+      case 'kembali':
+        return const Color(0xFF16A34A);
+      case 'ditolak':
+      case 'klaim_ditolak':
+        return const Color(0xFFDC2626);
+      case 'moderasi':
+        return const Color(0xFF7C3AED);
+      case 'dihubungi':
+        return const Color(0xFF0D9488);
+      case 'up':
+        return const Color(0xFFDB2777);
+      case 'komentar':
+        return const Color(0xFF0891B2);
+      case 'pantau':
+        return const Color(0xFFD97706);
+      case 'basi':
+        return const Color(0xFF92400E);
+      case 'pesan':
+        return const Color(0xFF2563EB);
+      case 'pengumuman':
+        return const Color(0xFFB45309);
+      default:
+        return kBiru;
+    }
+  }
+
   IconData _ikon(String jenis) {
     switch (jenis) {
       case 'cocok':
@@ -245,15 +277,12 @@ class _LayarNotifState extends State<LayarNotif> {
                                 _togglePilih((n['id'] ?? '').toString()),
                           )
                         : CircleAvatar(
-                            backgroundColor: belum
-                                ? kBiru.withOpacity(0.15)
-                                : (Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade100),
+                            backgroundColor: _warna(
+                              n['jenis'] ?? '',
+                            ).withOpacity(belum ? 0.22 : 0.12),
                             child: Icon(
                               _ikon(n['jenis'] ?? ''),
-                              color: belum ? kBiru : Colors.grey,
+                              color: _warna(n['jenis'] ?? ''),
                             ),
                           ),
                     title: Text(

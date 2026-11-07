@@ -78,6 +78,31 @@ Future<ImageSource?> pilihSumberFoto(BuildContext context) {
 SupabaseClient get sb => Supabase.instance.client;
 
 const Color kBiru = Color(0xFF0061C9);
+
+/// Warna khas tiap kategori barang, dipakai di kartu, chip, dan ikon
+/// supaya tampilan tidak monoton.
+Color warnaKategori(String k) => switch (k) {
+  'Dompet & Uang' => const Color(0xFFD97706),
+  'KTM & Dokumen' => const Color(0xFF2563EB),
+  'Kunci' => const Color(0xFFEA580C),
+  'HP & Elektronik' => const Color(0xFF7C3AED),
+  'Helm & Kendaraan' => const Color(0xFF0D9488),
+  'Tas & Pakaian' => const Color(0xFFDB2777),
+  'Buku & Alat Tulis' => const Color(0xFF16A34A),
+  _ => const Color(0xFF64748B),
+};
+
+/// Ikon khas tiap kategori barang.
+IconData ikonKategori(String k) => switch (k) {
+  'Dompet & Uang' => Icons.wallet_outlined,
+  'KTM & Dokumen' => Icons.badge_outlined,
+  'Kunci' => Icons.key_outlined,
+  'HP & Elektronik' => Icons.smartphone_outlined,
+  'Helm & Kendaraan' => Icons.sports_motorsports_outlined,
+  'Tas & Pakaian' => Icons.shopping_bag_outlined,
+  'Buku & Alat Tulis' => Icons.menu_book_outlined,
+  _ => Icons.category_outlined,
+};
 const List<String> kKategori = [
   'Dompet & Uang',
   'KTM & Dokumen',

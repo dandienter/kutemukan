@@ -1493,13 +1493,6 @@ class _LayarPindaiQr extends StatefulWidget {
 
 class _LayarPindaiQrState extends State<_LayarPindaiQr> {
   bool _ketemu = false;
-  final _kontrol = MobileScannerController();
-
-  @override
-  void dispose() {
-    _kontrol.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1507,60 +1500,16 @@ class _LayarPindaiQrState extends State<_LayarPindaiQr> {
       appBar: AppBar(title: Text(tr('Pindai Kode QR'))),
       body: Stack(
         children: [
-          MobileScanner(
-            controller: _kontrol,
-            errorBuilder: (context, galat, anak) {
-              return ColoredBox(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.no_photography_outlined,
-                          size: 56,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          tr('Kamera tidak bisa dibuka'),
-                          style: Theme.of(context).textTheme.titleMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          galat.errorCode.name ==
-                                  'permissionDenied'
-                              ? tr(
-                                  'Izin kamera belum diberikan. Aktifkan '
-                                  'izin kamera untuk KutemuKan di '
-                                  'Pengaturan, lalu coba lagi.',
-                                )
-                              : (galat.errorDetails?.message ??
-                                  galat.errorCode.name),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: Text(tr('Kembali')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
-            onDetect: (tangkap) {
+          // Mesin ZXing tertanam di aplikasi (bukan ML Kit Google):
+          // tidak butuh unduhan model dan tidak bergantung layanan
+          // Google di HP, jadi kamera langsung bisa memindai.
+          ReaderWidget(
+            onScan: (kode) {
               if (_ketemu) return;
-              for (final b in tangkap.barcodes) {
-                final nilai = (b.rawValue ?? '').trim();
-                if (nilai.isNotEmpty) {
-                  _ketemu = true;
-                  Navigator.of(context).pop(nilai);
-                  return;
-                }
+              final nilai = (kode.text ?? '').trim();
+              if (nilai.isNotEmpty) {
+                _ketemu = true;
+                Navigator.of(context).pop(nilai);
               }
             },
           ),
