@@ -1,7 +1,7 @@
 name: kutemukan
 description: KutemuKan - Lost and Found Unindra
 publish_to: "none"
-version: 1.7.3+34
+version: 1.7.4+35
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -30,6 +30,8 @@ dependencies:
   audioplayers: ^6.4.0
   flutter_localizations:
     sdk: flutter
+  google_sign_in: ^6.2.1
+  app_links: ^6.3.2
 
 dev_dependencies:
   flutter_lints: ^3.0.0
@@ -44,6 +46,7 @@ flutter:
     - assets/burung.png
     - assets/splash.png
     - assets/icon.png
+    - assets/icons/google.png
     - assets/icons/instagram.png
     - assets/icons/whatsapp.png
     - assets/icons/github.png
