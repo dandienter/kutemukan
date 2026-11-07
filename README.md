@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.7.6** (Android, arm64)
+Versi saat ini: **1.7.7** (Android, arm64)
 
 ## Unduh
 
@@ -16,24 +16,25 @@ APK Android terbaru selalu tersedia di halaman rilis:
 
 Di dalam aplikasi juga ada tombol Cek Update di tab Akun yang akan memberi tahu bila ada versi baru.
 
-Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sama dan bisa dicoba di [demo KutemuKan Web](http://demo.43-130-228-96.sslip.io/kutemukan-web/). Tautan postingan yang dibagikan dari aplikasi membuka halaman web-nya, dan dari web ada tombol Buka di Aplikasi yang melompat langsung ke postingan yang sama di aplikasi Android (deep link `kutemukan://post/<id>`).
+Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sama dan bisa dicoba di [demo KutemuKan Web](https://demo.43-130-228-96.sslip.io/kutemukan-web/). Tautan postingan yang dibagikan dari aplikasi membuka halaman web-nya, dan dari web ada tombol Buka di Aplikasi yang melompat langsung ke postingan yang sama di aplikasi Android (deep link `kutemukan://post/<id>`).
 
 ## Fitur utama
 
 ### Masuk dan identitas
 
-- **Masuk dan verifikasi SIKA**: mahasiswa UNINDRA bisa masuk langsung dengan NPM dan kata sandi SIKA (kata sandi tidak pernah disimpan) atau memverifikasi akun email dan Google yang sudah ada. Akun terverifikasi berstatus Mahasiswa Terverifikasi, dan nama, NPM, program studi, fakultas, kelas, angkatan, nomor WhatsApp, serta foto profil terisi otomatis dari biodata SIKA.
+- **Masuk dan verifikasi SIKA**: mahasiswa UNINDRA bisa masuk langsung dengan NPM dan kata sandi SIKA (kata sandi tidak pernah disimpan) atau memverifikasi akun email dan Google yang sudah ada. Bila NPM sudah terverifikasi di akun email atau Google yang ada, masuk dengan SIKA dari halaman depan meneruskan sesi ke akun utama itu juga, bukan akun terpisah. Akun terverifikasi berstatus Mahasiswa Terverifikasi, dan nama, NPM, program studi, fakultas, kelas, angkatan, nomor WhatsApp, serta foto profil terisi otomatis dari biodata SIKA.
 - **Masuk dengan Google satu ketuk**: login Google berjalan native di dalam aplikasi lewat akun Google di HP, tanpa membuka browser. Bila jalur native gagal, aplikasi otomatis jatuh ke login Google lewat browser seperti biasa.
 - **Profil publik dan identitas bertingkat**: profil pengguna lain bisa dibuka (foto, nama tampilan, badge terverifikasi, program studi, statistik bantuan). Pengguna bisa memakai nama tampilan, dan akun terverifikasi SIKA bisa menyamarkan namanya pada postingan tertentu. Beranda juga menampilkan statistik publik komunitas.
 
 ### Papan dan pencarian
 
 - **Papan hilang dan temuan** dengan kategori Dompet dan Uang, KTM dan Dokumen, Kunci, HP dan Elektronik, Helm dan Kendaraan, Tas dan Pakaian, Buku dan Alat Tulis, dan Lainnya. Dilengkapi pencarian, saringan jenis dan kategori, urutan terbaru atau terlama, dan saringan rentang tanggal. Seluruh kepala beranda (sapaan, statistik komunitas, pencarian, dan saringan) ikut menggulir bersama daftar supaya ruang baca lega, statistik komunitas menyatu di dalam kartu sapaan, dan berpindah antara Semua dan Saya bisa dengan menggeser layar ke samping. Sapaan di beranda memakai nama lengkap pengguna.
-- **Lapor Cepat**: tulis satu kalimat bebas, misalnya "kehilangan dompet coklat di sekitar parkiran motor kemarin sore", dan aplikasi menguraikannya menjadi kategori, warna, lokasi, dan perkiraan waktu, lalu langsung menampilkan kandidat postingan yang mirip. Formulir Buat Postingan terisi otomatis dari kalimat itu dan tetap bisa diubah sebelum diterbitkan.
+- **Lapor Cepat**: tulis satu kalimat bebas, misalnya "kehilangan dompet coklat di sekitar parkiran motor kemarin sore", dan aplikasi menguraikannya menjadi kategori, warna, lokasi, dan perkiraan waktu, lalu langsung menampilkan kandidat postingan yang mirip. Formulir Buat Postingan terisi otomatis dari kalimat itu dan tetap bisa diubah sebelum diterbitkan. Tebakan lokasinya mengutamakan tempat yang paling spesifik: "di tangga sekitar gedung 6" terbaca Gedung 6, "parkiran gedung B" terbaca Parkiran Gedung B, dan pola lantai serta ruang berangka (Lantai 2, Ruang 3.2) dikenali utuh.
+- **Kartu papan foto besar**: postingan berfoto tampil dengan foto lebar penuh ala umpan media sosial. Kepala kartu berisi foto profil, nama, dan status pemilik plus chip Hilang atau Temuan, foto dengan banyak gambar bisa digeser dan dilengkapi penanda posisi (misalnya 2/5), dan keterangan barang berada di bawah foto. Postingan tanpa foto tetap ringkas memakai ikon kategori supaya papan tidak monoton.
 - **Papan offline**: papan terakhir yang kamu lihat tersimpan di HP. Saat tidak ada internet, papan tetap bisa dibuka dari simpanan itu dengan penanda bahwa datanya adalah data terakhir, bukan data live.
 - **Pantau Kategori**: nyalakan kategori yang dicari dan terima kabar setiap ada postingan baru di kategori itu.
 - **Watchlist Barang**: simpan barang yang sedang kamu cari lengkap dengan kategori, ciri, lokasi, dan rentang tanggal. Sistem memeriksa setiap temuan baru dan mengabari bila ada kandidat yang cocok.
-- **Bantu UP** satu kali per postingan per hari, jumlah tayang asli, komentar, dan berbagi kartu postingan lengkap dengan tautan ke versi web-nya.
+- **Bantu UP** satu kali per postingan per hari untuk postingan yang belum diklaim (sesudah ada klaim yang disetujui, tombolnya hilang dan yang tampil adalah label Telah Diklaim), jumlah tayang asli, komentar, dan berbagi kartu postingan lengkap dengan tautan ke versi web-nya.
 
 ### Pencocokan otomatis
 
@@ -112,6 +113,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.7.7**: kartu papan dirombak jadi umpan foto besar (foto lebar penuh yang bisa digeser dengan penanda posisi, kepala kartu berisi pemilik dan chip status, postingan tanpa foto tetap ringkas), Bantu UP tidak lagi ditawarkan pada postingan yang sudah diklaim, Lapor Cepat lebih pintar membaca lokasi spesifik (Gedung 6, Lantai 2, Ruang 3.2, Parkiran Gedung B), tombol Unduh pada dialog pembaruan diperbaiki sampai benar-benar membuka tautan unduhan, dan masuk SIKA dari halaman depan diperbaiki di server supaya masuk ke akun utama bagi pengguna yang NPM-nya sudah terverifikasi di akun email atau Google. Versi web ikut dirombak tampilannya mengikuti gaya yang sama dan kini berjalan di HTTPS.
 - **1.7.6**: login Google di aplikasi diperbaiki dari akarnya (client OAuth Android di Google Cloud proyeknya kini terdaftar resmi dengan sidik jari rilis), formulir SIKA dirapikan (label di atas kolom), ikon mata di semua kolom kata sandi, foto profil tampil di kartu postingan, komentar, klaim, dan statistik, logo header polos, teks samar ditegaskan, dan login SIKA otomatis mencoba sekali lagi bila server kampus membalas sibuk.
 - **1.7.5**: maskot dan logo diwarnai ulang bersih ke biru Unindra cerah, beranda dipadatkan jadi satu aliran scroll (statistik menyatu di kartu sapaan, kepala beranda ikut menggulir, Semua dan Saya bisa digeser), sapaan nama lengkap, ikon bilah status adaptif, dan perbaikan cek update yang sebelumnya tidak pernah mendeteksi versi baru.
 - **1.7.4**: login Google native satu ketuk, pencocokan AI semantik (embedding + pgvector), Lapor Cepat satu kalimat, panduan interaktif bermaskot, papan offline, notifikasi dan beranda realtime, unduh data dan hapus akun mandiri, deep link postingan, pengingat arsip H-3, ikon Google resmi dan maskot biru pekat.
