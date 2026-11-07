@@ -56,7 +56,7 @@ class KartuPostingan extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    final hilang = post['jenis'] == 'hilang';
+    final sudahKembali = post['status'] == 'kembali';
     final foto = daftarFoto(post);
     final nama = (post['nama_pemilik'] ?? '').toString();
     final dilihat = (post['views_count'] as num?)?.toInt() ?? 0;
@@ -139,22 +139,13 @@ class KartuPostingan extends StatelessWidget {
                 ),
                 const Spacer(),
                 if (tampilStatus)
-                  Chip(
-                    label: Text(
-                      labelStatus(post['status'] ?? ''),
-                      style: const TextStyle(fontSize: 10, color: Colors.white),
+                  Text(
+                    labelStatus(post['status'] ?? ''),
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w700,
+                      color: warnaStatus(post['status'] ?? ''),
                     ),
-                    backgroundColor: warnaStatus(post['status'] ?? ''),
-                    visualDensity: VisualDensity.compact,
-                  )
-                else
-                  Chip(
-                    label: Text(
-                      hilang ? 'HILANG' : 'TEMUAN',
-                      style: const TextStyle(fontSize: 11, color: Colors.white),
-                    ),
-                    backgroundColor: hilang ? Colors.red : Colors.green,
-                    visualDensity: VisualDensity.compact,
                   ),
                 if (onAksi != null)
                   PopupMenuButton<String>(
@@ -184,7 +175,23 @@ class KartuPostingan extends StatelessWidget {
             ),
           ),
           if (foto.isNotEmpty)
-            _PagerFoto(urls: foto, onTap: onTap)
+            Stack(
+              children: [
+                if (sudahKembali)
+                  ColorFiltered(
+                    colorFilter: kFilterFotoRedup,
+                    child: _PagerFoto(urls: foto, onTap: onTap),
+                  )
+                else
+                  _PagerFoto(urls: foto, onTap: onTap),
+                if (sudahKembali)
+                  const Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(child: StempelKembali(ukuran: 17)),
+                    ),
+                  ),
+              ],
+            )
           else
             InkWell(
               onTap: onTap,
@@ -228,6 +235,10 @@ class KartuPostingan extends StatelessWidget {
                         ],
                       ),
                     ),
+                    if (sudahKembali) ...[
+                      const SizedBox(width: 10),
+                      const StempelKembali(ukuran: 9),
+                    ],
                   ],
                 ),
               ),
