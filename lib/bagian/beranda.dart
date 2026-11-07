@@ -209,11 +209,27 @@ class KartuPostingan extends StatelessWidget {
                       ),
                 child: Row(
                 children: [
-                  Text(
-                    kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: warnaMeta),
+                  CircleAvatar(
+                    radius: 9,
+                    backgroundImage:
+                        ((post['foto_pemilik'] ?? '').toString().isNotEmpty)
+                        ? NetworkImage((post['foto_pemilik']).toString())
+                        : null,
+                    child: ((post['foto_pemilik'] ?? '').toString().isEmpty)
+                        ? Text(
+                            nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                            style: const TextStyle(fontSize: 9),
+                          )
+                        : null,
+                  ),
+                  const SizedBox(width: 5),
+                  Flexible(
+                    child: Text(
+                      kBahasa.value == 'en' ? 'by $nama' : 'oleh $nama',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 12, color: warnaMeta),
+                    ),
                   ),
                   if (post['terverifikasi_pemilik'] == true) ...[
                     const SizedBox(width: 4),
@@ -656,15 +672,8 @@ class _LayarBerandaState extends State<LayarBeranda> {
       appBar: AppBar(
         leadingWidth: 54,
         leading: Padding(
-          padding: const EdgeInsets.only(left: 10),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            padding: const EdgeInsets.all(3),
-            child: Image.asset('assets/burung.png'),
-          ),
+          padding: const EdgeInsets.only(left: 12),
+          child: Image.asset('assets/burung.png'),
         ),
         title: const Text(
           'KutemuKan',

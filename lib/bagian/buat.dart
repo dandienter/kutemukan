@@ -278,9 +278,22 @@ class _LayarBuatState extends State<LayarBuat> {
                           TextField(
                             controller: _cepat,
                             maxLines: 3,
-                            decoration: _rapat(
-                              tr(
+                            decoration: InputDecoration(
+                              labelText: tr(
                                 'Contoh: Gue kehilangan dompet warna cokelat kayaknya di sekitar kantin kemarin sore',
+                              ),
+                              labelStyle: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13,
+                              ),
+                              border: const OutlineInputBorder(),
+                              isDense: true,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
                               ),
                             ),
                           ),
@@ -350,9 +363,12 @@ class _LayarBuatState extends State<LayarBuat> {
                               tr(
                                 'Hasil tebakannya sudah masuk ke formulir di bawah. Cek dan ubah kalau ada yang kurang pas.',
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.grey,
+                                fontWeight: FontWeight.w500,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.78),
                               ),
                             ),
                           ],

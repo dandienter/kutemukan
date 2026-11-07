@@ -10,33 +10,44 @@ Future<Map<String, dynamic>> _panggilSika(
   String kataSandi, {
   bool pakaiToken = false,
 }) async {
-  final res = await http
-      .post(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          if (pakaiToken)
-            'Authorization':
-                'Bearer ${sb.auth.currentSession?.accessToken ?? ''}',
-        },
-        body: jsonEncode({'npm': npm, 'password': kataSandi}),
-      )
-      .timeout(const Duration(seconds: 30));
-  Map<String, dynamic> data = {};
-  try {
-    data = jsonDecode(res.body) as Map<String, dynamic>;
-  } catch (_) {}
-  if (res.statusCode != 200) {
-    // Bila badan balasan bukan JSON dari server kami (misal halaman galat
-    // perantara), pakai pesan yang sesuai kode statusnya.
-    final cadangan = switch (res.statusCode) {
-      401 => 'NPM atau kata sandi SIKA salah',
-      502 || 503 || 504 => 'SIKA sedang sulit dihubungi, coba lagi sebentar',
-      _ => 'Server SIKA menolak permintaan',
-    };
-    throw (data['detail'] ?? cadangan).toString();
+  // Server kampus kadang membalas 502 sesaat lalu pulih sendiri, jadi
+  // satu kegagalan gerbang dicoba sekali lagi sebelum menyerah.
+  for (var percobaan = 0; ; percobaan++) {
+    final res = await http
+        .post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            if (pakaiToken)
+              'Authorization':
+                  'Bearer ${sb.auth.currentSession?.accessToken ?? ''}',
+          },
+          body: jsonEncode({'npm': npm, 'password': kataSandi}),
+        )
+        .timeout(const Duration(seconds: 30));
+    if ((res.statusCode == 502 ||
+            res.statusCode == 503 ||
+            res.statusCode == 504) &&
+        percobaan == 0) {
+      await Future.delayed(const Duration(milliseconds: 1500));
+      continue;
+    }
+    Map<String, dynamic> data = {};
+    try {
+      data = jsonDecode(res.body) as Map<String, dynamic>;
+    } catch (_) {}
+    if (res.statusCode != 200) {
+      // Bila badan balasan bukan JSON dari server kami (misal halaman galat
+      // perantara), pakai pesan yang sesuai kode statusnya.
+      final cadangan = switch (res.statusCode) {
+        401 => 'NPM atau kata sandi SIKA salah',
+        502 || 503 || 504 => 'SIKA sedang sulit dihubungi, coba lagi sebentar',
+        _ => 'Server SIKA menolak permintaan',
+      };
+      throw (data['detail'] ?? cadangan).toString();
+    }
+    return data;
   }
-  return data;
 }
 
 /// Masuk memakai akun SIKA: backend memverifikasi ke server kampus,

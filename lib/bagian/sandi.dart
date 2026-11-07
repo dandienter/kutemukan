@@ -14,6 +14,7 @@ class _LayarUbahSandiState extends State<LayarUbahSandi> {
   final _baru = TextEditingController();
   final _ulang = TextEditingController();
   bool _sibuk = false;
+  bool _lihat = false;
 
   Future<void> _simpan() async {
     final b = _baru.text;
@@ -72,19 +73,37 @@ class _LayarUbahSandiState extends State<LayarUbahSandi> {
             const SizedBox(height: 20),
             TextField(
               controller: _baru,
-              obscureText: true,
+              obscureText: !_lihat,
               decoration: InputDecoration(
                 labelText: tr('Kata sandi baru'),
                 border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _lihat
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: tr('Lihat kata sandi'),
+                  onPressed: () => setState(() => _lihat = !_lihat),
+                ),
               ),
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _ulang,
-              obscureText: true,
+              obscureText: !_lihat,
               decoration: InputDecoration(
                 labelText: tr('Ulangi kata sandi baru'),
                 border: OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _lihat
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: tr('Lihat kata sandi'),
+                  onPressed: () => setState(() => _lihat = !_lihat),
+                ),
               ),
             ),
             const SizedBox(height: 20),

@@ -963,13 +963,19 @@ class _LayarDetailState extends State<LayarDetail> {
             children: [
               CircleAvatar(
                 radius: 16,
-                child: Text(
-                  ((k['nama_pemilik'] ?? '?').toString().isNotEmpty
-                          ? (k['nama_pemilik'] ?? '?').toString()[0]
-                          : '?')
-                      .toUpperCase(),
-                  style: const TextStyle(fontSize: 13),
-                ),
+                backgroundImage:
+                    ((k['foto_pemilik'] ?? '').toString().isNotEmpty)
+                    ? NetworkImage((k['foto_pemilik']).toString())
+                    : null,
+                child: ((k['foto_pemilik'] ?? '').toString().isEmpty)
+                    ? Text(
+                        ((k['nama_pemilik'] ?? '?').toString().isNotEmpty
+                                ? (k['nama_pemilik'] ?? '?').toString()[0]
+                                : '?')
+                            .toUpperCase(),
+                        style: const TextStyle(fontSize: 13),
+                      )
+                    : null,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1121,6 +1127,20 @@ class _LayarDetailState extends State<LayarDetail> {
           children: [
             Row(
               children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundImage:
+                      ((k['foto_pemilik'] ?? '').toString().isNotEmpty)
+                      ? NetworkImage((k['foto_pemilik']).toString())
+                      : null,
+                  child: ((k['foto_pemilik'] ?? '').toString().isEmpty)
+                      ? Text(
+                          nama.isNotEmpty ? nama[0].toUpperCase() : '?',
+                          style: const TextStyle(fontSize: 13),
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     nama,

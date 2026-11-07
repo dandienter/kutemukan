@@ -17,6 +17,8 @@ class _LayarLoginState extends State<LayarLogin> {
   final _sandiSika = TextEditingController();
   bool _modeDaftar = true;
   bool _formSika = false;
+  bool _lihatSandi = false;
+  bool _lihatSandiSika = false;
   bool _sibuk = false;
   bool _sibukSika = false;
   String? _galat;
@@ -57,7 +59,15 @@ class _LayarLoginState extends State<LayarLogin> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${tr('Login Google di aplikasi gagal')}: $e'),
+            content: Text(
+              '${tr('Login Google di aplikasi gagal')}: $e',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            backgroundColor: const Color(0xFF37474F),
+            behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 6),
           ),
         );
@@ -244,10 +254,20 @@ class _LayarLoginState extends State<LayarLogin> {
             const SizedBox(height: 14),
             TextField(
               controller: _sandi,
-              obscureText: true,
+              obscureText: !_lihatSandi,
               decoration: InputDecoration(
                 labelText: tr('Kata sandi'),
                 prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _lihatSandi
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: tr('Lihat kata sandi'),
+                  onPressed: () =>
+                      setState(() => _lihatSandi = !_lihatSandi),
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -329,12 +349,21 @@ class _LayarLoginState extends State<LayarLogin> {
               style: const TextStyle(color: Colors.white70, fontSize: 12.5),
             ),
             const SizedBox(height: 12),
+            const Text(
+              'NPM',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 6),
             TextField(
               controller: _npm,
               keyboardType: TextInputType.number,
               style: const TextStyle(color: Colors.black87),
               decoration: InputDecoration(
-                labelText: 'NPM',
+                hintText: tr('Masukkan NPM kamu'),
                 filled: true,
                 fillColor: Colors.white,
                 prefixIcon: const Icon(Icons.badge_outlined),
@@ -344,15 +373,34 @@ class _LayarLoginState extends State<LayarLogin> {
               ),
             ),
             const SizedBox(height: 12),
+            Text(
+              tr('Kata sandi SIKA'),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 6),
             TextField(
               controller: _sandiSika,
-              obscureText: true,
+              obscureText: !_lihatSandiSika,
               style: const TextStyle(color: Colors.black87),
               decoration: InputDecoration(
-                labelText: tr('Kata sandi SIKA'),
+                hintText: tr('Masukkan kata sandi SIKA'),
                 filled: true,
                 fillColor: Colors.white,
                 prefixIcon: const Icon(Icons.lock_outline),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _lihatSandiSika
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                  ),
+                  tooltip: tr('Lihat kata sandi'),
+                  onPressed: () =>
+                      setState(() => _lihatSandiSika = !_lihatSandiSika),
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

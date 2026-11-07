@@ -16,7 +16,7 @@ class LayarStatistik extends StatelessWidget {
           ),
     );
     final users = List<Map<String, dynamic>>.from(
-      await sb.from('lf_profiles').select('id, nama'),
+      await sb.from('lf_profiles').select('id, nama, foto_url'),
     );
     final klaim = List<Map<String, dynamic>>.from(
       await sb.from('lf_claims').select('user_id, status, created_at'),
@@ -128,6 +128,10 @@ class LayarStatistik extends StatelessWidget {
 
           final namaUser = <String, String>{
             for (final u in users) (u['id'] ?? ''): (u['nama'] ?? '-'),
+          };
+          final fotoUser = <String, String>{
+            for (final u in users)
+              (u['id'] ?? ''): (u['foto_url'] ?? '').toString(),
           };
           final perUser = <String, Map<String, int>>{};
           for (final p in posts) {
@@ -364,11 +368,17 @@ class LayarStatistik extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      child: Text(
-                        (namaUser[e.key] ?? '?').isNotEmpty
-                            ? (namaUser[e.key] ?? '?')[0].toUpperCase()
-                            : '?',
-                      ),
+                      backgroundImage:
+                          ((fotoUser[e.key] ?? '').isNotEmpty)
+                          ? NetworkImage(fotoUser[e.key]!)
+                          : null,
+                      child: ((fotoUser[e.key] ?? '').isEmpty)
+                          ? Text(
+                              (namaUser[e.key] ?? '?').isNotEmpty
+                                  ? (namaUser[e.key] ?? '?')[0].toUpperCase()
+                                  : '?',
+                            )
+                          : null,
                     ),
                     title: Text(namaUser[e.key] ?? 'Pengguna'),
                     subtitle: Text(
