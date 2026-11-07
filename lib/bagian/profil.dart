@@ -35,9 +35,9 @@ class _LayarProfilState extends State<LayarProfil> {
       _fotoUrl = awal['foto_url'] as String?;
     } else {
       final meta = sb.auth.currentUser?.userMetadata;
-      final namaGoogle = meta?['full_name'] ?? meta?['name'];
-      if (namaGoogle is String && namaGoogle.isNotEmpty) {
-        _nama.text = namaGoogle;
+      final namaAwal = meta?['nama'] ?? meta?['full_name'] ?? meta?['name'];
+      if (namaAwal is String && namaAwal.isNotEmpty) {
+        _nama.text = namaAwal;
       }
     }
   }
