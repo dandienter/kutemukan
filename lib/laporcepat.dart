@@ -126,28 +126,102 @@ HasilLaporCepat uraikanLaporCepat(String teksAsli, {DateTime? sekarang}) {
     }
   }
 
+  // Lokasi, dari yang paling spesifik ke yang paling umum:
+  // 1) pola beridentitas: gedung 6, lantai 2, ruang 3.2, kelas 7. Kata
+  //    kamus yang menempel tepat di depannya ikut dibawa (parkiran
+  //    gedung b, tangga gedung 6), tapi kata umum yang jauh tidak
+  //    boleh menang melawan pola ini.
+  // 2) frasa sesudah kata depan (di sekitar X, di dekat X, di X):
+  //    ambil kata kamus pertama di frasa itu plus identitas sesudahnya.
+  // 3) kata kamus yang muncul paling awal di kalimat.
+  String rapikanLokasi(String s) => s
+      .trim()
+      .split(RegExp(r'\s+'))
+      .map(
+        (w) => w.length == 1
+            ? w.toUpperCase()
+            : '${w[0].toUpperCase()}${w.substring(1)}',
+      )
+      .join(' ');
+  bool identitas(String w) =>
+      RegExp(r'^([0-9]+([.,][0-9]+)?[a-z]?|[a-z])$').hasMatch(w);
   String? lokasi;
-  for (final l in _kamusLokasi) {
-    if (teks.contains(l)) {
-      lokasi = l;
-      break;
+  final mSpesifik = RegExp(
+    r'\b(gedung|lantai|lt|ruang|ruangan|kelas)\s+([a-z]?[0-9]+([.,][0-9]+)?[a-z]?|[a-z])\b',
+  ).firstMatch(teks);
+  if (mSpesifik != null) {
+    var inti = '${mSpesifik.group(1)} ${mSpesifik.group(2)}';
+    if (inti.startsWith('lt ')) inti = 'lantai ${inti.substring(3)}';
+    final sebelum = teks
+        .substring(0, mSpesifik.start)
+        .trim()
+        .split(RegExp(r'\s+'));
+    final kataSebelum = sebelum.isEmpty ? '' : sebelum.last;
+    if (_kamusLokasi.contains(kataSebelum) &&
+        !inti.startsWith(kataSebelum)) {
+      inti = '$kataSebelum $inti';
     }
+    lokasi = rapikanLokasi(inti);
   }
   if (lokasi == null) {
-    // Pola "di sekitar X" / "di dekat X" / "di X" sampai tiga kata.
     final m = RegExp(
-      r'\bdi (?:sekitar |dekat |area )?([a-z]+(?: [a-z]+){0,2})',
+      r'\bdi (?:sekitar |dekat |area |seberang |belakang |depan |samping |pinggir )?([a-z0-9]+(?: [a-z0-9]+){0,2})',
     ).firstMatch(teks);
     if (m != null) {
-      final mentah = m.group(1)!.trim();
+      final kata = m.group(1)!.trim().split(RegExp(r'\s+'));
       const stop = {'sana', 'situ', 'dalam', 'atas', 'luar', 'kampus'};
-      if (mentah.isNotEmpty && !stop.contains(mentah.split(' ').first)) {
-        lokasi = mentah;
+      if (!stop.contains(kata.first)) {
+        var idxKamus = -1;
+        var panjangKamus = 0;
+        for (var i = 0; i < kata.length; i++) {
+          for (final l in _kamusLokasi) {
+            final bagian = l.split(' ');
+            if (i + bagian.length <= kata.length &&
+                kata.sublist(i, i + bagian.length).join(' ') == l &&
+                bagian.length > panjangKamus) {
+              idxKamus = i;
+              panjangKamus = bagian.length;
+            }
+          }
+          if (idxKamus >= 0) break;
+        }
+        if (idxKamus >= 0) {
+          final ambil = kata.sublist(idxKamus, idxKamus + panjangKamus);
+          final sesudah = idxKamus + panjangKamus;
+          if (sesudah < kata.length && identitas(kata[sesudah])) {
+            ambil.add(kata[sesudah]);
+          }
+          lokasi = rapikanLokasi(ambil.join(' '));
+        } else {
+          lokasi = rapikanLokasi(kata.join(' '));
+        }
       }
     }
   }
-  if (lokasi != null) {
-    lokasi = lokasi[0].toUpperCase() + lokasi.substring(1);
+  if (lokasi == null) {
+    var idxTerbaik = -1;
+    String? frasaTerbaik;
+    for (final l in _kamusLokasi) {
+      final i = teks.indexOf(l);
+      if (i >= 0 &&
+          (idxTerbaik < 0 ||
+              i < idxTerbaik ||
+              (i == idxTerbaik && l.length > (frasaTerbaik?.length ?? 0)))) {
+        idxTerbaik = i;
+        frasaTerbaik = l;
+      }
+    }
+    if (frasaTerbaik != null) {
+      var hasil = frasaTerbaik;
+      final sisa = teks
+          .substring(idxTerbaik + frasaTerbaik.length)
+          .trim()
+          .split(RegExp(r'\s+'));
+      if (sisa.isNotEmpty && identitas(sisa.first)) {
+        hasil = '$hasil ${sisa.first}';
+      }
+      lokasi = rapikanLokasi(hasil);
+    }
   }
 
   // Waktu: frasa umum diterjemahkan menjadi perkiraan tanggal jam.
