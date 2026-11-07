@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.7.5** (Android, arm64)
+Versi saat ini: **1.7.6** (Android, arm64)
 
 ## Unduh
 
@@ -112,6 +112,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.7.6**: login Google di aplikasi diperbaiki dari akarnya (client OAuth Android di Google Cloud proyeknya kini terdaftar resmi dengan sidik jari rilis), formulir SIKA dirapikan (label di atas kolom), ikon mata di semua kolom kata sandi, foto profil tampil di kartu postingan, komentar, klaim, dan statistik, logo header polos, teks samar ditegaskan, dan login SIKA otomatis mencoba sekali lagi bila server kampus membalas sibuk.
 - **1.7.5**: maskot dan logo diwarnai ulang bersih ke biru Unindra cerah, beranda dipadatkan jadi satu aliran scroll (statistik menyatu di kartu sapaan, kepala beranda ikut menggulir, Semua dan Saya bisa digeser), sapaan nama lengkap, ikon bilah status adaptif, dan perbaikan cek update yang sebelumnya tidak pernah mendeteksi versi baru.
 - **1.7.4**: login Google native satu ketuk, pencocokan AI semantik (embedding + pgvector), Lapor Cepat satu kalimat, panduan interaktif bermaskot, papan offline, notifikasi dan beranda realtime, unduh data dan hapus akun mandiri, deep link postingan, pengingat arsip H-3, ikon Google resmi dan maskot biru pekat.
 - **1.7.3**: pemindaian QR serah terima tertanam di aplikasi (tanpa Google Lens), desain berwarna biru kampus, perbaikan hapus notifikasi.
