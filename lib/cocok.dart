@@ -134,7 +134,11 @@ String teksDokumen(Map<String, dynamic> post) {
 class HasilCocok {
   final Map<String, dynamic> post;
   final double skor;
-  HasilCocok(this.post, this.skor);
+
+  /// True bila pasangan ini ditemukan atau diperkuat pencocokan AI
+  /// semantik di server (embedding), bukan kata kunci saja.
+  final bool dariAi;
+  HasilCocok(this.post, this.skor, {this.dariAi = false});
 }
 
 class MesinCocok {

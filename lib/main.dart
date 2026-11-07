@@ -6,7 +6,9 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:app_links/app_links.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter_zxing/flutter_zxing.dart' hide Position;
 import 'package:permission_handler/permission_handler.dart';
@@ -17,6 +19,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:record/record.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
@@ -31,10 +34,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'cocok.dart';
+import 'laporcepat.dart';
 import 'config.dart';
 import 'i18n.dart';
 
 @pragma('vm:entry-point')
+part 'bagian/tur.dart';
 part 'bagian/sika.dart';
 part 'bagian/bersama.dart';
 part 'bagian/splash.dart';
@@ -133,7 +138,31 @@ class KutemuKanApp extends StatelessWidget {
               actionsIconTheme: IconThemeData(color: Colors.white),
             ),
             navigationBarTheme: NavigationBarThemeData(
-              indicatorColor: kBiru.withOpacity(0.16),
+              indicatorColor: kBiru.withOpacity(0.28),
+              iconTheme: WidgetStateProperty.resolveWith(
+                (states) => IconThemeData(
+                  color: states.contains(WidgetState.selected)
+                      ? kBiru
+                      : Colors.grey.shade600,
+                ),
+              ),
+              labelTextStyle: WidgetStateProperty.resolveWith(
+                (states) => TextStyle(
+                  fontSize: 12,
+                  fontWeight: states.contains(WidgetState.selected)
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                  color: states.contains(WidgetState.selected)
+                      ? kBiru
+                      : Colors.grey.shade600,
+                ),
+              ),
+            ),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: TransisiHalus(),
+                TargetPlatform.iOS: TransisiHalus(),
+              },
             ),
           ),
           darkTheme: ThemeData(
@@ -148,6 +177,33 @@ class KutemuKanApp extends StatelessWidget {
               elevation: 0,
               iconTheme: IconThemeData(color: Colors.white),
               actionsIconTheme: IconThemeData(color: Colors.white),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              indicatorColor: kBiru.withOpacity(0.45),
+              iconTheme: WidgetStateProperty.resolveWith(
+                (states) => IconThemeData(
+                  color: states.contains(WidgetState.selected)
+                      ? Colors.white
+                      : Colors.grey.shade400,
+                ),
+              ),
+              labelTextStyle: WidgetStateProperty.resolveWith(
+                (states) => TextStyle(
+                  fontSize: 12,
+                  fontWeight: states.contains(WidgetState.selected)
+                      ? FontWeight.w700
+                      : FontWeight.w500,
+                  color: states.contains(WidgetState.selected)
+                      ? Colors.white
+                      : Colors.grey.shade400,
+                ),
+              ),
+            ),
+            pageTransitionsTheme: const PageTransitionsTheme(
+              builders: {
+                TargetPlatform.android: TransisiHalus(),
+                TargetPlatform.iOS: TransisiHalus(),
+              },
             ),
           ),
           home: const LayarSplash(),

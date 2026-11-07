@@ -17,6 +17,12 @@ const String kMasukSikaUrl = 'https://api.mysika.my.id/api/lf/masuk-sika';
 const String kVerifikasiSikaUrl =
     'https://api.mysika.my.id/api/lf/verifikasi-sika';
 
+// Client ID OAuth web untuk login Google native (pemilih akun di dalam
+// aplikasi). Token ID dari alur native ditukar menjadi sesi Supabase.
+// Client ID bersifat publik, aman tertanam di aplikasi.
+const String kGoogleWebClientId =
+    '654645757975-dp0q4t8ei0ole5abnbst3u5s7ca6plia.apps.googleusercontent.com';
+
 // Berkas penanda versi terbaru untuk fitur cek pembaruan.
 const String kVersionJsonUrl =
     'https://temubalik.43-130-228-96.sslip.io/kutemukan-version.json';
