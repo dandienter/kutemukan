@@ -116,17 +116,50 @@ class _LayarBagikanState extends State<LayarBagikan> {
                       ),
                     ),
                     if (foto.isNotEmpty)
-                      Image.network(
-                        foto.first,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const SizedBox(
-                          height: 60,
-                          child: Center(
-                            child: Icon(Icons.image_not_supported_outlined),
-                          ),
-                        ),
+                      Stack(
+                        children: [
+                          if ((p['status'] ?? '') == 'kembali')
+                            ColorFiltered(
+                              colorFilter: kFilterFotoRedup,
+                              child: CachedNetworkImage(
+                                imageUrl: foto.first,
+                                height: 200,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                errorWidget: (_, __, ___) => const SizedBox(
+                                  height: 60,
+                                  child: Center(
+                                    child: Icon(
+                                      Icons.image_not_supported_outlined,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            )
+                          else
+                            CachedNetworkImage(
+                              imageUrl: foto.first,
+                              height: 200,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => const SizedBox(
+                                height: 60,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.image_not_supported_outlined,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          if ((p['status'] ?? '') == 'kembali')
+                            const Positioned.fill(
+                              child: IgnorePointer(
+                                child: Center(
+                                  child: StempelKembali(ukuran: 16),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     Padding(
                       padding: const EdgeInsets.all(14),
