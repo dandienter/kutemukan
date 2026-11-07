@@ -136,6 +136,11 @@ class KutemuKanApp extends StatelessWidget {
               elevation: 0,
               iconTheme: IconThemeData(color: Colors.white),
               actionsIconTheme: IconThemeData(color: Colors.white),
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarColor: kBiru,
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              ),
             ),
             navigationBarTheme: NavigationBarThemeData(
               indicatorColor: kBiru.withOpacity(0.28),
@@ -177,6 +182,11 @@ class KutemuKanApp extends StatelessWidget {
               elevation: 0,
               iconTheme: IconThemeData(color: Colors.white),
               actionsIconTheme: IconThemeData(color: Colors.white),
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarColor: Color(0xFF0B3B6E),
+                statusBarIconBrightness: Brightness.light,
+                statusBarBrightness: Brightness.dark,
+              ),
             ),
             navigationBarTheme: NavigationBarThemeData(
               indicatorColor: kBiru.withOpacity(0.45),
@@ -206,6 +216,25 @@ class KutemuKanApp extends StatelessWidget {
               },
             ),
           ),
+          builder: (context, child) {
+            final gelap =
+                mode == ThemeMode.dark ||
+                (mode == ThemeMode.system &&
+                    MediaQuery.platformBrightnessOf(context) ==
+                        Brightness.dark);
+            return AnnotatedRegion<SystemUiOverlayStyle>(
+              value: gelap
+                  ? const SystemUiOverlayStyle(
+                      statusBarIconBrightness: Brightness.light,
+                      statusBarBrightness: Brightness.dark,
+                    )
+                  : const SystemUiOverlayStyle(
+                      statusBarIconBrightness: Brightness.dark,
+                      statusBarBrightness: Brightness.light,
+                    ),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
           home: const LayarSplash(),
         ),
       ),
