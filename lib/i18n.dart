@@ -389,6 +389,9 @@ const Map<String, String> _idKeEn = {
   'Pemilik postingan memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.': 'The post owner chose not to share WhatsApp. Use the in-app Chat.',
   'Pengklaim memilih tidak membagikan WhatsApp. Gunakan Chat di Aplikasi.': 'The claimant chose not to share WhatsApp. Use the in-app Chat.',
   'Kode Serah Terima': 'Handover Code',
+  'Halo': 'Hello',
+  'Laporkan barang hilang atau temuanmu, biar cepat kembali ke pemiliknya.':
+      'Report a lost item or something you found, so it gets back to its owner quickly.',
   'Pratinjau PDF': 'Preview PDF',
   'Pratinjau Laporan': 'Report Preview',
   'Izin Kamera Ditolak': 'Camera Permission Denied',

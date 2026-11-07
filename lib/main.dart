@@ -8,7 +8,7 @@ import 'dart:ui' as ui;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_zxing/flutter_zxing.dart' hide Position;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -125,6 +125,16 @@ class KutemuKanApp extends StatelessWidget {
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: kBiru),
             useMaterial3: true,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: kBiru,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: IconThemeData(color: Colors.white),
+              actionsIconTheme: IconThemeData(color: Colors.white),
+            ),
+            navigationBarTheme: NavigationBarThemeData(
+              indicatorColor: kBiru.withOpacity(0.16),
+            ),
           ),
           darkTheme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
@@ -132,6 +142,13 @@ class KutemuKanApp extends StatelessWidget {
               brightness: Brightness.dark,
             ),
             useMaterial3: true,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Color(0xFF0B3B6E),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              iconTheme: IconThemeData(color: Colors.white),
+              actionsIconTheme: IconThemeData(color: Colors.white),
+            ),
           ),
           home: const LayarSplash(),
         ),
