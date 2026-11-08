@@ -57,6 +57,59 @@ class _LayarModerasiState extends State<LayarModerasi> {
     setState(() {});
   }
 
+  Future<List<Map<String, dynamic>>> _ambilArsip() async {
+    final rows = await sb
+        .from('lf_posts')
+        .select()
+        .eq('status', 'arsip')
+        .order('created_at', ascending: true);
+    final data = List<Map<String, dynamic>>.from(rows);
+    await pasangNama(data);
+    return data;
+  }
+
+  /// Tutup postingan arsip sebagai dimusnahkan/dihibahkan (status akhir
+  /// untuk barang yang sudah melewati batas waktu penyimpanan), lalu
+  /// kabari pemiliknya lewat notifikasi.
+  Future<void> _tutupMusnahHibah(Map<String, dynamic> post) async {
+    final jadi = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Tutup postingan ini?')),
+        content: Text(
+          tr('Barang yang sudah melewati batas waktu akan dicatat petugas sebagai dimusnahkan atau dihibahkan. Postingan tidak tampil lagi di papan dan tidak bisa dikembalikan.'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(tr('Batal')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(tr('Ya, Tutup')),
+          ),
+        ],
+      ),
+    );
+    if (jadi != true || !mounted) return;
+    await _putuskan(post, 'musnah_hibah');
+    try {
+      await sb.from('lf_notif').insert({
+        'user_id': post['user_id'],
+        'jenis': 'moderasi',
+        'judul': 'Postinganmu ditutup',
+        'isi':
+            'Barang pada postingan "${post['judul']}" sudah melewati batas waktu penyimpanan dan dicatat petugas sebagai dimusnahkan/dihibahkan.',
+        'post_id': post['id'],
+      });
+    } catch (_) {}
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(tr('Postingan ditutup (dimusnahkan/dihibahkan).'))),
+      );
+    }
+  }
+
   Future<void> _putuskan(Map<String, dynamic> post, String status) async {
     await sb.from('lf_posts').update({
       'status': status,
@@ -69,7 +122,7 @@ class _LayarModerasiState extends State<LayarModerasi> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Moderasi'))),
-      body: Column(
+      body: ListView(
         children: [
           FutureBuilder<List<Map<String, dynamic>>>(
             future: _ambilSengketa(),
@@ -142,21 +195,32 @@ class _LayarModerasiState extends State<LayarModerasi> {
               );
             },
           ),
-          Expanded(
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _ambil(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+            child: Text(
+              tr('Menunggu Moderasi'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _ambil(),
               builder: (context, snap) {
                 if (snap.connectionState != ConnectionState.done) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final data = snap.data ?? [];
                 if (data.isEmpty) {
-                  return Center(
-                    child: Text(tr('Tidak ada postingan menunggu moderasi.')),
+                  return Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      tr('Tidak ada postingan menunggu moderasi.'),
+                      textAlign: TextAlign.center,
+                    ),
                   );
                 }
                 return ListView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: data.length,
                   itemBuilder: (_, i) {
                     final p = data[i];
@@ -219,6 +283,71 @@ class _LayarModerasiState extends State<LayarModerasi> {
                 );
               },
             ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+            child: Text(
+              tr('Arsip Lewat Batas Waktu'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _ambilArsip(),
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+              final data = snap.data ?? [];
+              if (data.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 28),
+                  child: Text(tr('Tidak ada postingan arsip.')),
+                );
+              }
+              return ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: data.length,
+                itemBuilder: (_, i) {
+                  final p = data[i];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          KartuPostingan(
+                            post: p,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => LayarDetail(post: p),
+                              ),
+                            ),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () => _putuskan(p, 'tampil'),
+                                child: Text(tr('Tampilkan Lagi')),
+                              ),
+                              FilledButton(
+                                onPressed: () => _tutupMusnahHibah(p),
+                                child: Text(tr('Musnahkan / Hibahkan')),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
           ),
         ],
       ),

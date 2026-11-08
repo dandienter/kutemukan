@@ -16,6 +16,8 @@ Color warnaStatus(String s) {
       return Colors.red;
     case 'arsip':
       return Colors.grey;
+    case 'musnah_hibah':
+      return Colors.brown;
     default:
       return Colors.grey;
   }
@@ -33,6 +35,8 @@ String labelStatus(String s) {
       return tr('Ditolak');
     case 'arsip':
       return tr('Diarsipkan');
+    case 'musnah_hibah':
+      return tr('Dimusnahkan / Dihibahkan');
     default:
       return s;
   }
