@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.9.5** (Android, arm64)
+Versi saat ini: **1.9.6** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.9.6**: navigasi bawah kini tampil rounded melayang dengan bayangan lembut di atas latar halaman yang buram, dan kepala Beranda diberi alas buram warna latar halaman sehingga isi yang bergulir tidak lagi tembus terlihat di sudut lengkung kepala. Audit lapisan semua halaman: AppBar bertema biru buram, kepala Akun statis dalam alur, tidak ada halaman dengan badan tembus pandang.
 - **1.9.5**: perilaku gulir kepala Beranda disesuaikan dengan arahan pengguna: kartu statistik sekarang menjadi isi pertama daftar gulir sehingga saat digulir ia menyelip ke belakang kepala biru, sedangkan kepala biru berisi sapaan dan nama tetap diam di lapisan paling depan. Sebelumnya kartu memudar di tempat sebagai bagian bilah yang menyusut.
 - **1.9.4**: dua perbaikan dari uji v1.9.3. Kepala Beranda kini menyusut saat digulir seperti WeKios: kartu statistik memudar dan tersembunyi, latar biru menjadi bilah ramping berisi sapaan yang tetap menempel di atas, dan isi mendapat ruang penuh; digulir kembali ke atas, kepala membesar lagi. Statistik disinkronkan dengan Beranda: semua angka gabungan kini dihitung fungsi basis data lf_stat_lengkap (SECURITY DEFINER, populasi tampil + kembali, sama seperti lf_stat_publik di Beranda), karena hitungan sisi klien sebelumnya terkena RLS sehingga pengguna biasa melihat Sudah Kembali 0 dan Tingkat Keberhasilan 0 persen. Rata-rata Hari Kembali dan Lokasi Tersering yang sebelumnya selalu kosong kini terisi.
 - **1.9.3**: statistik dibedakan untuk admin dan publik. Pengguna biasa hanya melihat Tingkat Keberhasilan, angka gabungan postingan, grafik 7 hari terakhir, dan kategori terbanyak; daftar pengguna (Aktivitas Pengguna dan halaman Peringkat), Kritik dan Saran, kartu Laporan Barang (PDF), serta kartu Pengguna, Menunggu Moderasi, Rata-rata Bintang, dan Klaim Ditolak hanya tampil untuk admin, dan datanya tidak lagi dimuat untuk publik. Logo Google pada tombol login diganti versi resmi berlatar transparan (sebelumnya latar putih menyatu).
