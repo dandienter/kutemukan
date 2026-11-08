@@ -1431,7 +1431,7 @@ child: ListView(
     if (k == null) {
       return [
         Card(
-          color: const Color(0xFFE6F4F1),
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF12332B) : const Color(0xFFE6F4F1),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Text(
@@ -1532,7 +1532,7 @@ child: ListView(
     return [
       if (kodeSaya.isNotEmpty) ...[
         Card(
-          color: const Color(0xFFE6F4F1),
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF12332B) : const Color(0xFFE6F4F1),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(

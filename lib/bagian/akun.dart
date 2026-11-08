@@ -342,7 +342,7 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                           ),
                           Text(
                             label,
-                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 11, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -547,7 +547,9 @@ class LayarAkun extends StatelessWidget {
     final admin = profil['peran'] == 'admin';
     final terverifikasi = profil['terverifikasi'] == true;
     return Scaffold(
-      body: RefreshIndicator(
+      body: Stack(
+        children: [
+          RefreshIndicator(
 onRefresh: () async {
           await onProfilDiubah?.call();
         },
@@ -810,6 +812,20 @@ child: ListView(
         ],
       )
 ),
+          // Perisai status bar: potongan gradasi kepala yang diam di
+          // lapisan depan agar isi yang digulir tidak tembus terlihat
+          // di area jam/status bar.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).padding.top,
+            child: const DecoratedBox(
+              decoration: BoxDecoration(gradient: kGradasiKepala),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

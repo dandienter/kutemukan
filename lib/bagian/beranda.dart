@@ -476,6 +476,8 @@ class _LayarBerandaState extends State<LayarBeranda> {
   late Future<Map<String, dynamic>> _fStat;
   late Future<Map<String, dynamic>?> _fPengumuman;
   bool _bannerTutup = false;
+  bool _bannerHilang = false;
+  Timer? _timerBanner;
 
   void _segarkan() {
     _fSemua = _ambilSemua();
@@ -641,7 +643,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                 children: [
                                   Text(
                                     label,
-                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant, fontWeight: FontWeight.w600),
                                   ),
                                   TweenAnimationBuilder<int>(
                                     tween: IntTween(begin: 0, end: nilai),
@@ -665,7 +667,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w700,
-                                    color: aksiBawah != null ? kBiruUtama : Colors.grey.shade600,
+                                    color: aksiBawah != null ? kBiruUtama : Theme.of(context).colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -687,7 +689,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                               MaterialPageRoute(builder: (_) => LayarStatistik(admin: widget.profil['peran'] == 'admin')),
                             ),
                           ),
-                          VerticalDivider(color: Colors.grey.shade300, width: 24),
+                          VerticalDivider(color: Theme.of(context).colorScheme.outlineVariant, width: 24),
                           sel(tr('Sudah Kembali'), angka('kembali'), 'kembali', '${tr('Hilang')} ${angka('hilang')} · ${tr('Temuan')} ${angka('temuan')}'),
                         ],
                       ),
@@ -720,14 +722,23 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      tr('Nemu Barang di Kampus?'),
-                      style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      tr('Posting di KutemuKan, biar cepat balik ke pemiliknya. Cepat, aman, terverifikasi.'),
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 450),
+                      child: Column(
+                        key: ValueKey<bool>(_bannerHilang),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tr(_bannerHilang ? 'Kehilangan Barang di Kampus?' : 'Nemu Barang di Kampus?'),
+                            style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            tr(_bannerHilang ? 'Posting di KutemuKan, biar yang menemukan bisa langsung menghubungimu. Cepat, aman, terverifikasi.' : 'Posting di KutemuKan, biar cepat balik ke pemiliknya. Cepat, aman, terverifikasi.'),
+                            style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -789,6 +800,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
   @override
   void initState() {
     super.initState();
+    _timerBanner = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) setState(() => _bannerHilang = !_bannerHilang);
+    });
     _fSemua = _ambilSemua();
     _fSaya = _ambilSaya();
     _fStat = _ambilStat();
@@ -853,6 +867,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
   @override
   void dispose() {
     _tundaSegar?.cancel();
+    _timerBanner?.cancel();
     if (_kanal != null) sb.removeChannel(_kanal!);
     _gulir.dispose();
     _cariCtrl.dispose();
