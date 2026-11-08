@@ -524,27 +524,37 @@ class _LayarBerandaState extends State<LayarBeranda> {
       );
     }
 
-    return Stack(
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            height: atas + 128,
-            decoration: const BoxDecoration(
-              gradient: kGradasiKepala,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(28),
-                bottomRight: Radius.circular(28),
+    // Kepala menyusut saat digulir (ala WeKios): t = 1 terbuka penuh,
+    // t = 0 tinggal bilah ramping berisi sapaan; kartu statistik
+    // memudar lalu tersembunyi dan lengkung biru menghilang.
+    return FlexibleSpaceBar(
+      collapseMode: CollapseMode.none,
+      background: LayoutBuilder(
+        builder: (context, batas) {
+          final t = ((batas.maxHeight - atas - 56) / 132).clamp(0.0, 1.0);
+          return Stack(
+            children: [
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: atas + 56 + 72 * t,
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: kGradasiKepala,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28 * t),
+                      bottomRight: Radius.circular(28 * t),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-        Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(18, atas + 14, 18, 0),
+              Positioned(
+                top: atas + 5 + 9 * t,
+                left: 0,
+                right: 0,
+                child:             Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
                 children: [
                   Container(
@@ -590,8 +600,16 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 ],
               ),
             ),
-            const SizedBox(height: 22),
-            Padding(
+              ),
+              Positioned(
+                top: atas + 82,
+                left: 0,
+                right: 0,
+                child: Opacity(
+                  opacity: t,
+                  child: IgnorePointer(
+                    ignoring: t < 0.85,
+                    child:             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -679,10 +697,13 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-          ],
-        ),
-      ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 
@@ -1074,11 +1095,10 @@ class _LayarBerandaState extends State<LayarBeranda> {
             final namaSapaan = namaRapi(
               (widget.profil['nama'] ?? '').toString(),
             );
-            final tinggiKepala = MediaQuery.of(context).padding.top + 188;
             return Stack(
               children: [
                 RefreshIndicator(
-                  displacement: tinggiKepala + 16,
+                  displacement: 56,
                   onRefresh: () async {
                     _segarkan();
                     await (saya ? _fSaya : _fSemua);
@@ -1087,7 +1107,17 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     controller: _gulir,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      SliverToBoxAdapter(child: SizedBox(height: tinggiKepala)),
+                      SliverAppBar(
+                        pinned: true,
+                        expandedHeight: 188,
+                        toolbarHeight: 56,
+                        automaticallyImplyLeading: false,
+                        backgroundColor: Colors.transparent,
+                        surfaceTintColor: Colors.transparent,
+                        elevation: 0,
+                        scrolledUnderElevation: 0,
+                        flexibleSpace: _kepalaBeranda(context, namaSapaan),
+                      ),
                       if (!saya) SliverToBoxAdapter(child: _bannerPengumuman()),
                       if (!saya) SliverToBoxAdapter(child: _bannerMaskot(context)),
                       SliverToBoxAdapter(
@@ -1374,15 +1404,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     ],
                   ),
                 ),
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: _kepalaBeranda(context, namaSapaan),
-                ),
                 if (_baru > 0 && !saya)
                   Positioned(
-                    top: tinggiKepala + 8,
+                    top: MediaQuery.of(context).padding.top + 64,
                     left: 0,
                     right: 0,
                     child: Center(

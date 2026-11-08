@@ -18,6 +18,24 @@ class _LayarStatistikState extends State<LayarStatistik> {
   late Future<Map<String, dynamic>> _fData = _hitung();
 
   Future<Map<String, dynamic>> _hitung() async {
+    // Angka gabungan selalu dari lf_stat_lengkap (SECURITY DEFINER,
+    // populasi tampil + kembali, sama seperti lf_stat_publik di Beranda)
+    // supaya Statistik sinkron dengan kepala Beranda untuk semua peran.
+    // Kueri baris langsung terkena RLS lf_posts (pengguna biasa hanya
+    // melihat postingan tampil dan miliknya), jadi hanya dipakai untuk
+    // seksi admin: peringkat pengguna dan daftar ulasan.
+    final stat = Map<String, dynamic>.from(
+      await sb.rpc('lf_stat_lengkap') as Map,
+    );
+    if (!widget.admin) {
+      return {
+        'stat': stat,
+        'posts': <Map<String, dynamic>>[],
+        'users': <Map<String, dynamic>>[],
+        'klaim': <Map<String, dynamic>>[],
+        'ulasan': <Map<String, dynamic>>[],
+      };
+    }
     final posts = List<Map<String, dynamic>>.from(
       await sb
           .from('lf_posts')
@@ -25,24 +43,26 @@ class _LayarStatistikState extends State<LayarStatistik> {
             'user_id, jenis, status, up_count, views_count, kategori, created_at',
           ),
     );
-    final users = widget.admin
-        ? List<Map<String, dynamic>>.from(
-            await sb.from('lf_profiles').select('id, nama, foto_url'),
-          )
-        : <Map<String, dynamic>>[];
+    final users = List<Map<String, dynamic>>.from(
+      await sb.from('lf_profiles').select('id, nama, foto_url'),
+    );
     final klaim = List<Map<String, dynamic>>.from(
       await sb.from('lf_claims').select('user_id, status, created_at'),
     );
-    final ulasan = widget.admin
-        ? List<Map<String, dynamic>>.from(
-            await sb
-                .from('lf_feedback')
-                .select('user_id, bintang, isi, created_at')
-                .order('created_at', ascending: false)
-                .limit(30),
-          )
-        : <Map<String, dynamic>>[];
-    return {'posts': posts, 'users': users, 'klaim': klaim, 'ulasan': ulasan};
+    final ulasan = List<Map<String, dynamic>>.from(
+      await sb
+          .from('lf_feedback')
+          .select('user_id, bintang, isi, created_at')
+          .order('created_at', ascending: false)
+          .limit(30),
+    );
+    return {
+      'posts': posts,
+      'users': users,
+      'klaim': klaim,
+      'ulasan': ulasan,
+      'stat': stat,
+    };
   }
 
   @override
@@ -62,80 +82,43 @@ class _LayarStatistikState extends State<LayarStatistik> {
           final users = snap.data!['users'] as List<Map<String, dynamic>>;
           final klaim = snap.data!['klaim'] as List<Map<String, dynamic>>;
           final ulasan = snap.data!['ulasan'] as List<Map<String, dynamic>>;
-          final totalUp = posts.fold<int>(
-            0,
-            (a, p) => a + ((p['up_count'] as num?)?.toInt() ?? 0),
-          );
-          final totalDilihat = posts.fold<int>(
-            0,
-            (a, p) => a + ((p['views_count'] as num?)?.toInt() ?? 0),
-          );
-          final rataBintang = ulasan.isEmpty
-              ? 0.0
-              : ulasan.fold<int>(
-                      0,
-                      (a, u) => a + ((u['bintang'] as num?)?.toInt() ?? 0),
-                    ) /
-                    ulasan.length;
+          final stat = snap.data!['stat'] as Map<String, dynamic>;
+          int ang(String k) => (stat[k] as num?)?.toInt() ?? 0;
+          final totalUp = ang('total_up');
+          final totalDilihat = ang('total_dilihat');
+          final rataBintang = (stat['rata_bintang'] as num?)?.toDouble() ?? 0;
 
-          int hitungPost(bool Function(Map<String, dynamic>) f) =>
-              posts.where(f).length;
-          final tampil = hitungPost((p) => p['status'] == 'tampil');
-          final menunggu = hitungPost((p) => p['status'] == 'menunggu');
-          final kembali = hitungPost((p) => p['status'] == 'kembali');
-          final hilangAktif = hitungPost(
-            (p) => p['status'] == 'tampil' && p['jenis'] == 'hilang',
-          );
-          final temuanAktif = hitungPost(
-            (p) => p['status'] == 'tampil' && p['jenis'] == 'temuan',
-          );
-          final diproses = posts.length - menunggu;
+          final tampil = ang('tampil');
+          final menunggu = ang('menunggu');
+          final kembali = ang('kembali');
+          final hilangAktif = ang('hilang_aktif');
+          final temuanAktif = ang('temuan_aktif');
+          final diproses = ang('total');
           final persen = diproses == 0 ? 0 : (kembali * 100 / diproses).round();
 
-          final batas7 = DateTime.now().subtract(const Duration(days: 7));
-          bool baru7(dynamic v) {
-            final d = DateTime.tryParse((v ?? '').toString());
-            return d != null && d.isAfter(batas7);
+          final postBaru7 = ang('post_baru_7');
+          final klaimBaru7 = ang('klaim_baru_7');
+          final klaimMenunggu = ang('klaim_menunggu');
+          final klaimDitolak = ang('klaim_ditolak');
+          final rataHariKembali =
+              (stat['rata_hari_kembali'] as num?)?.toDouble() ?? 0;
+          final lokasiMentah = stat['lokasi_top'] as Map?;
+          final lokasiTop = lokasiMentah == null
+              ? null
+              : MapEntry(
+                  (lokasiMentah['lokasi'] ?? '').toString(),
+                  (lokasiMentah['jumlah'] as num?)?.toInt() ?? 0,
+                );
+          final kategoriUrut = <MapEntry<String, int>>[];
+          for (final k in (stat['kategori'] as List? ?? const [])) {
+            final km = Map<String, dynamic>.from(k as Map);
+            kategoriUrut.add(
+              MapEntry(
+                (km['kategori'] ?? 'Lainnya').toString(),
+                (km['jumlah'] as num?)?.toInt() ?? 0,
+              ),
+            );
           }
-
-          final postBaru7 = posts.where((x) => baru7(x['created_at'])).length;
-          final klaimBaru7 = klaim.where((x) => baru7(x['created_at'])).length;
-          final klaimMenunggu = klaim
-              .where((x) => x['status'] == 'menunggu')
-              .length;
-          final klaimDitolak = klaim
-              .where((x) => x['status'] == 'ditolak')
-              .length;
-          final sudahKembali = posts.where((x) => x['status'] == 'kembali');
-          double rataHariKembali = 0;
-          if (sudahKembali.isNotEmpty) {
-            var totalJam = 0.0;
-            var terhitung = 0;
-            for (final x in sudahKembali) {
-              final a = DateTime.tryParse((x['created_at'] ?? '').toString());
-              final b = DateTime.tryParse((x['updated_at'] ?? '').toString());
-              if (a != null && b != null) {
-                totalJam += b.difference(a).inMinutes / 60.0;
-                terhitung++;
-              }
-            }
-            if (terhitung > 0) rataHariKembali = totalJam / terhitung / 24;
-          }
-          final perLokasi = <String, int>{};
-          for (final x in posts) {
-            final l = (x['lokasi'] ?? '').toString().trim();
-            if (l.isNotEmpty) perLokasi[l] = (perLokasi[l] ?? 0) + 1;
-          }
-          final lokasiUrut = perLokasi.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value));
-          final lokasiTop = lokasiUrut.isEmpty ? null : lokasiUrut.first;
-          final perKategori = <String, int>{};
-          for (final x in posts) {
-            final k = (x['kategori'] ?? 'Lainnya').toString();
-            perKategori[k] = (perKategori[k] ?? 0) + 1;
-          }
-          final kategoriUrut = perKategori.entries.toList()
-            ..sort((a, b) => b.value.compareTo(a.value));
           final maksKategori = kategoriUrut.isEmpty
               ? 1
               : kategoriUrut.first.value;
@@ -318,7 +301,7 @@ child: ListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  if (widget.admin) kartu('${users.length}', 'Pengguna', Icons.people_outline),
+                  if (widget.admin) kartu('${ang('jumlah_pengguna')}', 'Pengguna', Icons.people_outline),
                   kartu('$tampil', 'Tampil di Papan', Icons.dashboard_outlined),
                   if (widget.admin)
                     kartu(
