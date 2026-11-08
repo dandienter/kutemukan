@@ -463,6 +463,17 @@ const Map<String, String> _idKeEn = {
   'Judul': 'Title',
   'Isi pengumuman': 'Announcement content',
   'Belum ada pengumuman baru nih.': 'No new announcements yet.',
+  'Dimusnahkan / Dihibahkan': 'Destroyed / Donated',
+  'Arsip Lewat Batas Waktu': 'Expired Archive',
+  'Tidak ada postingan arsip.': 'No archived posts.',
+  'Musnahkan / Hibahkan': 'Destroy / Donate',
+  'Tampilkan Lagi': 'Show Again',
+  'Tutup postingan ini?': 'Close this post?',
+  'Barang yang sudah melewati batas waktu akan dicatat petugas sebagai dimusnahkan atau dihibahkan. Postingan tidak tampil lagi di papan dan tidak bisa dikembalikan.':
+      'Items past their storage limit will be recorded by staff as destroyed or donated. The post will no longer appear on the board and cannot be restored.',
+  'Ya, Tutup': 'Yes, Close It',
+  'Postingan ditutup (dimusnahkan/dihibahkan).':
+      'Post closed (destroyed/donated).',
   'Diarsipkan': 'Archived',
   'Perpanjang 30 Hari': 'Extend 30 Days',
   'Perpanjang dan Tampilkan Lagi': 'Extend and Show Again',
