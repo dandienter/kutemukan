@@ -501,6 +501,227 @@ class _LayarBerandaState extends State<LayarBeranda> {
     }
   }
 
+
+  /// Kepala Beranda redesign v1.9.0: kepala biru melengkung berisi
+  /// sapaan dan tombol cepat, dengan kartu statistik melayang yang
+  /// isinya hanya jumlah barang (tingkat keberhasilan tinggal di
+  /// layar Statistik). Sel statistik bisa diketuk untuk menyaring.
+  Widget _kepalaBeranda(BuildContext context, String namaSapaan) {
+    final atas = MediaQuery.of(context).padding.top;
+    Widget tombolCepat(IconData ikon, String tip, VoidCallback aksi, {bool emas = false}) {
+      return InkWell(
+        onTap: aksi,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: emas ? kEmas : Colors.white.withOpacity(0.18),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(ikon, color: emas ? const Color(0xFF5D4300) : Colors.white, size: 20),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(18, atas + 14, 18, 64),
+              decoration: const BoxDecoration(
+                gradient: kGradasiKepala,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Image.asset('assets/burung.png'),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${sapaanWaktu()},',
+                          style: const TextStyle(color: Colors.white70, fontSize: 13),
+                        ),
+                        Text(
+                          namaSapaan.isEmpty ? 'KutemuKan' : namaSapaan,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  tombolCepat(
+                    Icons.forum_outlined,
+                    tr('Chat'),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LayarDaftarChat()),
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  tombolCepat(
+                    Icons.notifications_outlined,
+                    tr('Notifikasi'),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LayarNotif()),
+                    ),
+                    emas: true,
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: -38,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: _fStat,
+                  builder: (context, s2) {
+                    final s = s2.data ?? const {};
+                    int angka(String k) => (s[k] as num?)?.toInt() ?? 0;
+                    Widget sel(String label, int nilai, String saring, String bawah, {VoidCallback? aksiBawah}) {
+                      return Expanded(
+                        child: InkWell(
+                          onTap: () => setState(() => _jenis = saring),
+                          borderRadius: BorderRadius.circular(10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                label,
+                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                              ),
+                              TweenAnimationBuilder<int>(
+                                tween: IntTween(begin: 0, end: nilai),
+                                duration: const Duration(milliseconds: 800),
+                                curve: Curves.easeOutCubic,
+                                builder: (_, v, __) => Text(
+                                  '$v',
+                                  style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: aksiBawah,
+                                child: Text(
+                                  bawah,
+                                  style: TextStyle(
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: aksiBawah != null ? kBiruUtama : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+
+                    return IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          sel(
+                            tr('Total Postingan'),
+                            angka('total'),
+                            'semua',
+                            tr('Lihat Statistik >'),
+                            aksiBawah: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const LayarStatistik()),
+                            ),
+                          ),
+                          VerticalDivider(color: Colors.grey.shade300, width: 24),
+                          sel(tr('Sudah Kembali'), angka('kembali'), 'kembali', '${tr('Hilang')} ${angka('hilang')} · ${tr('Temuan')} ${angka('temuan')}'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 50),
+      ],
+    );
+  }
+
+  /// Banner maskot di bawah kartu statistik: ajakan mengumumkan
+  /// temuan, membuka formulir laporan.
+  Widget _bannerMaskot(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => LayarBuat(profil: widget.profil)),
+        ),
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 14, 10, 14),
+          decoration: BoxDecoration(
+            gradient: kGradasiKepala,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('Nemu Barang di Kampus?'),
+                      style: const TextStyle(color: Colors.white, fontSize: 15.5, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      tr('Posting di KutemuKan, biar cepat balik ke pemiliknya. Cepat, aman, terverifikasi.'),
+                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Image.asset('assets/burung.png', width: 62, height: 62),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _bannerPengumuman() {
     if (_bannerTutup) return const SizedBox.shrink();
     return FutureBuilder<Map<String, dynamic>?>(
@@ -508,30 +729,38 @@ class _LayarBerandaState extends State<LayarBeranda> {
       builder: (context, snap) {
         final p = snap.data;
         if (p == null) return const SizedBox.shrink();
-        return Card(
-          color: Colors.amber.shade100,
-          margin: const EdgeInsets.fromLTRB(10, 10, 10, 2),
-          child: ListTile(
-            leading: const Icon(Icons.campaign_outlined, color: Colors.black87),
-            title: Text(
-              (p['judul'] ?? '').toString(),
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(
-              tr('Pengumuman komunitas'),
-              style: const TextStyle(color: Colors.black54),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.close, size: 18, color: Colors.black54),
-              onPressed: () => setState(() => _bannerTutup = true),
-            ),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+          child: InkWell(
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const LayarPengumuman()),
+            ),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: kBiruUtama.withOpacity(0.09),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.campaign_outlined, size: 18, color: kBiruUtama),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${tr('Pengumuman')}: ${(p['judul'] ?? '').toString()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _bannerTutup = true),
+                    child: const Icon(Icons.close, size: 16, color: Colors.grey),
+                  ),
+                  const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+                ],
+              ),
             ),
           ),
         );
@@ -806,26 +1035,6 @@ class _LayarBerandaState extends State<LayarBeranda> {
   Widget build(BuildContext context) {
     final saya = _segmen == 1;
     return Scaffold(
-      appBar: AppBar(
-        leadingWidth: 54,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 12),
-          child: Image.asset('assets/burung.png'),
-        ),
-        title: const Text(
-          'KutemuKan',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 21),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.emoji_events_outlined),
-            tooltip: tr('Papan Pahlawan'),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const LayarPahlawan())),
-          ),
-          TombolAkun(profil: widget.profil),
-        ],
-      ),
       body: GestureDetector(
         onHorizontalDragEnd: (d) {
           final v = d.primaryVelocity ?? 0;
@@ -870,221 +1079,43 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     controller: _gulir,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
+                      SliverToBoxAdapter(child: _kepalaBeranda(context, namaSapaan)),
+                      if (!saya) SliverToBoxAdapter(child: _bannerPengumuman()),
+                      if (!saya) SliverToBoxAdapter(child: _bannerMaskot(context)),
                       SliverToBoxAdapter(
-                        child: Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF0061C9), Color(0xFF00A3FF)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 12, 4),
+                          child: Row(
                             children: [
                               Text(
-                                namaSapaan.isEmpty
-                                    ? tr('Halo')
-                                    : '${tr('Halo')}, $namaSapaan',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                                tr('Papan Postingan'),
                                 style: const TextStyle(
-                                  color: Colors.white,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                tr(
-                                  'Kehilangan barang atau nemu sesuatu? Laporkan di sini, biar cepat balik ke pemiliknya.',
+                              const Spacer(),
+                              SegmentedButton<int>(
+                                segments: [
+                                  ButtonSegment(
+                                    value: 0,
+                                    label: Text(tr('Semua')),
+                                  ),
+                                  ButtonSegment(
+                                    value: 1,
+                                    label: Text(tr('Saya')),
+                                  ),
+                                ],
+                                selected: {_segmen},
+                                onSelectionChanged: (s) =>
+                                    setState(() => _segmen = s.first),
+                                style: const ButtonStyle(
+                                  visualDensity: VisualDensity.compact,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
                                 ),
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              FutureBuilder<Map<String, dynamic>>(
-                                future: _fStat,
-                                builder: (context, s2) {
-                                  final s = s2.data ?? const {};
-                                  if (s.isEmpty) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  int angka(String k) =>
-                                      (s[k] as num?)?.toInt() ?? 0;
-                                  Widget sel(
-                                    String label,
-                                    int nilai,
-                                    String saring,
-                                  ) => Expanded(
-                                    child: InkWell(
-                                      onTap: () =>
-                                          setState(() => _jenis = saring),
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 4,
-                                        ),
-                                        child: Column(
-                                          children: [
-                                            TweenAnimationBuilder<int>(
-                                              tween: IntTween(
-                                                begin: 0,
-                                                end: nilai,
-                                              ),
-                                              duration: const Duration(
-                                                milliseconds: 800,
-                                              ),
-                                              curve: Curves.easeOutCubic,
-                                              builder: (_, v, __) => Text(
-                                                '$v',
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              label,
-                                              style: TextStyle(
-                                                fontSize: 10.5,
-                                                fontWeight: _jenis == saring
-                                                    ? FontWeight.w800
-                                                    : FontWeight.w400,
-                                                color: _jenis == saring
-                                                    ? Colors.white
-                                                    : Colors.white70,
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                  final totalS = angka('total');
-                                  final kembaliS = angka('kembali');
-                                  final rasioS = totalS == 0
-                                      ? 0.0
-                                      : kembaliS / totalS;
-                                  return Column(
-                                    children: [
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: 10,
-                                        ),
-                                        child: Divider(
-                                          color: Colors.white24,
-                                          height: 1,
-                                        ),
-                                      ),
-                                      Row(
-                                        children: [
-                                          sel(
-                                            tr('Total Barang'),
-                                            totalS,
-                                            'semua',
-                                          ),
-                                          sel(
-                                            tr('Hilang'),
-                                            angka('hilang'),
-                                            'hilang',
-                                          ),
-                                          sel(
-                                            tr('Ditemukan'),
-                                            angka('temuan'),
-                                            'temuan',
-                                          ),
-                                          sel(
-                                            tr('Sudah kembali'),
-                                            kembaliS,
-                                            'kembali',
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 10),
-                                      Row(
-                                        children: [
-                                          const Icon(
-                                            Icons.verified_outlined,
-                                            size: 15,
-                                            color: Colors.white,
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            tr(
-                                              'Tingkat keberhasilan pengembalian',
-                                            ),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          Text(
-                                            '${(rasioS * 100).toStringAsFixed(0)}%',
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.w800,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 5),
-                                      TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(
-                                          begin: 0,
-                                          end: rasioS,
-                                        ),
-                                        duration: const Duration(
-                                          milliseconds: 900,
-                                        ),
-                                        curve: Curves.easeOutCubic,
-                                        builder: (_, v, __) => ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(99),
-                                          child: LinearProgressIndicator(
-                                            value: v,
-                                            minHeight: 6,
-                                            backgroundColor: Colors.white24,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                    ],
-                                  );
-                                },
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                      SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-                          child: SegmentedButton<int>(
-                            segments: [
-                              ButtonSegment(
-                                value: 0,
-                                label: Text(tr('Semua')),
-                              ),
-                              ButtonSegment(
-                                value: 1,
-                                label: Text(tr('Saya')),
-                              ),
-                            ],
-                            selected: {_segmen},
-                            onSelectionChanged: (s) =>
-                                setState(() => _segmen = s.first),
                           ),
                         ),
                       ),
@@ -1107,53 +1138,64 @@ class _LayarBerandaState extends State<LayarBeranda> {
                       ),
                       SliverToBoxAdapter(
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
+                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
                           child: Row(
                             children: [
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  scrollDirection: Axis.horizontal,
-                                  child: Row(
-                                    children: [
-                                      for (final j in [
-                                        'semua',
-                                        'hilang',
-                                        'temuan',
-                                        'kembali',
-                                      ])
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            right: 6,
-                                          ),
-                                          child: ChoiceChip(
-                                            label: Text(
-                                              tr(
-                                                j == 'semua'
-                                                    ? 'Semua'
-                                                    : (j == 'hilang'
-                                                          ? 'Kehilangan'
-                                                          : (j == 'temuan'
-                                                                ? 'Ditemukan'
-                                                                : 'Sudah Kembali')),
+                              for (final (j, label, ikon) in <(String, String, IconData)>[
+                                ('semua', tr('Semua'), Icons.grid_view),
+                                ('hilang', tr('Hilang'), Icons.search),
+                                ('temuan', tr('Temuan'), Icons.inventory_2_outlined),
+                                ('kembali', tr('Kembali'), Icons.check_circle_outline),
+                              ])
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: InkWell(
+                                      onTap: () => setState(() => _jenis = j),
+                                      borderRadius: BorderRadius.circular(999),
+                                      child: Container(
+                                        height: 38,
+                                        alignment: Alignment.center,
+                                        decoration: BoxDecoration(
+                                          color: _jenis == j ? kBiruUtama : Theme.of(context).colorScheme.surface,
+                                          borderRadius: BorderRadius.circular(999),
+                                          border: Border.all(color: _jenis == j ? kBiruUtama : Colors.grey.shade300),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Icon(ikon, size: 15, color: _jenis == j ? Colors.white : Colors.grey.shade600),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              label,
+                                              style: TextStyle(
+                                                fontSize: 12.5,
+                                                fontWeight: FontWeight.w700,
+                                                color: _jenis == j ? Colors.white : Colors.grey.shade700,
                                               ),
                                             ),
-                                            selected: _jenis == j,
-                                            onSelected: (_) =>
-                                                setState(() => _jenis = j),
-                                          ),
+                                          ],
                                         ),
-                                    ],
+                                      ),
+                                    ),
                                   ),
                                 ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 10, 12, 2),
+                          child: Row(
+                            children: [
+                              Text(
+                                '${daftar.length} ${tr('postingan')}',
+                                style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
                               ),
+                              const Spacer(),
                               PopupMenuButton<String>(
                                 tooltip: tr('Urutkan dan saring waktu'),
-                                icon: const Icon(
-                                  Icons.calendar_month_outlined,
-                                ),
                                 onSelected: (v) async {
                                   if (v == 'r_kalender') {
                                     final pilih = await showDateRangePicker(
@@ -1188,30 +1230,22 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                   const PopupMenuDivider(),
                                   CheckedPopupMenuItem(
                                     value: 'r_semua',
-                                    checked:
-                                        _rentangCustom == null &&
-                                        _rentang == 'semua',
+                                    checked: _rentangCustom == null && _rentang == 'semua',
                                     child: Text(tr('Semua waktu')),
                                   ),
                                   CheckedPopupMenuItem(
                                     value: 'r_hari_ini',
-                                    checked:
-                                        _rentangCustom == null &&
-                                        _rentang == 'hari_ini',
+                                    checked: _rentangCustom == null && _rentang == 'hari_ini',
                                     child: Text(tr('Hari ini')),
                                   ),
                                   CheckedPopupMenuItem(
                                     value: 'r_7_hari',
-                                    checked:
-                                        _rentangCustom == null &&
-                                        _rentang == '7_hari',
+                                    checked: _rentangCustom == null && _rentang == '7_hari',
                                     child: Text(tr('7 hari terakhir')),
                                   ),
                                   CheckedPopupMenuItem(
                                     value: 'r_30_hari',
-                                    checked:
-                                        _rentangCustom == null &&
-                                        _rentang == '30_hari',
+                                    checked: _rentangCustom == null && _rentang == '30_hari',
                                     child: Text(tr('30 hari terakhir')),
                                   ),
                                   CheckedPopupMenuItem(
@@ -1220,13 +1254,30 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                     child: Text(tr('Pilih dari kalender...')),
                                   ),
                                 ],
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(color: Colors.grey.shade300),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.swap_vert, size: 16, color: kBiruUtama),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _urut == 'baru' ? tr('Terbaru') : tr('Terlama'),
+                                        style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: kBiruUtama),
+                                      ),
+                                      const Icon(Icons.keyboard_arrow_down, size: 16, color: kBiruUtama),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                      if (!saya)
-                        SliverToBoxAdapter(child: _bannerPengumuman()),
                       if (_dariCache)
                         SliverToBoxAdapter(
                           child: Container(

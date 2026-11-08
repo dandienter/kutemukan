@@ -5,7 +5,8 @@ part of '../main.dart';
 // ===========================================================================
 
 class LayarNotif extends StatefulWidget {
-  const LayarNotif({super.key});
+  final bool sematkan;
+  const LayarNotif({super.key, this.sematkan = false});
   @override
   State<LayarNotif> createState() => _LayarNotifState();
 }
@@ -234,10 +235,57 @@ class _LayarNotifState extends State<LayarNotif> {
     _segarkanNotif();
   }
 
+  /// Bilah alat ringkas saat layar ini disematkan sebagai tab
+  /// Informasi: isinya sama dengan tindakan di AppBar versi mandiri.
+  Widget _alatTanam() {
+    if (_modePilih) {
+      return Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: _keluarModePilih,
+          ),
+          Text(
+            kBahasa.value == 'en'
+                ? '${_dipilih.length} selected'
+                : '${_dipilih.length} dipilih',
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const Spacer(),
+          IconButton(
+            icon: const Icon(Icons.select_all),
+            tooltip: tr('Pilih semua'),
+            onPressed: _pilihSemua,
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: tr('Hapus'),
+            onPressed: _dipilih.isEmpty ? null : _hapusTerpilih,
+          ),
+        ],
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        IconButton(
+          key: kunciPanduanNotif,
+          icon: const Icon(Icons.done_all),
+          tooltip: tr('Tandai semua dibaca'),
+          onPressed: _tandaiSemuaDibaca,
+        ),
+        IconButton(
+          icon: const Icon(Icons.checklist),
+          tooltip: tr('Pilih'),
+          onPressed: () => _masukModePilih(null),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    final appBar = AppBar(
         title: Text(
           _modePilih
               ? (kBahasa.value == 'en'
@@ -278,8 +326,8 @@ class _LayarNotifState extends State<LayarNotif> {
             const TombolAkun(),
           ],
         ],
-      ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
+      );
+    final isi = FutureBuilder<List<Map<String, dynamic>>>(
         future: _fNotif,
         builder: (context, snap) {
           if (snap.hasError && snap.data == null) {
@@ -353,7 +401,10 @@ class _LayarNotifState extends State<LayarNotif> {
             ),
           );
         },
-      ),
-    );
+      );
+    if (widget.sematkan) {
+      return Column(children: [_alatTanam(), Expanded(child: isi)]);
+    }
+    return Scaffold(appBar: appBar, body: isi);
   }
 }

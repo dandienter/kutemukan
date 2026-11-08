@@ -151,16 +151,6 @@ class _LayarLoginState extends State<LayarLogin> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset('assets/logo.png', height: 84),
-                const SizedBox(height: 4),
-                Text(
-                  tr('Lost and Found Kampus Unindra'),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: skema.onSurfaceVariant,
-                  ),
-                ),
                 const SizedBox(height: 6),
                 Text(
                   tr('Yang Hilang Dicariin, Yang Ketemu Dibalikin'),
@@ -180,26 +170,18 @@ class _LayarLoginState extends State<LayarLogin> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(tr('atau')),
+                      child: Text(
+                        tr('atau lanjutkan dengan'),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: skema.onSurfaceVariant,
+                        ),
+                      ),
                     ),
                     const Expanded(child: Divider()),
                   ],
                 ),
                 const SizedBox(height: 10),
-                if (!_formSika) ...[
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () => setState(() => _formSika = true),
-                    icon: const Icon(Icons.school, size: 22, color: kBiru),
-                    label: Text(tr('Masuk dengan SIKA')),
-                  ),
-                  const SizedBox(height: 8),
-                ],
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
@@ -215,6 +197,20 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                   label: Text(tr('Masuk dengan Google')),
                 ),
+                if (!_formSika) ...[
+                  const SizedBox(height: 8),
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => setState(() => _formSika = true),
+                    icon: const Icon(Icons.school, size: 22, color: kBiru),
+                    label: Text(tr('Masuk dengan SIKA')),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 Text(
                   '© 2026 KutemuKan',
@@ -250,14 +246,14 @@ class _LayarLoginState extends State<LayarLogin> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              _modeDaftar ? tr('Yuk, bikin akun baru') : tr('Halo, selamat datang lagi'),
-              style: const TextStyle(fontSize: 19, fontWeight: FontWeight.bold),
+              _modeDaftar ? tr('Yuk, bikin akun baru') : tr('Selamat Datang'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
               _modeDaftar
                   ? tr('Daftar dulu biar bisa posting dan klaim barang.')
-                  : tr('Masuk dulu yuk, buat lanjut.'),
+                  : tr('Masuk untuk mulai mencari dan menemukan'),
               style: TextStyle(color: skema.onSurfaceVariant),
             ),
             const SizedBox(height: 12),

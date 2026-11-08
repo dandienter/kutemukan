@@ -53,11 +53,11 @@ class _LayarUtamaState extends State<LayarUtama> {
           ),
         ),
         LangkahTur(
-          kunci: kunciPanduanPantau,
+          kunci: kunciPanduanNotif,
           tab: 1,
-          judul: tr('Pantau barang incaranmu'),
+          judul: tr('Semua kabar masuk ke sini'),
           isi: tr(
-            'Tekan tombol Baru untuk menyimpan barang yang kamu cari. Sistem otomatis mengabari kalau ada temuan yang mirip.',
+            'Notifikasi klaim dan kandidat cocok, pengumuman admin, dan panduan pemakaian sekarang berkumpul di tab Informasi ini.',
           ),
         ),
         LangkahTur(
@@ -69,18 +69,17 @@ class _LayarUtamaState extends State<LayarUtama> {
           ),
         ),
         LangkahTur(
-          kunci: kunciPanduanNotif,
           tab: 3,
-          judul: tr('Semua kabar masuk ke sini'),
+          judul: tr('Ngobrol langsung di Chat'),
           isi: tr(
-            'Klaim disetujui, kandidat cocok, dan pengingat arsip muncul di Notifikasi. Tombol ini menandai semua notifikasi sudah dibaca.',
+            'Sesudah klaim disetujui, kamu dan pemilik barang bisa chat di sini, kirim foto, bahkan bagikan lokasi langsung.',
           ),
         ),
         LangkahTur(
           tab: 4,
-          judul: tr('Ngobrol langsung di Chat'),
+          judul: tr('Akun dan Pantau di sini'),
           isi: tr(
-            'Sesudah klaim disetujui, kamu dan pemilik barang bisa chat di sini, kirim foto, bahkan bagikan lokasi langsung.',
+            'Profilmu, Pantau Kategori untuk barang incaran, unduh data, dan pengaturan ada di halaman Akun. Ketuk namamu untuk melihat profil lengkap.',
           ),
         ),
         LangkahTur(
@@ -88,7 +87,7 @@ class _LayarUtamaState extends State<LayarUtama> {
           tab: 0,
           judul: tr('Pindah halaman dari sini'),
           isi: tr(
-            'Lima tab utama KutemuKan ada di bawah ini. Tombol Akun ada di pojok kanan atas tiap halaman untuk profil, unduh data, dan pengaturan.',
+            'Lima tab utama KutemuKan ada di bawah ini. Tombol biru besar di tengah untuk membuat laporan baru.',
           ),
         ),
       ],
@@ -97,7 +96,7 @@ class _LayarUtamaState extends State<LayarUtama> {
       },
       selesai: () async {
         final p = await SharedPreferences.getInstance();
-        await p.setBool('panduan_v174_selesai', true);
+        await p.setBool('panduan_v190_selesai', true);
       },
     );
   }
@@ -108,7 +107,7 @@ class _LayarUtamaState extends State<LayarUtama> {
     pemicuPanduan = _mulaiTur;
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final p = await SharedPreferences.getInstance();
-      if (p.getBool('panduan_v174_selesai') != true && mounted) {
+      if (p.getBool('panduan_v190_selesai') != true && mounted) {
         await Future<void>.delayed(const Duration(milliseconds: 800));
         if (mounted) _mulaiTur();
       }
@@ -206,44 +205,105 @@ class _LayarUtamaState extends State<LayarUtama> {
     }
   }
 
+  void _pilihTab(int i) {
+    setState(() => _tab = i);
+    if (i == 4) _segarkanProfil();
+    if (i == 1) {
+      Future.delayed(const Duration(seconds: 2), _hitungBelumDibaca);
+    }
+    if (i == 3) {
+      Future.delayed(const Duration(seconds: 2), _hitungChatBelum);
+    }
+  }
+
+  Widget _itemNav(
+    int idx,
+    IconData ikon,
+    IconData ikonAktif,
+    String label, {
+    int badge = 0,
+  }) {
+    final aktif = _tab == idx;
+    final warna = aktif ? kBiruUtama : Colors.grey.shade500;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _pilihTab(idx),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Badge(
+              isLabelVisible: badge > 0,
+              label: Text('$badge'),
+              child: Icon(aktif ? ikonAktif : ikon, color: warna, size: 24),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: aktif ? FontWeight.w800 : FontWeight.w500,
+                color: warna,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tombolLapor() {
+    final aktif = _tab == 2;
+    return Expanded(
+      child: InkWell(
+        onTap: () => _pilihTab(2),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Transform.translate(
+              offset: const Offset(0, -12),
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: kGradasiKepala,
+                  border: Border.all(color: Colors.white, width: 2.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kBiruUtama.withOpacity(0.45),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 29),
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, -8),
+              child: Text(
+                tr('Lapor'),
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: aktif ? FontWeight.w800 : FontWeight.w600,
+                  color: aktif ? kBiruUtama : Colors.grey.shade600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final halaman = <Widget>[
       LayarBeranda(profil: _profil),
-      const LayarPantau(),
+      const LayarInformasi(),
       LayarBuat(profil: _profil),
-      const LayarNotif(),
       const LayarDaftarChat(),
-    ];
-    final tujuan = <NavigationDestination>[
-      NavigationDestination(
-        icon: const Icon(Icons.home_outlined),
-        label: tr('Beranda'),
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.visibility_outlined),
-        label: tr('Pantau'),
-      ),
-      NavigationDestination(
-        icon: const Icon(Icons.add_circle_outline),
-        label: tr('Buat'),
-      ),
-      NavigationDestination(
-        icon: Badge(
-          isLabelVisible: _belumDibaca > 0,
-          label: Text('$_belumDibaca'),
-          child: const Icon(Icons.notifications_outlined),
-        ),
-        label: tr('Notif'),
-      ),
-      NavigationDestination(
-        icon: Badge(
-          isLabelVisible: _chatBelum > 0,
-          label: Text('$_chatBelum'),
-          child: const Icon(Icons.forum_outlined),
-        ),
-        label: tr('Chat'),
-      ),
+      LayarAkun(profil: _profil),
     ];
     if (_tab >= halaman.length) _tab = 0;
     return Scaffold(
@@ -261,19 +321,46 @@ class _LayarUtamaState extends State<LayarUtama> {
         ),
         child: IndexedStack(index: _tab, children: halaman),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: Container(
         key: kunciPanduanNav,
-        selectedIndex: _tab,
-        onDestinationSelected: (i) {
-          setState(() => _tab = i);
-          if (i == 3) {
-            Future.delayed(const Duration(seconds: 2), _hitungBelumDibaca);
-          }
-          if (i == 4) {
-            Future.delayed(const Duration(seconds: 2), _hitungChatBelum);
-          }
-        },
-        destinations: tujuan,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.09),
+              blurRadius: 14,
+              offset: const Offset(0, -3),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          top: false,
+          child: SizedBox(
+            height: 62,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _itemNav(0, Icons.home_outlined, Icons.home, tr('Beranda')),
+                _itemNav(
+                  1,
+                  Icons.newspaper_outlined,
+                  Icons.newspaper,
+                  tr('Info'),
+                  badge: _belumDibaca,
+                ),
+                _tombolLapor(),
+                _itemNav(
+                  3,
+                  Icons.forum_outlined,
+                  Icons.forum,
+                  tr('Chat'),
+                  badge: _chatBelum,
+                ),
+                _itemNav(4, Icons.person_outline, Icons.person, tr('Akun')),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

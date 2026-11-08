@@ -79,6 +79,42 @@ SupabaseClient get sb => Supabase.instance.client;
 
 const Color kBiru = Color(0xFF0061C9);
 
+/// Palet redesign v1.9.0 (biru UNINDRA sesuai mockup yang disetujui):
+/// utama #1565C0, gelap #0D47A1, terang #1E88E5, emas lencana #FFC531.
+const Color kBiruUtama = Color(0xFF1565C0);
+const Color kBiruGelap = Color(0xFF0D47A1);
+const Color kBiruTerang = Color(0xFF1E88E5);
+const Color kEmas = Color(0xFFFFC531);
+
+/// Gradasi kepala melengkung layar utama redesign.
+const LinearGradient kGradasiKepala = LinearGradient(
+  colors: [kBiruTerang, kBiruUtama, kBiruGelap],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+);
+
+/// Sapaan sesuai jam perangkat: Pagi, Siang, Sore, atau Malam.
+String sapaanWaktu() {
+  final j = DateTime.now().hour;
+  if (j >= 4 && j < 11) return tr('Selamat Pagi');
+  if (j >= 11 && j < 15) return tr('Selamat Siang');
+  if (j >= 15 && j < 19) return tr('Selamat Sore');
+  return tr('Selamat Malam');
+}
+
+/// Lencana verifikasi SIKA: centang emas kecil saja, tanpa tulisan,
+/// sesuai keputusan desain final. Tampil hanya bila [terverifikasi].
+class LencanaEmas extends StatelessWidget {
+  final bool terverifikasi;
+  final double ukuran;
+  const LencanaEmas({super.key, required this.terverifikasi, this.ukuran = 17});
+  @override
+  Widget build(BuildContext context) {
+    if (!terverifikasi) return const SizedBox.shrink();
+    return Icon(Icons.verified, size: ukuran, color: kEmas);
+  }
+}
+
 /// Kunci target panduan interaktif, dipasang di widget aslinya masing
 /// masing layar agar tur bisa menyorot posisinya.
 final kunciPanduanCari = GlobalKey();

@@ -200,7 +200,7 @@ class _LayarDaftarChatState extends State<LayarDaftarChat> {
                             ),
                           ),
                           if (c['terverifikasi_lawan'] == true)
-                            const Icon(Icons.verified, size: 15, color: kBiru),
+                            const LencanaEmas(terverifikasi: true, ukuran: 15),
                         ],
                       ),
                       subtitle: Text(
@@ -296,10 +296,102 @@ class _LayarChatState extends State<LayarChat> {
               : widget.percakapan['user_a'])
           .toString();
 
+
+  Map<String, dynamic>? _postMini;
+
+  Future<void> _muatPostMini() async {
+    try {
+      final pid = (widget.percakapan['post_id'] ?? '').toString();
+      if (pid.isEmpty) return;
+      final rows = await sb
+          .from('lf_posts')
+          .select('id, judul, jenis, status, lokasi, kategori, foto_url, foto_urls')
+          .eq('id', pid);
+      if (rows.isNotEmpty && mounted) {
+        setState(() => _postMini = Map<String, dynamic>.from(rows.first));
+      }
+    } catch (_) {
+      // kartu mini hanya pelengkap
+    }
+  }
+
+  /// Kartu barang mini di atas ruang chat: barang yang sedang
+  /// dibicarakan, ketuk untuk membuka rinciannya.
+  Widget _kartuBarangMini() {
+    final p = _postMini!;
+    final foto = daftarFoto(p);
+    final status = (p['status'] ?? '').toString();
+    return Card(
+      margin: const EdgeInsets.fromLTRB(10, 8, 10, 0),
+      child: ListTile(
+        dense: true,
+        leading: foto.isEmpty
+            ? CircleAvatar(
+                backgroundColor: warnaKategori(
+                  (p['kategori'] ?? '').toString(),
+                ).withOpacity(0.14),
+                child: Icon(
+                  ikonKategori((p['kategori'] ?? '').toString()),
+                  color: warnaKategori((p['kategori'] ?? '').toString()),
+                  size: 19,
+                ),
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: foto.first,
+                  width: 44,
+                  height: 44,
+                  fit: BoxFit.cover,
+                  errorWidget: (_, __, ___) =>
+                      const Icon(Icons.image_not_supported_outlined),
+                ),
+              ),
+        title: Text(
+          widget.judulPost.isNotEmpty
+              ? widget.judulPost
+              : (p['judul'] ?? '').toString(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
+        ),
+        subtitle: Text(
+          '${p['jenis'] == 'hilang' ? tr('Hilang') : tr('Temuan')} · ${p['lokasi'] ?? ''}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        trailing: Chip(
+          label: Text(
+            labelStatus(status),
+            style: TextStyle(
+              fontSize: 10.5,
+              color: warnaStatus(status),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          backgroundColor: warnaStatus(status).withOpacity(0.12),
+          side: BorderSide.none,
+          visualDensity: VisualDensity.compact,
+        ),
+        onTap: () async {
+          final rows = await sb.from('lf_posts').select().eq('id', p['id']);
+          if (rows.isEmpty || !mounted) return;
+          final post = Map<String, dynamic>.from(rows.first);
+          await pasangNama([post]);
+          if (!mounted) return;
+          await Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => LayarDetail(post: post)),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
     _muatAwal();
+    _muatPostMini();
     _kanal = sb
         .channel('chat-$_id')
         .onPostgresChanges(
@@ -795,6 +887,7 @@ class _LayarChatState extends State<LayarChat> {
                 textAlign: TextAlign.center,
               ),
             ),
+          if (_postMini != null) _kartuBarangMini(),
           Expanded(
             child: _muat
                 ? const Center(child: CircularProgressIndicator())
@@ -834,7 +927,12 @@ class _LayarChatState extends State<LayarChat> {
                             color: saya
                                 ? skema.primary
                                 : skema.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(14),
+                            borderRadius: BorderRadius.only(
+                              topLeft: const Radius.circular(14),
+                              topRight: const Radius.circular(14),
+                              bottomLeft: Radius.circular(saya ? 14 : 4),
+                              bottomRight: Radius.circular(saya ? 4 : 14),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,

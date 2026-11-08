@@ -1,9 +1,14 @@
 part of '../main.dart';
 
 // ===========================================================================
-// Layar akun dan kepala profil
+// Layar akun dan kepala profil (redesign v1.9.0)
 // ===========================================================================
 
+/// Kepala Akun gaya baru: kepala biru melengkung berisi avatar, nama,
+/// dan lencana centang emas kecil saja bila terverifikasi SIKA (tanpa
+/// tulisan apa pun). Mengetuk area profil membuka lembar Profil
+/// Lengkap dari bawah. Di bawahnya melayang kartu statistik tiga
+/// kolom: Postinganku, Klaim, Bantu UP.
 class _KepalaAkun extends StatefulWidget {
   final Map<String, dynamic> profil;
   final Future<void> Function()? onProfilDiubah;
@@ -14,23 +19,174 @@ class _KepalaAkun extends StatefulWidget {
 }
 
 class _KepalaAkunState extends State<_KepalaAkun> {
-  bool _terbuka = false;
+  late Future<Map<String, dynamic>> _fStatSaya;
 
-  Widget _barisDetail(String label, String nilai) {
+  @override
+  void initState() {
+    super.initState();
+    _fStatSaya = _ambilStat();
+  }
+
+  Future<Map<String, dynamic>> _ambilStat() async {
+    try {
+      final id = (widget.profil['id'] ?? '').toString();
+      if (id.isEmpty) return const {};
+      final rows = await sb.from('lf_stat_pengguna').select().eq('user_id', id);
+      if (rows.isEmpty) return const {};
+      return Map<String, dynamic>.from(rows.first);
+    } catch (_) {
+      return const {};
+    }
+  }
+
+  Future<void> _keEditProfil() async {
+    final berubah = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => LayarProfil(profilAwal: widget.profil)),
+    );
+    if (berubah == true) await widget.onProfilDiubah?.call();
+  }
+
+  Widget _barisLembar(IconData ikon, String label, String nilai) {
     return Padding(
-      padding: const EdgeInsets.only(top: 5),
+      padding: const EdgeInsets.symmetric(vertical: 9),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 76,
-            child: Text(
-              label,
-              style: const TextStyle(color: Colors.grey, fontSize: 12),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: kBiruUtama.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(ikon, size: 19, color: kBiruUtama),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                Text(
+                  nilai,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          Expanded(child: Text(nilai, style: const TextStyle(fontSize: 12.5))),
         ],
+      ),
+    );
+  }
+
+  void _bukaLembarProfil() {
+    final profil = widget.profil;
+    final foto = profil['foto_url'] as String?;
+    final email = sb.auth.currentUser?.email ?? '';
+    final npm = (profil['npm'] ?? '').toString();
+    final kelas = (profil['kelas'] ?? '').toString();
+    final prodi = (profil['prodi'] ?? '').toString();
+    final terverifikasi = profil['terverifikasi'] == true;
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 18),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Text(
+                    tr('Profil Lengkap'),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.of(ctx).pop(),
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  AvatarPengguna(nama: (profil['nama'] ?? '').toString(), foto: foto, radius: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                (profil['nama'] ?? '').toString(),
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            LencanaEmas(terverifikasi: terverifikasi),
+                          ],
+                        ),
+                        Text(
+                          prodi.isEmpty ? tr('Mahasiswa') : '${tr('Mahasiswa')} · $prodi',
+                          style: TextStyle(fontSize: 12.5, color: Colors.grey.shade600),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (npm.isNotEmpty)
+                _barisLembar(
+                  Icons.badge_outlined,
+                  '${tr('NPM')} · ${tr('Kelas')}',
+                  kelas.isEmpty ? npm : '$npm · $kelas',
+                ),
+              if (email.isNotEmpty) _barisLembar(Icons.mail_outline, 'Email', email),
+              _barisLembar(
+                Icons.shield_outlined,
+                tr('Status Verifikasi'),
+                terverifikasi ? tr('Terverifikasi SIKA UNINDRA') : tr('Belum terverifikasi'),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _keEditProfil();
+                  },
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: Text(tr('Edit Profil')),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: kBiruUtama,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -40,118 +196,340 @@ class _KepalaAkunState extends State<_KepalaAkun> {
     final profil = widget.profil;
     final foto = profil['foto_url'] as String?;
     final admin = profil['peran'] == 'admin';
-    final email = sb.auth.currentUser?.email ?? '';
-    final npm = (profil['npm'] ?? '').toString();
     final prodi = (profil['prodi'] ?? '').toString();
-    final wa = (profil['wa'] ?? '').toString();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            onTap: () => setState(() => _terbuka = !_terbuka),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    final berubah = await Navigator.of(context).push<bool>(
-                      MaterialPageRoute(
-                        builder: (_) => LayarProfil(profilAwal: profil),
-                      ),
-                    );
-                    if (berubah == true) await widget.onProfilDiubah?.call();
-                  },
-                  child: AvatarPengguna(nama: (profil['nama'] ?? '').toString(), foto: foto, radius: 30),
+    final email = sb.auth.currentUser?.email ?? '';
+    final terverifikasi = profil['terverifikasi'] == true;
+    final atas = MediaQuery.of(context).padding.top;
+    final bisaKembali = Navigator.of(context).canPop();
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(18, atas + 14, 18, 58),
+              decoration: const BoxDecoration(
+                gradient: kGradasiKepala,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+              ),
+              child: Row(
+                children: [
+                  if (bisaKembali) ...[
+                    InkWell(
+                      onTap: () => Navigator.of(context).pop(),
+                      borderRadius: BorderRadius.circular(999),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.arrow_back, color: Colors.white, size: 19),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: InkWell(
+                      onTap: _bukaLembarProfil,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Row(
                         children: [
-                          Flexible(
-                            child: Text(
-                              profil['nama'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          Container(
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: AvatarPengguna(
+                              nama: (profil['nama'] ?? '').toString(),
+                              foto: foto,
+                              radius: 25,
                             ),
                           ),
-                          if (admin) ...[
-                            const SizedBox(width: 6),
-                            const Tooltip(
-                              message: 'Admin KutemuKan',
-                              child: Icon(
-                                Icons.verified,
-                                size: 18,
-                                color: Colors.blue,
-                              ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        (profil['nama'] ?? '').toString(),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 17.5,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    LencanaEmas(terverifikasi: terverifikasi),
+                                    if (admin) ...[
+                                      const SizedBox(width: 5),
+                                      const Icon(Icons.shield, size: 15, color: Colors.white70),
+                                    ],
+                                  ],
+                                ),
+                                Text(
+                                  prodi.isNotEmpty ? prodi : email,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(color: Colors.white70, fontSize: 12.5),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-                Icon(
-                  _terbuka ? Icons.expand_less : Icons.expand_more,
-                  color: Colors.grey,
-                ),
-              ],
-            ),
-          ),
-          if (_terbuka) ...[
-            const SizedBox(height: 6),
-            if (profil['terverifikasi'] == true) ...[
-              Chip(
-                avatar: const Icon(Icons.verified, size: 14, color: kBiru),
-                label: Text(
-                  tr('Mahasiswa Terverifikasi'),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: kBiru,
-                    fontWeight: FontWeight.w600,
+                  InkWell(
+                    onTap: _keEditProfil,
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.18),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.edit_outlined, color: Colors.white, size: 19),
+                    ),
                   ),
-                ),
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ],
               ),
-              const SizedBox(height: 6),
-            ],
-            if (npm.isNotEmpty) _barisDetail('NPM', npm),
-            if (prodi.isNotEmpty) _barisDetail('Prodi', prodi),
-            _barisDetail(
-              'WhatsApp',
-              wa.isEmpty ? tr('Nomor WhatsApp belum diisi') : '+$wa',
             ),
-            if (email.isNotEmpty) _barisDetail('Email', email),
-            const SizedBox(height: 8),
-            BarisBadge(userId: (profil['id'] ?? '').toString()),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: -32,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: FutureBuilder<Map<String, dynamic>>(
+                  future: _fStatSaya,
+                  builder: (context, snap) {
+                    final s = snap.data ?? const {};
+                    int angka(String k) => (s[k] as num?)?.toInt() ?? 0;
+                    Widget sel(String label, int nilai) => Expanded(
+                      child: Column(
+                        children: [
+                          TweenAnimationBuilder<int>(
+                            tween: IntTween(begin: 0, end: nilai),
+                            duration: const Duration(milliseconds: 700),
+                            curve: Curves.easeOutCubic,
+                            builder: (_, v, __) => Text(
+                              '$v',
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          Text(
+                            label,
+                            style: TextStyle(fontSize: 11, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    );
+                    return Row(
+                      children: [
+                        sel(tr('Postinganku'), angka('total_posting')),
+                        sel(tr('Klaim'), angka('klaim_ok')),
+                        sel(tr('Bantu UP'), angka('up_diberikan')),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ),
           ],
-        ],
-      ),
+        ),
+        const SizedBox(height: 44),
+      ],
     );
   }
 }
 
 Widget _judulSeksi(String teks) {
   return Padding(
-    padding: const EdgeInsets.fromLTRB(16, 18, 16, 4),
+    padding: const EdgeInsets.fromLTRB(18, 16, 16, 2),
     child: Text(
       teks.toUpperCase(),
-      style: const TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.bold,
-        color: kBiru,
-        letterSpacing: 0.8,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w800,
+        color: Colors.grey.shade500,
+        letterSpacing: 1.1,
       ),
     ),
   );
+}
+
+Widget _ikonMenu(IconData ikon, {Color warna = kBiruUtama}) {
+  return Container(
+    width: 38,
+    height: 38,
+    decoration: BoxDecoration(
+      color: warna.withOpacity(0.11),
+      borderRadius: BorderRadius.circular(11),
+    ),
+    child: Icon(ikon, size: 19, color: warna),
+  );
+}
+
+Widget _grupMenu(List<Widget> isi) {
+  return Card(
+    margin: const EdgeInsets.fromLTRB(12, 6, 12, 0),
+    child: Column(
+      children: [
+        for (var i = 0; i < isi.length; i++) ...[
+          if (i > 0) const Divider(height: 1, indent: 68, endIndent: 12),
+          isi[i],
+        ],
+      ],
+    ),
+  );
+}
+
+/// Daftar klaim yang pernah diajukan pengguna ini, lengkap dengan
+/// statusnya; mengetuk satu klaim membuka rincian postingannya.
+class LayarKlaimku extends StatefulWidget {
+  const LayarKlaimku({super.key});
+  @override
+  State<LayarKlaimku> createState() => _LayarKlaimkuState();
+}
+
+class _LayarKlaimkuState extends State<LayarKlaimku> {
+  late Future<List<Map<String, dynamic>>> _fData = _ambil();
+
+  Future<List<Map<String, dynamic>>> _ambil() async {
+    final uid = sb.auth.currentUser!.id;
+    final klaim = await sb
+        .from('lf_claims')
+        .select()
+        .eq('user_id', uid)
+        .order('created_at', ascending: false)
+        .limit(100);
+    final data = List<Map<String, dynamic>>.from(klaim);
+    if (data.isEmpty) return data;
+    final ids = data.map((k) => k['post_id']).where((e) => e != null).toSet().toList();
+    if (ids.isNotEmpty) {
+      final posts = await sb
+          .from('lf_posts')
+          .select('id, judul, jenis, status')
+          .inFilter('id', ids);
+      final peta = {for (final p in posts) (p['id'] ?? '').toString(): p};
+      for (final k in data) {
+        final p = peta[(k['post_id'] ?? '').toString()];
+        if (p != null) {
+          k['judul_post'] = p['judul'];
+          k['jenis_post'] = p['jenis'];
+        }
+      }
+    }
+    return data;
+  }
+
+  (String, Color) _statusKlaim(String s) {
+    switch (s) {
+      case 'disetujui':
+        return (tr('Disetujui'), Colors.green);
+      case 'ditolak':
+        return (tr('Ditolak'), Colors.red);
+      case 'selesai':
+        return (tr('Selesai'), Colors.blueGrey);
+      default:
+        return (tr('Menunggu'), Colors.orange);
+    }
+  }
+
+  Future<void> _buka(Map<String, dynamic> k) async {
+    final rows = await sb.from('lf_posts').select().eq('id', k['post_id']);
+    if (rows.isEmpty || !mounted) return;
+    final post = Map<String, dynamic>.from(rows.first);
+    await pasangNama([post]);
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => LayarDetail(post: post)),
+    );
+    setState(() => _fData = _ambil());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Klaimku'))),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fData,
+        builder: (context, snap) {
+          if (snap.data == null) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final data = snap.data ?? [];
+          if (data.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Text(
+                  tr('Kamu belum pernah mengajukan klaim. Klaim muncul di sini sesudah kamu mengklaim barang dari papan.'),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+          return ListView.builder(
+            itemCount: data.length,
+            itemBuilder: (_, i) {
+              final k = data[i];
+              final (label, warna) = _statusKlaim((k['status'] ?? '').toString());
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                child: ListTile(
+                  leading: _ikonMenu(
+                    (k['jenis_post'] ?? '').toString() == 'temuan'
+                        ? Icons.inventory_2_outlined
+                        : Icons.search,
+                  ),
+                  title: Text(
+                    (k['judul_post'] ?? tr('Postingan')).toString(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  subtitle: Text(fmtTanggal(k['created_at'])),
+                  trailing: Chip(
+                    label: Text(label, style: TextStyle(fontSize: 11, color: warna, fontWeight: FontWeight.w700)),
+                    backgroundColor: warna.withOpacity(0.12),
+                    visualDensity: VisualDensity.compact,
+                    side: BorderSide.none,
+                  ),
+                  onTap: () => _buka(k),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
 }
 
 class LayarAkun extends StatelessWidget {
@@ -162,233 +540,252 @@ class LayarAkun extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final admin = profil['peran'] == 'admin';
+    final terverifikasi = profil['terverifikasi'] == true;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Akun'))),
       body: ListView(
+        padding: const EdgeInsets.only(bottom: 20),
         children: [
           _KepalaAkun(profil: profil, onProfilDiubah: onProfilDiubah),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.manage_accounts_outlined),
-            title: Text(tr('Edit Profil')),
-            subtitle: Text(tr('Nama, nomor WhatsApp, dan foto profil')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final berubah = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => LayarProfil(profilAwal: profil),
-                ),
-              );
-              if (berubah == true) await onProfilDiubah?.call();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.school_outlined),
-            title: Text(tr('Verifikasi Mahasiswa')),
-            subtitle: Text(
-              profil['terverifikasi'] == true
-                  ? 'NPM ${profil['npm']} • ${profil['prodi'] ?? ''}'
-                  : tr('Hubungkan akun SIKA untuk badge terverifikasi'),
-            ),
-            trailing: profil['terverifikasi'] == true
-                ? const Icon(Icons.verified, color: kBiru)
-                : const Icon(Icons.chevron_right),
-            onTap: () async {
-              final berubah = await Navigator.of(context).push<bool>(
-                MaterialPageRoute(
-                  builder: (_) => LayarVerifikasiSika(profil: profil),
-                ),
-              );
-              if (berubah == true) await onProfilDiubah?.call();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: Text(tr('Ubah Kata Sandi')),
-            subtitle: Text(tr('Berlaku juga untuk akun yang masuk via Google')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const LayarUbahSandi())),
-          ),
-          _judulSeksi(tr('Pengaturan')),
-          ListTile(
-            leading: const Icon(Icons.brightness_6_outlined),
-            title: Text(tr('Tampilan')),
-            subtitle: Text(tr('Ikuti sistem, terang, atau gelap')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final sekarang = kTemaMode.value == ThemeMode.dark
-                  ? 'gelap'
-                  : kTemaMode.value == ThemeMode.light
-                  ? 'terang'
-                  : 'sistem';
-              final pilih = await showDialog<String>(
-                context: context,
-                builder: (_) => SimpleDialog(
-                  title: Text(tr('Tampilan')),
-                  children: [
-                    for (final o in ['sistem', 'terang', 'gelap'])
-                      RadioListTile<String>(
-                        value: o,
-                        groupValue: sekarang,
-                        title: Text(
-                          tr(
-                            o == 'sistem'
-                                ? 'Sistem'
-                                : o == 'terang'
-                                ? 'Terang'
-                                : 'Gelap',
-                          ),
-                        ),
-                        onChanged: (v) => Navigator.of(context).pop(v),
-                      ),
-                  ],
-                ),
-              );
-              if (pilih != null) await aturTema(pilih);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.language_outlined),
-            title: Text(tr('Bahasa')),
-            subtitle: Text(tr('Indonesia atau English')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              final pilih = await showDialog<String>(
-                context: context,
-                builder: (_) => SimpleDialog(
-                  title: const Text('Bahasa / Language'),
-                  children: [
-                    RadioListTile<String>(
-                      value: 'id',
-                      groupValue: kBahasa.value,
-                      title: const Text('Bahasa Indonesia'),
-                      onChanged: (v) => Navigator.of(context).pop(v),
-                    ),
-                    RadioListTile<String>(
-                      value: 'en',
-                      groupValue: kBahasa.value,
-                      title: const Text('English'),
-                      onChanged: (v) => Navigator.of(context).pop(v),
-                    ),
-                  ],
-                ),
-              );
-              if (pilih != null) await aturBahasa(pilih);
-            },
-          ),
-
-          if (admin) ...[
-            _judulSeksi(tr('Admin')),
+          _judulSeksi(tr('Aktivitas')),
+          _grupMenu([
             ListTile(
-              leading: const Icon(Icons.shield_outlined),
-              title: Text(tr('Moderasi Postingan')),
-              subtitle: Text(tr('Setujui atau tolak postingan yang menunggu')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LayarModerasi())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.flag_outlined),
-              title: Text(tr('Laporan Pengguna')),
-              subtitle: Text(tr('Postingan yang dilaporkan bermasalah')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LayarLaporan())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bar_chart_outlined),
-              title: Text(tr('Statistik')),
-              subtitle: Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const LayarStatistik())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.campaign_outlined),
-              title: Text(tr('Pengumuman')),
-              subtitle: Text(tr('Buat dan kelola pengumuman komunitas')),
-              trailing: const Icon(Icons.chevron_right),
+              leading: _ikonMenu(Icons.grid_view_outlined),
+              title: Text(tr('Postinganku')),
+              subtitle: Text(tr('Lihat dan kelola semua postinganmu')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => const LayarPengumuman(admin: true),
+                  builder: (_) => LayarProfilPublik(userId: (profil['id'] ?? '').toString()),
                 ),
               ),
             ),
-          ],
-          _judulSeksi(tr('Lainnya')),
-          ListTile(
-            leading: const Icon(Icons.emoji_events_outlined),
-            title: Text(tr('Papan Pahlawan')),
-            subtitle: Text(tr('Peringkat penolong kampus bulan ini')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const LayarPahlawan())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.rate_review_outlined),
-            title: Text(tr('Kritik & Saran')),
-            subtitle: Text(tr('Beri bintang dan tulis ulasanmu')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const LayarKritikSaran())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.system_update_outlined),
-            title: Text(tr('Cek Pembaruan')),
-            subtitle: Text(tr('Periksa versi aplikasi terbaru')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => cekUpdate(context, manual: true),
-          ),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(tr('Info Aplikasi')),
-            subtitle: Text(tr('Tentang KutemuKan dan pembuatnya')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () =>
-                Navigator.of(context)
-                    .push(MaterialPageRoute(builder: (_) => const LayarInfo())),
-          ),
-          ListTile(
-            leading: const Icon(Icons.explore_outlined),
-            title: Text(tr('Panduan Interaktif')),
-            subtitle: Text(tr('Tur keliling fitur ditemani maskot')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.of(context).pop();
-              Future<void>.delayed(
-                const Duration(milliseconds: 350),
-                () => pemicuPanduan?.call(),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(tr('Unduh Data Saya')),
-            subtitle: Text(tr('Profil, postingan, klaim, dan notifikasi dalam satu berkas')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => unduhDataSaya(context, profil),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_forever_outlined, color: Colors.red),
-            title: Text(
-              tr('Hapus Akun Saya'),
-              style: const TextStyle(color: Colors.red),
+            ListTile(
+              leading: _ikonMenu(Icons.how_to_reg_outlined),
+              title: Text(tr('Klaimku')),
+              subtitle: Text(tr('Klaim yang kamu ajukan dan terima')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarKlaimku()),
+              ),
             ),
-            subtitle: Text(tr('Hapus permanen akun dan semua datamu')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => mintaHapusAkun(context),
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: OutlinedButton.icon(
-              onPressed: () async {
+            ListTile(
+              leading: _ikonMenu(Icons.visibility_outlined),
+              title: Text(tr('Pantau Kategori')),
+              subtitle: Text(tr('Kabar otomatis untuk kategori pilihan')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarPantau()),
+              ),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.emoji_events_outlined),
+              title: Text(tr('Papan Pahlawan')),
+              subtitle: Text(tr('Peringkat penemu barang bulan ini')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarPahlawan()),
+              ),
+            ),
+          ]),
+          if (admin) ...[
+            _judulSeksi(tr('Admin')),
+            _grupMenu([
+              ListTile(
+                leading: _ikonMenu(Icons.shield_outlined),
+                title: Text(tr('Moderasi Postingan')),
+                subtitle: Text(tr('Setujui atau tolak postingan yang menunggu')),
+                trailing: const Icon(Icons.chevron_right, size: 19),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LayarModerasi()),
+                ),
+              ),
+              ListTile(
+                leading: _ikonMenu(Icons.flag_outlined),
+                title: Text(tr('Laporan Pengguna')),
+                subtitle: Text(tr('Postingan yang dilaporkan bermasalah')),
+                trailing: const Icon(Icons.chevron_right, size: 19),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LayarLaporan()),
+                ),
+              ),
+              ListTile(
+                leading: _ikonMenu(Icons.bar_chart_outlined),
+                title: Text(tr('Statistik')),
+                subtitle: Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
+                trailing: const Icon(Icons.chevron_right, size: 19),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LayarStatistik()),
+                ),
+              ),
+              ListTile(
+                leading: _ikonMenu(Icons.campaign_outlined),
+                title: Text(tr('Pengumuman')),
+                subtitle: Text(tr('Buat dan kelola pengumuman komunitas')),
+                trailing: const Icon(Icons.chevron_right, size: 19),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LayarPengumuman(admin: true)),
+                ),
+              ),
+            ]),
+          ],
+          _judulSeksi(tr('Pengaturan')),
+          _grupMenu([
+            ListTile(
+              leading: _ikonMenu(Icons.manage_accounts_outlined),
+              title: Text(tr('Edit Profil')),
+              subtitle: Text(tr('Nama, foto, dan data kampus')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () async {
+                final berubah = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(builder: (_) => LayarProfil(profilAwal: profil)),
+                );
+                if (berubah == true) await onProfilDiubah?.call();
+              },
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.school_outlined),
+              title: Text(tr('Verifikasi Mahasiswa')),
+              subtitle: Text(
+                terverifikasi
+                    ? 'NPM ${profil['npm']} · ${profil['prodi'] ?? ''}'
+                    : tr('Hubungkan akun SIKA untuk badge terverifikasi'),
+              ),
+              trailing: terverifikasi
+                  ? const LencanaEmas(terverifikasi: true, ukuran: 20)
+                  : const Icon(Icons.chevron_right, size: 19),
+              onTap: () async {
+                final berubah = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(builder: (_) => LayarVerifikasiSika(profil: profil)),
+                );
+                if (berubah == true) await onProfilDiubah?.call();
+              },
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.lock_outline),
+              title: Text(tr('Ubah Kata Sandi')),
+              subtitle: Text(tr('Berlaku juga untuk akun yang masuk via Google')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarUbahSandi()),
+              ),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.brightness_6_outlined),
+              title: Text(tr('Tampilan')),
+              subtitle: Text(tr('Ikuti sistem, terang, atau gelap')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () async {
+                final sekarang = kTemaMode.value == ThemeMode.dark
+                    ? 'gelap'
+                    : kTemaMode.value == ThemeMode.light
+                    ? 'terang'
+                    : 'sistem';
+                final pilih = await showDialog<String>(
+                  context: context,
+                  builder: (_) => SimpleDialog(
+                    title: Text(tr('Tampilan')),
+                    children: [
+                      for (final o in ['sistem', 'terang', 'gelap'])
+                        RadioListTile<String>(
+                          value: o,
+                          groupValue: sekarang,
+                          title: Text(tr(o == 'sistem' ? 'Sistem' : o == 'terang' ? 'Terang' : 'Gelap')),
+                          onChanged: (v) => Navigator.of(context).pop(v),
+                        ),
+                    ],
+                  ),
+                );
+                if (pilih != null) await aturTema(pilih);
+              },
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.language_outlined),
+              title: Text(tr('Bahasa')),
+              subtitle: Text(tr('Indonesia atau English')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () async {
+                final pilih = await showDialog<String>(
+                  context: context,
+                  builder: (_) => SimpleDialog(
+                    title: const Text('Bahasa / Language'),
+                    children: [
+                      RadioListTile<String>(
+                        value: 'id',
+                        groupValue: kBahasa.value,
+                        title: const Text('Bahasa Indonesia'),
+                        onChanged: (v) => Navigator.of(context).pop(v),
+                      ),
+                      RadioListTile<String>(
+                        value: 'en',
+                        groupValue: kBahasa.value,
+                        title: const Text('English'),
+                        onChanged: (v) => Navigator.of(context).pop(v),
+                      ),
+                    ],
+                  ),
+                );
+                if (pilih != null) await aturBahasa(pilih);
+              },
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.menu_book_outlined),
+              title: Text(tr('Panduan Lengkap')),
+              subtitle: Text(tr('Cara pakai KutemuKan langkah demi langkah')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => Scaffold(
+                    appBar: AppBar(title: Text(tr('Panduan'))),
+                    body: const TabPanduan(),
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.download_outlined),
+              title: Text(tr('Unduh Data Saya')),
+              subtitle: Text(tr('Profil, postingan, klaim, dan notifikasi dalam satu berkas')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => unduhDataSaya(context, profil),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.rate_review_outlined),
+              title: Text(tr('Kritik & Saran')),
+              subtitle: Text(tr('Beri bintang dan tulis ulasanmu')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarKritikSaran()),
+              ),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.system_update_outlined),
+              title: Text(tr('Cek Pembaruan')),
+              subtitle: Text(tr('Periksa versi aplikasi terbaru')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => cekUpdate(context, manual: true),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.info_outline),
+              title: Text(tr('Tentang KutemuKan')),
+              subtitle: Text(tr('Info aplikasi dan pembuatnya')),
+              trailing: const Icon(Icons.chevron_right, size: 19),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LayarInfo()),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 14),
+          _grupMenu([
+            ListTile(
+              leading: _ikonMenu(Icons.delete_forever_outlined, warna: Colors.red),
+              title: Text(tr('Hapus Akun Saya'), style: const TextStyle(color: Colors.red)),
+              subtitle: Text(tr('Hapus permanen akun dan semua datamu')),
+              onTap: () => mintaHapusAkun(context),
+            ),
+            ListTile(
+              leading: _ikonMenu(Icons.logout, warna: Colors.red),
+              title: Text(tr('Keluar'), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w700)),
+              onTap: () async {
                 await sb.auth.signOut();
                 if (context.mounted) {
                   Navigator.of(context).pushAndRemoveUntil(
@@ -397,10 +794,9 @@ class LayarAkun extends StatelessWidget {
                   );
                 }
               },
-              icon: const Icon(Icons.logout),
-              label: Text(tr('Keluar')),
             ),
-          ),
+          ]),
+          const SizedBox(height: 10),
         ],
       ),
     );

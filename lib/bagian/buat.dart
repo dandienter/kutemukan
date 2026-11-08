@@ -229,7 +229,7 @@ class _LayarBuatState extends State<LayarBuat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(tr(_modeUbah ? 'Ubah Postingan' : 'Buat Postingan')),
+        title: Text(tr(_modeUbah ? 'Ubah Postingan' : 'Buat Laporan')),
       ),
       body: Column(
         children: [
@@ -279,15 +279,9 @@ class _LayarBuatState extends State<LayarBuat> {
                             controller: _cepat,
                             maxLines: 3,
                             decoration: InputDecoration(
-                              labelText: tr(
-                                'Contoh: Gue kehilangan dompet warna cokelat kayaknya di sekitar kantin kemarin sore',
-                              ),
-                              labelStyle: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface,
-                                fontWeight: FontWeight.w600,
-                                fontSize: 13,
+                              labelText: tr('Teks Bebas'),
+                              hintText: tr(
+                                'Contoh: dompet kulit cokelat saya hilang di parkiran Gedung B tadi pagi jam 9. Isinya KTP, KTM, sama kartu ATM.',
                               ),
                               border: const OutlineInputBorder(),
                               isDense: true,
@@ -303,7 +297,7 @@ class _LayarBuatState extends State<LayarBuat> {
                             child: FilledButton.icon(
                               onPressed: _sibukCepat ? null : _prosesCepat,
                               icon: const Icon(Icons.auto_fix_high, size: 18),
-                              label: Text(tr('Isi Otomatis')),
+                              label: Text(tr('Ubah Jadi Laporan')),
                             ),
                           ),
                           if (_hasilCepat != null) ...[
@@ -361,7 +355,7 @@ class _LayarBuatState extends State<LayarBuat> {
                             ),
                             Text(
                               tr(
-                                'Hasil tebakannya sudah masuk ke formulir di bawah. Cek dan ubah kalau ada yang kurang pas.',
+                                'Semua bidang di form ini hasil bacaan otomatis dan bisa langsung kamu ganti sebelum dikirim.',
                               ),
                               style: TextStyle(
                                 fontSize: 12,
@@ -433,124 +427,75 @@ class _LayarBuatState extends State<LayarBuat> {
                   ),
                   const SizedBox(height: 14),
                 ],
-                SegmentedButton<String>(
-                  segments: [
-                    ButtonSegment(
-                      value: 'hilang',
-                      label: Text(tr('Saya Kehilangan')),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _jenis = 'hilang'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: _jenis == 'hilang' ? const Color(0xFFC62828) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _jenis == 'hilang' ? const Color(0xFFC62828) : Colors.grey.shade400),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.search, size: 17, color: _jenis == 'hilang' ? Colors.white : Colors.grey.shade700),
+                              const SizedBox(width: 6),
+                              Text(
+                                tr('Saya Kehilangan'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.5,
+                                  color: _jenis == 'hilang' ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                    ButtonSegment(
-                      value: 'temuan',
-                      label: Text(tr('Saya Menemukan')),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _jenis = 'temuan'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: _jenis == 'temuan' ? kBiruUtama : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: _jenis == 'temuan' ? kBiruUtama : Colors.grey.shade400),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inventory_2_outlined, size: 17, color: _jenis == 'temuan' ? Colors.white : Colors.grey.shade700),
+                              const SizedBox(width: 6),
+                              Text(
+                                tr('Saya Menemukan'),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13.5,
+                                  color: _jenis == 'temuan' ? Colors.white : Colors.grey.shade700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
-                  selected: {_jenis},
-                  onSelectionChanged: (s) => setState(() => _jenis = s.first),
                 ),
                 const SizedBox(height: 16),
-                TextField(
-                  controller: _judul,
-                  decoration: _rapat(
-                    tr('Judul (mis. Dompet hitam berisi KTM)'),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                DropdownButtonFormField<String>(
-                  value: _kategori,
-                  items: kKategori
-                      .map((k) => DropdownMenuItem(value: k, child: Text(k)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _kategori = v!),
-                  decoration: _rapat(tr('Kategori')),
-                ),
-                const SizedBox(height: 14),
-                InkWell(
-                  onTap: () async {
-                    final tgl = await showDatePicker(
-                      context: context,
-                      initialDate: _waktu,
-                      firstDate: DateTime.now().subtract(
-                        const Duration(days: 365),
-                      ),
-                      lastDate: DateTime.now(),
-                    );
-                    if (tgl == null || !mounted) return;
-                    final jam = await showTimePicker(
-                      context: context,
-                      initialTime: TimeOfDay.fromDateTime(_waktu),
-                    );
-                    if (!mounted) return;
-                    setState(
-                      () => _waktu = DateTime(
-                        tgl.year,
-                        tgl.month,
-                        tgl.day,
-                        jam?.hour ?? _waktu.hour,
-                        jam?.minute ?? _waktu.minute,
-                      ),
-                    );
-                  },
-                  child: InputDecorator(
-                    decoration: _rapat(tr('Waktu')),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(fmtTanggal(_waktu.toIso8601String())),
-                        ),
-                        const Icon(
-                          Icons.edit_calendar_outlined,
-                          size: 18,
-                          color: Colors.grey,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _lokasi,
-                  decoration: _rapat(tr('Lokasi (hilang / ditemukan)')),
-                ),
-                if (_jenis == 'temuan') ...[
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _penitipan,
-                    decoration: _rapat(
-                      tr('Barang dititipkan di (mis. pos satpam)'),
-                    ),
-                  ),
-                ],
-                if (widget.profil['terverifikasi'] == true) ...[
-                  const SizedBox(height: 6),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(tr('Samarkan nama saya')),
-                    subtitle: Text(
-                      tr(
-                        'Nama dan foto profil tidak ditampilkan pada postingan ini. Identitas terverifikasi tetap tercatat untuk keamanan.',
-                      ),
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    value: _samarkan,
-                    onChanged: (v) => setState(() => _samarkan = v),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _deskripsi,
-                  maxLines: 2,
-                  decoration: _rapat(
-                    tr('Deskripsi dan ciri-ciri (tampil publik)'),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                TextField(
-                  controller: _rahasia,
-                  maxLines: 2,
-                  decoration: _rapat(
-                    tr('Ciri khusus rahasia'),
-                    hint: tr('Tidak tampil publik, untuk verifikasi klaim'),
-                  ),
+                Text(
+                  '${tr('Foto Barang')} (${tr('maks')} 5)',
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5),
                 ),
                 const SizedBox(height: 16),
                 SizedBox(
@@ -698,6 +643,132 @@ class _LayarBuatState extends State<LayarBuat> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _judul,
+                  decoration: _rapat(
+                    tr('Judul (mis. Dompet hitam berisi KTM)'),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child:
+                DropdownButtonFormField<String>(
+                  value: _kategori,
+                  items: kKategori
+                      .map((k) => DropdownMenuItem(value: k, child: Text(k)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _kategori = v!),
+                  decoration: _rapat(tr('Kategori')),
+                ),),
+                    const SizedBox(width: 10),
+                    Expanded(flex: 2, child:
+                InkWell(
+                  onTap: () async {
+                    final tgl = await showDatePicker(
+                      context: context,
+                      initialDate: _waktu,
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 365),
+                      ),
+                      lastDate: DateTime.now(),
+                    );
+                    if (tgl == null || !mounted) return;
+                    final jam = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(_waktu),
+                    );
+                    if (!mounted) return;
+                    setState(
+                      () => _waktu = DateTime(
+                        tgl.year,
+                        tgl.month,
+                        tgl.day,
+                        jam?.hour ?? _waktu.hour,
+                        jam?.minute ?? _waktu.minute,
+                      ),
+                    );
+                  },
+                  child: InputDecorator(
+                    decoration: _rapat(tr('Waktu')),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(fmtTanggal(_waktu.toIso8601String())),
+                        ),
+                        const Icon(
+                          Icons.edit_calendar_outlined,
+                          size: 18,
+                          color: Colors.grey,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _lokasi,
+                  decoration: _rapat(tr('Lokasi (hilang / ditemukan)')),
+                ),
+                if (_jenis == 'temuan') ...[
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: _penitipan,
+                    decoration: _rapat(
+                      tr('Barang dititipkan di (mis. pos satpam)'),
+                    ),
+                  ),
+                ],
+                if (widget.profil['terverifikasi'] == true) ...[
+                  const SizedBox(height: 6),
+                  SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(tr('Samarkan nama saya')),
+                    subtitle: Text(
+                      tr(
+                        'Nama dan foto profil tidak ditampilkan pada postingan ini. Identitas terverifikasi tetap tercatat untuk keamanan.',
+                      ),
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    value: _samarkan,
+                    onChanged: (v) => setState(() => _samarkan = v),
+                  ),
+                ],
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _deskripsi,
+                  maxLines: 2,
+                  decoration: _rapat(
+                    tr('Deskripsi dan ciri-ciri (tampil publik)'),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: _rahasia,
+                  maxLines: 2,
+                  decoration: _rapat(
+                    tr('Ciri khusus rahasia'),
+                    hint: tr('Tidak tampil publik, untuk verifikasi klaim'),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline, size: 14, color: Colors.grey),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        tr('Detail rahasia tidak tampil ke publik. Laporanmu masuk antrean moderasi admin sebelum tayang.'),
+                        style: const TextStyle(fontSize: 11.5, color: Colors.grey),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

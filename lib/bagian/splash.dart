@@ -47,22 +47,53 @@ class _LayarSplashState extends State<LayarSplash>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBiru,
-      body: Center(
-        child: FadeTransition(
-          opacity: _pudar,
-          child: ScaleTransition(
-            scale: _skala,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset('assets/logo.png', height: 235),
-                const SizedBox(height: 10),
-                Text(
-                  tr('Lost and Found Kampus Unindra'),
-                  style: TextStyle(fontSize: 15, color: Colors.white70),
-                ),
-              ],
+      body: Container(
+        decoration: const BoxDecoration(gradient: kGradasiKepala),
+        child: Center(
+          child: FadeTransition(
+            opacity: _pudar,
+            child: ScaleTransition(
+              scale: _skala,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: Image.asset('assets/icon.png', height: 108),
+                  ),
+                  const SizedBox(height: 18),
+                  const Text(
+                    'KutemuKan',
+                    style: TextStyle(
+                      fontSize: 31,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    tr('Yang Hilang Dicariin, Yang Ketemu Dibalikin'),
+                    style: const TextStyle(fontSize: 13.5, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 26),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final a in [1.0, 0.55, 0.3])
+                        Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 3.5),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withOpacity(a),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

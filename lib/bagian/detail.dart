@@ -495,195 +495,14 @@ class _LayarDetailState extends State<LayarDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final hilang = _post['jenis'] == 'hilang';
     final foto = daftarFoto(_post);
-    final namaPemilik = _post['nama_pemilik'] ?? 'Pengguna KutemuKan';
     final dilihat = (_post['views_count'] as num?)?.toInt() ?? 0;
     final ups = (_post['up_count'] as num?)?.toInt() ?? 0;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(hilang ? 'Barang Hilang' : 'Barang Temuan'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            tooltip: tr('Bagikan'),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => LayarBagikan(post: _post)),
-            ),
-          ),
-          if (_punyaSaya && _post['status'] != 'kembali')
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: tr('Ubah'),
-              onPressed: _ubahPost,
-            ),
-          if (!_punyaSaya)
-            IconButton(
-              icon: const Icon(Icons.flag_outlined),
-              tooltip: tr('Laporkan'),
-              onPressed: _laporkan,
-            ),
-        ],
-      ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 12, 16, 16),
         children: [
-          if (foto.isNotEmpty) ...[
-            Stack(
-              children: [
-                if ((_post['status'] ?? '') == 'kembali')
-                  ColorFiltered(
-                    colorFilter: kFilterFotoRedup,
-                    child: SizedBox(
-                      height: 250,
-                      child: PageView.builder(
-                        itemCount: foto.length,
-                        onPageChanged: (i) => setState(() => _fotoKe = i),
-                        itemBuilder: (_, i) => GestureDetector(
-                          onTap: () => lihatFotoBesar(context, foto[i]),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: CachedNetworkImage(
-                              imageUrl: foto[i],
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) => const Center(
-                                child: Icon(Icons.image_not_supported_outlined),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-                else
-                  SizedBox(
-                    height: 250,
-                    child: PageView.builder(
-                      itemCount: foto.length,
-                      onPageChanged: (i) => setState(() => _fotoKe = i),
-                      itemBuilder: (_, i) => GestureDetector(
-                        onTap: () => lihatFotoBesar(context, foto[i]),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: CachedNetworkImage(
-                            imageUrl: foto[i],
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                            errorWidget: (_, __, ___) => const Center(
-                              child: Icon(Icons.image_not_supported_outlined),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                if ((_post['status'] ?? '') == 'kembali')
-                  const Positioned.fill(
-                    child: IgnorePointer(
-                      child: Center(child: StempelKembali(ukuran: 21)),
-                    ),
-                  )
-                else
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Center(
-                        child: StempelJenis(
-                          jenis: (_post['jenis'] ?? 'hilang').toString(),
-                          ukuran: 21,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            if (foto.length > 1)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    foto.length,
-                    (i) => Container(
-                      margin: const EdgeInsets.all(3),
-                      width: _fotoKe == i ? 18 : 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: _fotoKe == i ? kBiru : Colors.grey.shade300,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 14),
-          ],
-          Text(
-            _post['judul'] ?? '',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: [
-              Chip(
-                label: Text(
-                  (_post['kategori'] ?? '').toString(),
-                  style: const TextStyle(fontSize: 11),
-                ),
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Card(
-            margin: EdgeInsets.zero,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              child: Column(
-                children: [
-                  _barisInfo(
-                    Icons.place_outlined,
-                    tr('Lokasi'),
-                    _post['lokasi'],
-                  ),
-                  _barisInfo(
-                    Icons.event_outlined,
-                    tr('Waktu kejadian'),
-                    fmtTanggal(_post['waktu_kejadian']),
-                    sub: fmtRelatif(_post['waktu_kejadian']),
-                  ),
-                  _barisInfo(
-                    Icons.person_outline,
-                    tr('Dilaporkan oleh'),
-                    namaPemilik,
-                    verified: _post['terverifikasi_pemilik'] == true,
-                    sub: (_post['prodi_pemilik'] ?? '').toString().isEmpty
-                        ? null
-                        : (_post['prodi_pemilik'] ?? '').toString(),
-                    onTap: (_post['nama_disamarkan'] == true ||
-                            (_post['user_id'] ?? '').toString() ==
-                                (sb.auth.currentUser?.id ?? ''))
-                        ? null
-                        : () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => LayarProfilPublik(
-                                  userId: (_post['user_id'] ?? '').toString(),
-                                ),
-                              ),
-                            ),
-                  ),
-                  _barisInfo(
-                    Icons.publish_outlined,
-                    tr('Diposting'),
-                    fmtTanggal(_post['created_at']),
-                    terakhir: true,
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _kepalaDetail(context, foto),
           if ((_post['penitipan'] ?? '').toString().isNotEmpty) ...[
             const SizedBox(height: 10),
             Container(
@@ -754,12 +573,6 @@ class _LayarDetailState extends State<LayarDetail> {
               const SizedBox(width: 4),
               Text('$ups UP', style: const TextStyle(color: Colors.grey)),
               const Spacer(),
-              if (!_punyaSaya && _post['status'] == 'tampil' && !_sudahUp)
-                FilledButton.tonalIcon(
-                  onPressed: _bantuUpDetail,
-                  icon: const Icon(Icons.arrow_circle_up_outlined, size: 18),
-                  label: Text(tr('Bantu UP')),
-                ),
             ],
           ),
           const SizedBox(height: 16),
@@ -774,6 +587,7 @@ class _LayarDetailState extends State<LayarDetail> {
                 : (_post['deskripsi'] ?? '').toString(),
             style: const TextStyle(fontSize: 15, height: 1.45),
           ),
+          _kartuPelapor(),
           _bagianCocok(),
           const Divider(height: 32),
           if (_muatKlaim)
@@ -786,6 +600,7 @@ class _LayarDetailState extends State<LayarDetail> {
           ..._bagianKomentar(),
         ],
       ),
+      bottomNavigationBar: _ctaBawah(),
     );
   }
 
@@ -843,6 +658,364 @@ class _LayarDetailState extends State<LayarDetail> {
     } catch (_) {
       return [];
     }
+  }
+
+
+  /// Kepala Rincian gaya baru: foto hero dengan tombol melayang
+  /// (kembali, bagikan, ubah/laporkan) dan stempel, lalu kartu info
+  /// yang melayang menimpa bagian bawah foto berisi chip jenis dan
+  /// kategori, judul, lokasi, waktu, dan penanda verifikasi pelapor.
+  Widget _kepalaDetail(BuildContext context, List<String> foto) {
+    final hilang = _post['jenis'] == 'hilang';
+    final kembali = (_post['status'] ?? '') == 'kembali';
+    final terverifikasi = _post['terverifikasi_pemilik'] == true;
+    Widget tombolFoto(IconData ikon, String tip, VoidCallback aksi) {
+      return InkWell(
+        onTap: aksi,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.92),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.18), blurRadius: 6),
+            ],
+          ),
+          child: Icon(ikon, size: 19, color: const Color(0xFF33475B)),
+        ),
+      );
+    }
+
+    final kartu = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.13),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: (hilang ? const Color(0xFFC62828) : kBiruUtama).withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  hilang ? tr('Hilang') : tr('Temuan'),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: hilang ? const Color(0xFFC62828) : kBiruUtama,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 7),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.14),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  (_post['kategori'] ?? '').toString(),
+                  style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600),
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.visibility_outlined, size: 15, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                '${(_post['views_count'] as num?)?.toInt() ?? 0}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 9),
+          Text(
+            _post['judul'] ?? '',
+            style: const TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          ),
+          _barisInfo(Icons.place_outlined, tr('Lokasi'), _post['lokasi']),
+          _barisInfo(
+            Icons.event_outlined,
+            tr('Waktu kejadian'),
+            fmtTanggal(_post['waktu_kejadian']),
+            sub: fmtRelatif(_post['waktu_kejadian']),
+          ),
+          if (terverifikasi)
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 6),
+              child: Row(
+                children: [
+                  const Icon(Icons.verified, size: 15, color: Color(0xFF1E7A34)),
+                  const SizedBox(width: 5),
+                  Text(
+                    tr('Pelapor terverifikasi SIKA'),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: Color(0xFF1E7A34),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          _barisInfo(
+            Icons.publish_outlined,
+            tr('Diposting'),
+            fmtTanggal(_post['created_at']),
+            terakhir: true,
+          ),
+        ],
+      ),
+    );
+
+    if (foto.isEmpty) return kartu;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 30),
+          child: Stack(
+            children: [
+              if (kembali)
+                ColorFiltered(
+                  colorFilter: kFilterFotoRedup,
+                  child: _pagerHero(foto),
+                )
+              else
+                _pagerHero(foto),
+              if (kembali)
+                const Positioned.fill(
+                  child: IgnorePointer(child: Center(child: StempelKembali(ukuran: 21))),
+                )
+              else
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Center(
+                      child: StempelJenis(
+                        jenis: (_post['jenis'] ?? 'hilang').toString(),
+                        ukuran: 21,
+                      ),
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: 10,
+                left: 10,
+                child: tombolFoto(
+                  Icons.arrow_back,
+                  tr('Kembali'),
+                  () => Navigator.of(context).pop(),
+                ),
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Row(
+                  children: [
+                    tombolFoto(
+                      Icons.share_outlined,
+                      tr('Bagikan'),
+                      () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => LayarBagikan(post: _post)),
+                      ),
+                    ),
+                    if (_punyaSaya && _post['status'] != 'kembali') ...[
+                      const SizedBox(width: 8),
+                      tombolFoto(Icons.edit_outlined, tr('Ubah'), _ubahPost),
+                    ],
+                    if (!_punyaSaya) ...[
+                      const SizedBox(width: 8),
+                      tombolFoto(Icons.flag_outlined, tr('Laporkan'), _laporkan),
+                    ],
+                  ],
+                ),
+              ),
+              if (foto.length > 1)
+                Positioned(
+                  right: 12,
+                  bottom: 10,
+                  child: Row(
+                    children: List.generate(
+                      foto.length,
+                      (i) => Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                        width: 6.5,
+                        height: 6.5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _fotoKe == i ? Colors.white : Colors.white.withOpacity(0.5),
+                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 3)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Positioned(left: 2, right: 2, bottom: 0, child: kartu),
+      ],
+    );
+  }
+
+  Widget _pagerHero(List<String> foto) {
+    return SizedBox(
+      height: 258,
+      child: PageView.builder(
+        itemCount: foto.length,
+        onPageChanged: (i) => setState(() => _fotoKe = i),
+        itemBuilder: (_, i) => GestureDetector(
+          onTap: () => lihatFotoBesar(context, foto[i]),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: CachedNetworkImage(
+              imageUrl: foto[i],
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorWidget: (_, __, ___) => const Center(
+                child: Icon(Icons.image_not_supported_outlined),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Kartu pelapor di bawah deskripsi: avatar, nama dengan lencana
+  /// emas bila terverifikasi, dan prodi. Ketuk untuk profil publik.
+  Widget _kartuPelapor() {
+    final nama = (_post['nama_pemilik'] ?? 'Pengguna KutemuKan').toString();
+    final terverifikasi = _post['terverifikasi_pemilik'] == true;
+    final prodi = (_post['prodi_pemilik'] ?? '').toString();
+    final bisaBuka = _post['nama_disamarkan'] != true &&
+        (_post['user_id'] ?? '').toString() != (sb.auth.currentUser?.id ?? '');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 18),
+        Text(
+          tr('Dilaporkan oleh'),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          margin: EdgeInsets.zero,
+          child: ListTile(
+            leading: AvatarPengguna(
+              nama: nama,
+              foto: (_post['foto_pemilik'] ?? '').toString(),
+              radius: 22,
+            ),
+            title: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    nama,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                LencanaEmas(terverifikasi: terverifikasi),
+              ],
+            ),
+            subtitle: Text(prodi.isEmpty ? tr('Mahasiswa') : prodi),
+            trailing: bisaBuka ? const Icon(Icons.chevron_right, size: 19) : null,
+            onTap: bisaBuka
+                ? () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LayarProfilPublik(
+                        userId: (_post['user_id'] ?? '').toString(),
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Bilah aksi lengket di bawah Rincian untuk pengunjung: Bantu UP
+  /// dan Klaim Barang, sesuai mockup.
+  Widget? _ctaBawah() {
+    if (_punyaSaya || _post['status'] != 'tampil' || _muatKlaim) return null;
+    final bisaKlaim = _klaimSaya == null && _post['diklaim'] != true;
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 14,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 10),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _sudahUp ? null : _bantuUpDetail,
+                  icon: const Icon(Icons.arrow_circle_up_outlined, size: 18),
+                  label: Text(_sudahUp ? tr('Sudah di-UP') : tr('Bantu UP')),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(13),
+                    ),
+                  ),
+                ),
+              ),
+              if (bisaKlaim) ...[
+                const SizedBox(width: 10),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      final terkirim = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(builder: (_) => LayarKlaim(post: _post)),
+                      );
+                      if (terkirim == true) await _muat();
+                    },
+                    icon: const Icon(Icons.verified_user_outlined, size: 18),
+                    label: Text(tr('Klaim Barang')),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: kBiruUtama,
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _bagianCocok() {

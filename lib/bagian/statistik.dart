@@ -219,6 +219,24 @@ class LayarStatistik extends StatelessWidget {
                           fontSize: 12,
                         ),
                       ),
+                      const SizedBox(height: 14),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween<double>(
+                          begin: 0,
+                          end: (persen / 100).clamp(0.0, 1.0),
+                        ),
+                        duration: const Duration(milliseconds: 900),
+                        curve: Curves.easeOutCubic,
+                        builder: (_, v, __) => ClipRRect(
+                          borderRadius: BorderRadius.circular(99),
+                          child: LinearProgressIndicator(
+                            value: v,
+                            minHeight: 7,
+                            backgroundColor: Colors.white24,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
