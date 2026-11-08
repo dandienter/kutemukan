@@ -110,7 +110,7 @@ class LayarInfo extends StatelessWidget {
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(
-                    tr('Versi 1.8.1'),
+                    tr('Versi 1.8.2'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   visualDensity: VisualDensity.compact,

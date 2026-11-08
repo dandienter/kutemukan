@@ -212,15 +212,21 @@ const ColorFilter kFilterFotoRedup = ColorFilter.matrix(<double>[
   0, 0, 0, 1, 0,
 ]);
 
-/// Stempel "SUDAH KEMBALI" miring ala cap karet untuk postingan yang
-/// barangnya sudah balik ke pemiliknya. Menggantikan badge status:
-/// sekali lihat langsung terbaca selesai. [ukuran] = ukuran huruf.
-class StempelKembali extends StatelessWidget {
+/// Stempel miring ala cap karet di atas foto postingan: terbaca sekali
+/// lihat dari luar (kartu, rincian, kartu bagikan), dan memang tidak
+/// ikut tampil di penampil foto besar agar foto aslinya tetap bersih.
+class StempelCap extends StatelessWidget {
+  final String teks;
+  final Color warna;
   final double ukuran;
-  const StempelKembali({super.key, this.ukuran = 15});
+  const StempelCap({
+    super.key,
+    required this.teks,
+    required this.warna,
+    this.ukuran = 15,
+  });
   @override
   Widget build(BuildContext context) {
-    const warna = Color(0xFF1E7A34);
     return Transform.rotate(
       angle: -0.24,
       child: Container(
@@ -242,7 +248,7 @@ class StempelKembali extends StatelessWidget {
             borderRadius: BorderRadius.circular(ukuran * 0.34),
           ),
           child: Text(
-            'SUDAH KEMBALI',
+            teks,
             style: TextStyle(
               color: warna.withOpacity(0.95),
               fontSize: ukuran,
@@ -252,6 +258,38 @@ class StempelKembali extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Stempel "SUDAH KEMBALI" hijau untuk postingan yang barangnya sudah
+/// balik ke pemiliknya. [ukuran] = ukuran huruf.
+class StempelKembali extends StatelessWidget {
+  final double ukuran;
+  const StempelKembali({super.key, this.ukuran = 15});
+  @override
+  Widget build(BuildContext context) {
+    return StempelCap(
+      teks: 'SUDAH KEMBALI',
+      warna: const Color(0xFF1E7A34),
+      ukuran: ukuran,
+    );
+  }
+}
+
+/// Stempel jenis postingan di atas foto: HILANG merah, DITEMUKAN biru.
+/// Dipakai untuk postingan yang belum kembali.
+class StempelJenis extends StatelessWidget {
+  final String jenis;
+  final double ukuran;
+  const StempelJenis({super.key, required this.jenis, this.ukuran = 15});
+  @override
+  Widget build(BuildContext context) {
+    final hilang = jenis == 'hilang';
+    return StempelCap(
+      teks: hilang ? 'HILANG' : 'DITEMUKAN',
+      warna: hilang ? const Color(0xFFC62828) : const Color(0xFF1565C0),
+      ukuran: ukuran,
     );
   }
 }

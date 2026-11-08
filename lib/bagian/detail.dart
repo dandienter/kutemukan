@@ -583,6 +583,17 @@ class _LayarDetailState extends State<LayarDetail> {
                     child: IgnorePointer(
                       child: Center(child: StempelKembali(ukuran: 21)),
                     ),
+                  )
+                else
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: StempelJenis(
+                          jenis: (_post['jenis'] ?? 'hilang').toString(),
+                          ukuran: 21,
+                        ),
+                      ),
+                    ),
                   ),
               ],
             ),

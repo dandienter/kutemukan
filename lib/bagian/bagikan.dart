@@ -158,6 +158,17 @@ class _LayarBagikanState extends State<LayarBagikan> {
                                   child: StempelKembali(ukuran: 16),
                                 ),
                               ),
+                            )
+                          else
+                            Positioned.fill(
+                              child: IgnorePointer(
+                                child: Center(
+                                  child: StempelJenis(
+                                    jenis: (p['jenis'] ?? 'hilang').toString(),
+                                    ukuran: 16,
+                                  ),
+                                ),
+                              ),
                             ),
                         ],
                       ),

@@ -157,6 +157,17 @@ class KartuPostingan extends StatelessWidget {
                     child: IgnorePointer(
                       child: Center(child: StempelKembali(ukuran: 17)),
                     ),
+                  )
+                else
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Center(
+                        child: StempelJenis(
+                          jenis: (post['jenis'] ?? 'hilang').toString(),
+                          ukuran: 17,
+                        ),
+                      ),
+                    ),
                   ),
               ],
             )
