@@ -313,21 +313,26 @@ class _LayarUtamaState extends State<LayarUtama> {
       body: IndexedStack(index: _tab, children: halaman),
       bottomNavigationBar: Container(
         key: kunciPanduanNav,
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.09),
-              blurRadius: 14,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
+        color: Theme.of(context).scaffoldBackgroundColor,
         child: SafeArea(
           top: false,
-          child: SizedBox(
-            height: 62,
-            child: Row(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: BorderRadius.circular(26),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.13),
+                    blurRadius: 18,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                height: 62,
+                child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _itemNav(0, Icons.home_outlined, Icons.home, tr('Beranda')),
@@ -347,7 +352,9 @@ class _LayarUtamaState extends State<LayarUtama> {
                   badge: _chatBelum,
                 ),
                 _itemNav(4, Icons.person_outline, Icons.person, tr('Akun')),
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
         ),

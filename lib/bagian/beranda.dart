@@ -532,6 +532,11 @@ class _LayarBerandaState extends State<LayarBeranda> {
       height: atas + 78,
       child: Stack(
         children: [
+          Positioned.fill(
+            child: ColoredBox(
+              color: Theme.of(context).scaffoldBackgroundColor,
+            ),
+          ),
           const Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
