@@ -111,6 +111,36 @@ const Set<String> kStopwords = {
   'barang',
   'milik',
   'punya',
+  'kampus',
+  'unindra',
+  'tertinggal',
+  'ketinggalan',
+  'warna',
+  'berisi',
+};
+
+/// Nama warna umum. Bila dua postingan menyebut warna berbeda tanpa
+/// irisan sama sekali, kemiripan teksnya dipotong: helm pink hampir
+/// pasti bukan HP hitam, walau kata lain di deskripsinya mirip.
+const Set<String> kWarna = {
+  'hitam',
+  'putih',
+  'merah',
+  'biru',
+  'hijau',
+  'kuning',
+  'pink',
+  'cokelat',
+  'coklat',
+  'abu',
+  'silver',
+  'emas',
+  'ungu',
+  'oranye',
+  'krem',
+  'marun',
+  'navy',
+  'toska',
 };
 
 /// Pecah teks menjadi token bersih tanpa stopwords.
@@ -193,11 +223,22 @@ class MesinCocok {
     return a.intersection(b).length / gabung;
   }
 
-  /// Skor kecocokan dua postingan (0..1) beserta rincian tidak dipakai
-  /// di tampilan, skor akhir saja yang dikembalikan.
-  double skorPasangan(Map<String, dynamic> a, Map<String, dynamic> b) {
-    final teks = _cosine(_vektor(a), _vektor(b));
-    final kategori = (a['kategori'] ?? '') == (b['kategori'] ?? '') ? 1.0 : 0.0;
+  /// Rincian skor kecocokan dua postingan: skor akhir beserta komponen
+  /// teks dan kesamaan kategori untuk gerbang kualitas di cariCocok.
+  ({double total, double teks, bool kategoriSama}) rincianPasangan(
+    Map<String, dynamic> a,
+    Map<String, dynamic> b,
+  ) {
+    var teks = _cosine(_vektor(a), _vektor(b));
+    final warnaA = tokenisasi(teksDokumen(a)).toSet().intersection(kWarna);
+    final warnaB = tokenisasi(teksDokumen(b)).toSet().intersection(kWarna);
+    if (warnaA.isNotEmpty &&
+        warnaB.isNotEmpty &&
+        warnaA.intersection(warnaB).isEmpty) {
+      teks *= 0.5;
+    }
+    final kategoriSama = (a['kategori'] ?? '') == (b['kategori'] ?? '');
+    final kategori = kategoriSama ? 1.0 : 0.0;
     final lokasi = _jaccard(
       tokenisasi((a['lokasi'] ?? '').toString()).toSet(),
       tokenisasi((b['lokasi'] ?? '').toString()).toSet(),
@@ -209,15 +250,20 @@ class MesinCocok {
       final hari = ta.difference(tb).inHours.abs() / 24.0;
       waktu = math.max(0, 1 - hari / 30);
     }
-    return 0.55 * teks + 0.20 * kategori + 0.15 * lokasi + 0.10 * waktu;
+    final total = 0.55 * teks + 0.20 * kategori + 0.15 * lokasi + 0.10 * waktu;
+    return (total: total, teks: teks, kategoriSama: kategoriSama);
   }
+
+  /// Skor kecocokan dua postingan (0..1).
+  double skorPasangan(Map<String, dynamic> a, Map<String, dynamic> b) =>
+      rincianPasangan(a, b).total;
 
   /// Cari pasangan paling cocok untuk satu postingan dari korpus:
   /// jenis berlawanan, status tampil, bukan milik sendiri.
   List<HasilCocok> cariCocok(
     Map<String, dynamic> post,
     List<Map<String, dynamic>> korpus, {
-    double ambang = 0.30,
+    double ambang = 0.42,
     int maks = 3,
   }) {
     final hasil = <HasilCocok>[];
@@ -226,8 +272,11 @@ class MesinCocok {
       if (lain['jenis'] == post['jenis']) continue;
       if (lain['status'] != 'tampil') continue;
       if (lain['user_id'] == post['user_id']) continue;
-      final skor = skorPasangan(post, lain);
-      if (skor >= ambang) hasil.add(HasilCocok(lain, skor));
+      final r = rincianPasangan(post, lain);
+      // Gerbang kualitas: pasangan tanpa irisan kata bermakna dan beda
+      // kategori tidak ditampilkan walau lokasi dan waktunya dekat.
+      if (r.teks < 0.15 && !r.kategoriSama) continue;
+      if (r.total >= ambang) hasil.add(HasilCocok(lain, r.total));
     }
     hasil.sort((x, y) => y.skor.compareTo(x.skor));
     return hasil.take(maks).toList();

@@ -182,6 +182,8 @@ const Map<String, String> _idKeEn = {
   'Klaimmu sudah terkirim dan menunggu keputusan yang memposting. Kamu akan mendapat notif begitu ada keputusan.': 'Your claim has been sent and is waiting for the poster\'s decision. You will be notified once there is a decision.',
   'Komentar': 'Comments',
   'Kemungkinan Cocok': 'Possible Matches',
+  'Yang hilang dicariin, yang nemu dibalikin.':
+      'Lost something? We help find it. Found something? We help return it.',
   'Dihitung otomatis dari kemiripan isi, kategori, lokasi, dan waktu.': 'Calculated automatically from content, category, location, and time similarity.',
   'Konfirmasi kata sandi tidak sama.': 'Password confirmation does not match.',
   'Kritik & Saran': 'Feedback',
