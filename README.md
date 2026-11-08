@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.8.2** (Android, arm64)
+Versi saat ini: **1.8.3** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.8.3**: status akhir postingan Dimusnahkan / Dihibahkan (nilai status baru musnah_hibah, SQL 22) untuk barang yang sudah melewati batas waktu, sesuai dokumen fitur Modul Admin. Layar Moderasi kini memuat seksi Arsip Lewat Batas Waktu: admin bisa menampilkan lagi postingan arsip atau menutupnya sebagai dimusnahkan/dihibahkan dengan konfirmasi; pemilik menerima notifikasi penutupan. Label status baru juga tampil di web.
 - **1.8.2**: stempel jenis kini ikut tampil di atas foto: HILANG (merah) dan DITEMUKAN (biru) ala cap karet seperti SUDAH KEMBALI, berlaku di kartu Beranda, foto rincian, kartu bagikan, dan web. Stempel hanya lapisan tampilan luar; penampil foto besar tetap bersih tanpa stempel.
 - **1.8.1**: garis bawah pada sel statistik Beranda yang aktif dihapus (penanda aktif cukup huruf tebal dan warna penuh), redaksi tagline diluruskan menjadi "Yang Hilang Dicariin, Yang Ketemu Dibalikin" di aplikasi, web, dan proposal, dan halaman masuk dipadatkan (logo dan jarak dirampingkan, halaman tidak bisa digulir lagi).
 - **1.8.0**: teks status di sebelah nama dan chip status/jenis di rincian dihapus, statistik publik Beranda jadi interaktif (angka count-up, ketuk untuk menyaring, Tingkat Keberhasilan Pengembalian dengan bilah animasi), papan ikut menampilkan postingan sudah kembali dengan saringan "Sudah Kembali", barang yang sudah diklaim terkunci dari klaim baru (aplikasi + SQL 21), Kemungkinan Cocok diketatkan (ambang 0,42, gerbang kategori/kata, penalti konflik warna, stopwords kampus, ambang AI 0,50), avatar disatukan lewat widget AvatarPengguna bercache dan foto Google tersalin otomatis ke profil kosong, tagline resmi tampil di halaman masuk, Tentang, dan web, peringkat pengguna di statistik admin dibatasi 8 teratas dengan halaman Lihat Semua yang bisa dicari, Unduh Data Saya bisa memilih format (JSON, TXT, PDF) dan tempat menyimpan, serta transisi halaman diperhalus dengan redup kedalaman.
