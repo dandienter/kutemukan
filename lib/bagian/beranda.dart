@@ -945,9 +945,6 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                                 color: _jenis == saring
                                                     ? Colors.white
                                                     : Colors.white70,
-                                                decoration: _jenis == saring
-                                                    ? TextDecoration.underline
-                                                    : null,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),

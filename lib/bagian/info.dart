@@ -100,7 +100,7 @@ class LayarInfo extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  tr('Yang hilang dicariin, yang nemu dibalikin.'),
+                  tr('Yang Hilang Dicariin, Yang Ketemu Dibalikin'),
                   style: const TextStyle(
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w600,
@@ -110,7 +110,7 @@ class LayarInfo extends StatelessWidget {
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(
-                    tr('Versi 1.8.0'),
+                    tr('Versi 1.8.1'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   visualDensity: VisualDensity.compact,

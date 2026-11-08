@@ -145,35 +145,36 @@ class _LayarLoginState extends State<LayarLogin> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/logo.png', height: 118),
+                Image.asset('assets/logo.png', height: 84),
                 const SizedBox(height: 4),
                 Text(
                   tr('Lost and Found Kampus Unindra'),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: skema.onSurfaceVariant,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  tr('Yang hilang dicariin, yang nemu dibalikin.'),
+                  tr('Yang Hilang Dicariin, Yang Ketemu Dibalikin'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 13,
                     fontStyle: FontStyle.italic,
                     fontWeight: FontWeight.w600,
                     color: kBiru,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
                 _formSika ? _kartuSika(skema) : _kartuEmail(skema),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 Row(
                   children: [
                     const Expanded(child: Divider()),
@@ -184,11 +185,11 @@ class _LayarLoginState extends State<LayarLogin> {
                     const Expanded(child: Divider()),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
                 if (!_formSika) ...[
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(50),
+                      minimumSize: const Size.fromHeight(48),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -197,11 +198,11 @@ class _LayarLoginState extends State<LayarLogin> {
                     icon: const Icon(Icons.school, size: 22, color: kBiru),
                     label: Text(tr('Masuk dengan SIKA')),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                 ],
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -214,7 +215,7 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                   label: Text(tr('Masuk dengan Google')),
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: 14),
                 Text(
                   '© 2026 KutemuKan',
                   style: TextStyle(
@@ -244,7 +245,7 @@ class _LayarLoginState extends State<LayarLogin> {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -259,7 +260,7 @@ class _LayarLoginState extends State<LayarLogin> {
                   : tr('Masuk dulu yuk, buat lanjut.'),
               style: TextStyle(color: skema.onSurfaceVariant),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
             if (_modeDaftar) ...[
               TextField(
                 controller: _nama,
@@ -273,7 +274,7 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
             ],
             TextField(
               controller: _email,
@@ -286,7 +287,7 @@ class _LayarLoginState extends State<LayarLogin> {
                 ),
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             TextField(
               controller: _sandi,
               obscureText: !_lihatSandi,
@@ -309,7 +310,7 @@ class _LayarLoginState extends State<LayarLogin> {
               ),
             ),
             if (_galat != null) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -322,10 +323,10 @@ class _LayarLoginState extends State<LayarLogin> {
                 ),
               ),
             ],
-            const SizedBox(height: 20),
+            const SizedBox(height: 14),
             FilledButton(
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
+                minimumSize: const Size.fromHeight(48),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -358,7 +359,7 @@ class _LayarLoginState extends State<LayarLogin> {
       color: kBiru,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -383,7 +384,7 @@ class _LayarLoginState extends State<LayarLogin> {
               ),
               style: const TextStyle(color: Colors.white70, fontSize: 12.5),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             const Text(
               'NPM',
               style: TextStyle(
@@ -407,7 +408,7 @@ class _LayarLoginState extends State<LayarLogin> {
                 ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               tr('Kata sandi SIKA'),
               style: const TextStyle(
@@ -442,7 +443,7 @@ class _LayarLoginState extends State<LayarLogin> {
               ),
             ),
             if (_galatSika != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -455,7 +456,7 @@ class _LayarLoginState extends State<LayarLogin> {
                 ),
               ),
             ],
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
