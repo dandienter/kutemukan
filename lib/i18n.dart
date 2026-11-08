@@ -416,6 +416,7 @@ const Map<String, String> _idKeEn = {
   'Sudah kembali': 'Returned',
   'Ditolak': 'Rejected',
   'Belum ada postingan yang cocok nih. Coba kata kunci lain ya.': 'No matching posts yet. Try another keyword.',
+  'Belum ada postingan.': 'No posts yet.',
   'Simpan Perubahan': 'Save Changes',
   'Simpan dan Masuk': 'Save and Sign In',
   'Deskripsi dan ciri-ciri (tampil publik)':
