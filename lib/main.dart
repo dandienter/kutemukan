@@ -58,6 +58,7 @@ part 'bagian/pantau.dart';
 part 'bagian/chat.dart';
 part 'bagian/pengumuman.dart';
 part 'bagian/notif.dart';
+part 'bagian/informasi.dart';
 part 'bagian/akun.dart';
 part 'bagian/profil.dart';
 part 'bagian/verifikasi.dart';
