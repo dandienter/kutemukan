@@ -502,7 +502,12 @@ class _LayarDetailState extends State<LayarDetail> {
       body: SafeArea(
         top: true,
         bottom: false,
-        child: ListView(
+        child: RefreshIndicator(
+onRefresh: () async {
+          await _muat();
+        },
+child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
           _kepalaDetail(context, foto),
@@ -602,7 +607,8 @@ class _LayarDetailState extends State<LayarDetail> {
           const Divider(height: 32),
           ..._bagianKomentar(),
           ],
-        ),
+        )
+),
       ),
       bottomNavigationBar: _ctaBawah(),
     );
@@ -1416,7 +1422,7 @@ class _LayarDetailState extends State<LayarDetail> {
               tr(
                 'Barang ini sudah diklaim pengguna lain dan sedang proses serah terima, jadi klaim baru ditutup dulu ya.',
               ),
-              style: const TextStyle(color: Colors.black87),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
         ),
@@ -1432,7 +1438,7 @@ class _LayarDetailState extends State<LayarDetail> {
               tr(
                 'Ini barangmu? Ajukan klaim dan sebutkan ciri khususnya. Nomor WhatsApp baru terbuka sesudah klaimmu disetujui yang memposting.',
               ),
-              style: const TextStyle(color: Colors.black87),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ),
         ),
@@ -1510,7 +1516,7 @@ class _LayarDetailState extends State<LayarDetail> {
                 tr(
                   'Sengketa sudah kamu ajukan dan sedang menunggu tinjauan admin.',
                 ),
-                style: const TextStyle(color: Colors.black87),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               ),
             ),
           )
@@ -1533,8 +1539,8 @@ class _LayarDetailState extends State<LayarDetail> {
               children: [
                 Text(
                   tr('Kode Serah Terima'),
-                  style: const TextStyle(
-                    color: Colors.black87,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -1567,7 +1573,7 @@ class _LayarDetailState extends State<LayarDetail> {
                   tr(
                     'Atau tunjukkan QR ini untuk dipindai pemilik postingan.',
                   ),
-                  style: const TextStyle(color: Colors.black87, fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 4),
@@ -1575,7 +1581,7 @@ class _LayarDetailState extends State<LayarDetail> {
                   tr(
                     'Tunjukkan kode ini ke pemilik postingan saat barang diserahkan. Jangan bagikan ke orang lain.',
                   ),
-                  style: const TextStyle(color: Colors.black87, fontSize: 12),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),
               ],

@@ -293,10 +293,15 @@ class _LayarPantauState extends State<LayarPantau> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Pantau')), actions: const [TombolAkun()]),
+      appBar: AppBar(title: Text(tr('Pantau'))),
       body: _muat
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
+          : RefreshIndicator(
+onRefresh: () async {
+                await _ambil();
+              },
+child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
@@ -429,7 +434,8 @@ class _LayarPantauState extends State<LayarPantau> {
                     onChanged: (v) => _ubah(k, v),
                   ),
               ],
-            ),
+            )
+),
     );
   }
 }

@@ -126,7 +126,7 @@ class _KepalaAkunState extends State<_KepalaAkun> {
               ),
               Row(
                 children: [
-                  AvatarPengguna(nama: (profil['nama'] ?? '').toString(), foto: foto, radius: 24),
+                  AvatarPengguna(nama: (profil['nama'] ?? '').toString(), foto: foto, radius: 24, onTap: (foto ?? '').isNotEmpty ? () => lihatFotoBesar(ctx, foto!) : null),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -249,6 +249,9 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                               nama: (profil['nama'] ?? '').toString(),
                               foto: foto,
                               radius: 25,
+                              onTap: (foto ?? '').isNotEmpty
+                                  ? () => lihatFotoBesar(context, foto!)
+                                  : null,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -490,7 +493,13 @@ class _LayarKlaimkuState extends State<LayarKlaimku> {
               ),
             );
           }
-          return ListView.builder(
+          return RefreshIndicator(
+onRefresh: () async {
+              setState(() => _fData = _ambil());
+              await _fData;
+            },
+child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             itemCount: data.length,
             itemBuilder: (_, i) {
               final k = data[i];
@@ -520,7 +529,8 @@ class _LayarKlaimkuState extends State<LayarKlaimku> {
                 ),
               );
             },
-          );
+          )
+);
         },
       ),
     );
@@ -537,7 +547,12 @@ class LayarAkun extends StatelessWidget {
     final admin = profil['peran'] == 'admin';
     final terverifikasi = profil['terverifikasi'] == true;
     return Scaffold(
-      body: ListView(
+      body: RefreshIndicator(
+onRefresh: () async {
+          await onProfilDiubah?.call();
+        },
+child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 20),
         children: [
           _KepalaAkun(profil: profil, onProfilDiubah: onProfilDiubah),
@@ -793,7 +808,8 @@ class LayarAkun extends StatelessWidget {
           ]),
           const SizedBox(height: 10),
         ],
-      ),
+      )
+),
     );
   }
 }

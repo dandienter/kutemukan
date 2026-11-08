@@ -14,6 +14,16 @@ class LayarInformasi extends StatefulWidget {
 class _LayarInformasiState extends State<LayarInformasi>
     with SingleTickerProviderStateMixin {
   late final TabController _tab = TabController(length: 3, vsync: this);
+  final _kunciNotif = GlobalKey<_LayarNotifState>();
+  bool _notifPilih = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _tab.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -29,17 +39,33 @@ class _LayarInformasiState extends State<LayarInformasi>
           tr('Informasi Terkini'),
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
+        actions: [
+          if (_tab.index == 0 && !_notifPilih) ...[
+            IconButton(
+              key: kunciPanduanNotif,
+              icon: const Icon(Icons.done_all),
+              tooltip: tr('Tandai semua dibaca'),
+              onPressed: () => _kunciNotif.currentState?._tandaiSemuaDibaca(),
+            ),
+            IconButton(
+              icon: const Icon(Icons.checklist),
+              tooltip: tr('Pilih'),
+              onPressed: () => _kunciNotif.currentState?._masukModePilih(null),
+            ),
+          ],
+        ],
         bottom: TabBar(
           controller: _tab,
           indicatorColor: kEmas,
           indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
+          unselectedLabelColor: Colors.white.withOpacity(0.88),
           labelStyle: const TextStyle(
             fontWeight: FontWeight.w800,
-            fontSize: 13,
-            letterSpacing: 0.6,
+            fontSize: 12.5,
+            letterSpacing: 0,
           ),
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
           tabs: [
             Tab(text: tr('NOTIFIKASI')),
             Tab(text: tr('PENGUMUMAN')),
@@ -49,10 +75,18 @@ class _LayarInformasiState extends State<LayarInformasi>
       ),
       body: TabBarView(
         controller: _tab,
-        children: const [
-          _TetapHidup(child: LayarNotif(sematkan: true)),
-          _TetapHidup(child: LayarPengumuman(sematkan: true)),
-          _TetapHidup(child: TabPanduan()),
+        children: [
+          _TetapHidup(
+            child: LayarNotif(
+              sematkan: true,
+              key: _kunciNotif,
+              onModePilihBerubah: (v) {
+                if (mounted) setState(() => _notifPilih = v);
+              },
+            ),
+          ),
+          const _TetapHidup(child: LayarPengumuman(sematkan: true)),
+          const _TetapHidup(child: TabPanduan()),
         ],
       ),
     );
@@ -110,7 +144,12 @@ class TabPanduan extends StatelessWidget {
         ),
       ),
     ];
-    return ListView(
+    return RefreshIndicator(
+onRefresh: () async {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      },
+child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
       children: [
         Container(
@@ -193,7 +232,8 @@ class TabPanduan extends StatelessWidget {
           ).push(MaterialPageRoute(builder: (_) => const LayarPrivasi())),
         ),
       ],
-    );
+    )
+);
   }
 }
 

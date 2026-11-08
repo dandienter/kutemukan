@@ -524,21 +524,27 @@ class _LayarBerandaState extends State<LayarBeranda> {
       );
     }
 
-    return Column(
+    return Stack(
       children: [
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(18, atas + 14, 18, 64),
-              decoration: const BoxDecoration(
-                gradient: kGradasiKepala,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(28),
-                  bottomRight: Radius.circular(28),
-                ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            height: atas + 128,
+            decoration: const BoxDecoration(
+              gradient: kGradasiKepala,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(28),
+                bottomRight: Radius.circular(28),
               ),
+            ),
+          ),
+        ),
+        Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.fromLTRB(18, atas + 14, 18, 0),
               child: Row(
                 children: [
                   Container(
@@ -584,10 +590,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 ],
               ),
             ),
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: -38,
+            const SizedBox(height: 22),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
@@ -674,9 +679,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 ),
               ),
             ),
+            const SizedBox(height: 14),
           ],
         ),
-        const SizedBox(height: 50),
       ],
     );
   }
@@ -1069,21 +1074,20 @@ class _LayarBerandaState extends State<LayarBeranda> {
             final namaSapaan = namaRapi(
               (widget.profil['nama'] ?? '').toString(),
             );
-            return Column(
+            final tinggiKepala = MediaQuery.of(context).padding.top + 188;
+            return Stack(
               children: [
-                _kepalaBeranda(context, namaSapaan),
-                Expanded(
-                  child: Stack(
-                    children: [
-                      RefreshIndicator(
-                        onRefresh: () async {
-                          _segarkan();
-                          await (saya ? _fSaya : _fSemua);
-                        },
-                        child: CustomScrollView(
+                RefreshIndicator(
+                  displacement: tinggiKepala + 16,
+                  onRefresh: () async {
+                    _segarkan();
+                    await (saya ? _fSaya : _fSemua);
+                  },
+                  child: CustomScrollView(
                     controller: _gulir,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
+                      SliverToBoxAdapter(child: SizedBox(height: tinggiKepala)),
                       if (!saya) SliverToBoxAdapter(child: _bannerPengumuman()),
                       if (!saya) SliverToBoxAdapter(child: _bannerMaskot(context)),
                       SliverToBoxAdapter(
@@ -1370,9 +1374,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     ],
                   ),
                 ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _kepalaBeranda(context, namaSapaan),
+                ),
                 if (_baru > 0 && !saya)
                   Positioned(
-                    top: 8,
+                    top: tinggiKepala + 8,
                     left: 0,
                     right: 0,
                     child: Center(
@@ -1393,9 +1403,6 @@ class _LayarBerandaState extends State<LayarBeranda> {
                       ),
                     ),
                   ),
-                    ],
-                  ),
-                ),
               ],
             );
           },

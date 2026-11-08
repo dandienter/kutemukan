@@ -137,7 +137,7 @@ class _LayarDaftarChatState extends State<LayarDaftarChat> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Pesan')), actions: const [TombolAkun()]),
+      appBar: AppBar(title: Text(tr('Pesan'))),
       body: Column(
         children: [
           Padding(
@@ -175,7 +175,13 @@ class _LayarDaftarChatState extends State<LayarDaftarChat> {
                     ),
                   );
                 }
-                return ListView.builder(
+                return RefreshIndicator(
+onRefresh: () async {
+              setState(() => _fData = _ambil());
+              await _fData;
+            },
+child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   itemCount: data.length,
                   itemBuilder: (_, i) {
                     final c = data[i];
@@ -254,7 +260,8 @@ class _LayarDaftarChatState extends State<LayarDaftarChat> {
                       },
                     );
                   },
-                );
+                )
+);
               },
             ),
           ),

@@ -6,7 +6,8 @@ part of '../main.dart';
 
 class LayarNotif extends StatefulWidget {
   final bool sematkan;
-  const LayarNotif({super.key, this.sematkan = false});
+  final ValueChanged<bool>? onModePilihBerubah;
+  const LayarNotif({super.key, this.sematkan = false, this.onModePilihBerubah});
   @override
   State<LayarNotif> createState() => _LayarNotifState();
 }
@@ -71,6 +72,7 @@ class _LayarNotifState extends State<LayarNotif> {
       _modePilih = true;
       if (idAwal != null) _dipilih.add(idAwal);
     });
+    widget.onModePilihBerubah?.call(true);
   }
 
   void _keluarModePilih() {
@@ -78,6 +80,7 @@ class _LayarNotifState extends State<LayarNotif> {
       _modePilih = false;
       _dipilih.clear();
     });
+    widget.onModePilihBerubah?.call(false);
   }
 
   void _togglePilih(String id) {
@@ -269,7 +272,6 @@ class _LayarNotifState extends State<LayarNotif> {
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
-          key: kunciPanduanNotif,
           icon: const Icon(Icons.done_all),
           tooltip: tr('Tandai semua dibaca'),
           onPressed: _tandaiSemuaDibaca,
@@ -313,7 +315,6 @@ class _LayarNotifState extends State<LayarNotif> {
             ),
           ] else ...[
             IconButton(
-              key: kunciPanduanNotif,
               icon: const Icon(Icons.done_all),
               tooltip: tr('Tandai semua dibaca'),
               onPressed: _tandaiSemuaDibaca,
@@ -323,7 +324,6 @@ class _LayarNotifState extends State<LayarNotif> {
               tooltip: tr('Pilih'),
               onPressed: () => _masukModePilih(null),
             ),
-            const TombolAkun(),
           ],
         ],
       );
@@ -338,7 +338,15 @@ class _LayarNotifState extends State<LayarNotif> {
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return Center(child: Text(tr('Belum ada notifikasi nih. Nanti kalau ada kabar, muncul di sini.')));
+            return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                tr('Belum ada notifikasi nih. Nanti kalau ada kabar, muncul di sini.'),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
           }
           return RefreshIndicator(
             onRefresh: () async {
@@ -405,7 +413,12 @@ class _LayarNotifState extends State<LayarNotif> {
         },
       );
     if (widget.sematkan) {
-      return Column(children: [_alatTanam(), Expanded(child: isi)]);
+      // Mode normal: tanpa baris alat sendiri, tombol Tandai Semua dan
+      // Pilih tinggal di AppBar Informasi supaya daftar rapat ke atas.
+      // Baris alat hanya muncul saat mode pilih aktif.
+      return _modePilih
+          ? Column(children: [_alatTanam(), Expanded(child: isi)])
+          : isi;
     }
     return Scaffold(appBar: appBar, body: isi);
   }

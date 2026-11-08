@@ -168,11 +168,13 @@ class AvatarPengguna extends StatelessWidget {
   final String nama;
   final String? foto;
   final double radius;
+  final VoidCallback? onTap;
   const AvatarPengguna({
     super.key,
     required this.nama,
     this.foto,
     this.radius = 20,
+    this.onTap,
   });
 
   String get _inisial {
@@ -221,7 +223,7 @@ class AvatarPengguna extends StatelessWidget {
     );
     if (url.isEmpty) return cadangan;
     final d = radius * 2;
-    return ClipOval(
+    final tampil = ClipOval(
       child: CachedNetworkImage(
         imageUrl: url,
         width: d,
@@ -231,6 +233,8 @@ class AvatarPengguna extends StatelessWidget {
         errorWidget: (_, __, ___) => cadangan,
       ),
     );
+    if (onTap == null) return tampil;
+    return GestureDetector(onTap: onTap, child: tampil);
   }
 }
 

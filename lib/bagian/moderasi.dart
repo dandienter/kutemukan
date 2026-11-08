@@ -122,7 +122,13 @@ class _LayarModerasiState extends State<LayarModerasi> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Moderasi'))),
-      body: ListView(
+      body: RefreshIndicator(
+onRefresh: () async {
+          setState(() {});
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+        },
+child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
           FutureBuilder<List<Map<String, dynamic>>>(
             future: _ambilSengketa(),
@@ -350,7 +356,8 @@ class _LayarModerasiState extends State<LayarModerasi> {
             },
           ),
         ],
-      ),
+      )
+),
     );
   }
 }

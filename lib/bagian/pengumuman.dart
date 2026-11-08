@@ -251,9 +251,23 @@ class _LayarPengumumanState extends State<LayarPengumuman> {
           }
           final data = snap.data ?? [];
           if (data.isEmpty) {
-            return Center(child: Text(tr('Belum ada pengumuman baru nih.')));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 32),
+                child: Text(
+                  tr('Belum ada pengumuman baru nih.'),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
           }
-          return ListView.builder(
+          return RefreshIndicator(
+onRefresh: () async {
+              setState(() => _fData = _ambil());
+              await _fData;
+            },
+child: ListView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.only(top: widget.sematkan ? 6 : 0, bottom: 12),
             itemCount: data.length,
             itemBuilder: (_, i) {
@@ -331,7 +345,8 @@ class _LayarPengumumanState extends State<LayarPengumuman> {
                 ),
               );
             },
-          );
+          )
+);
         },
       );
     if (widget.sematkan) return isi;

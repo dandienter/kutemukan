@@ -270,13 +270,20 @@ class _LayarProfilState extends State<LayarProfil> {
 // Profil publik pengguna lain: hanya data aman (tanpa WA, email, NPM).
 // ===========================================================================
 
-class LayarProfilPublik extends StatelessWidget {
+class LayarProfilPublik extends StatefulWidget {
   final String userId;
   const LayarProfilPublik({super.key, required this.userId});
 
+  @override
+  State<LayarProfilPublik> createState() => _LayarProfilPublikState();
+}
+
+class _LayarProfilPublikState extends State<LayarProfilPublik> {
+  late Future<Map<String, dynamic>> _fProfil = _muat();
+
   Future<Map<String, dynamic>> _muat() async {
-    final peta = await ambilProfilPublik([userId]);
-    final pub = peta[userId] ?? <String, dynamic>{};
+    final peta = await ambilProfilPublik([widget.userId]);
+    final pub = peta[widget.userId] ?? <String, dynamic>{};
     var posts = <Map<String, dynamic>>[];
     try {
       final rows = await sb
@@ -284,7 +291,7 @@ class LayarProfilPublik extends StatelessWidget {
           .select(
             'id, jenis, judul, status, foto_url, foto_urls, kategori, lokasi, waktu_kejadian, created_at, deskripsi, penitipan, up_count, views_count, user_id',
           )
-          .eq('user_id', userId)
+          .eq('user_id', widget.userId)
           .order('created_at', ascending: false);
       posts = List<Map<String, dynamic>>.from(rows);
     } catch (_) {}
@@ -293,7 +300,7 @@ class LayarProfilPublik extends StatelessWidget {
       final rows = await sb
           .from('lf_stat_pengguna')
           .select()
-          .eq('user_id', userId);
+          .eq('user_id', widget.userId);
       if (rows.isNotEmpty) stat = Map<String, dynamic>.from(rows.first);
     } catch (_) {}
     return {'pub': pub, 'posts': posts, 'stat': stat};
@@ -304,7 +311,7 @@ class LayarProfilPublik extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Profil Pengguna'))),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: _muat(),
+        future: _fProfil,
         builder: (context, snap) {
           if (snap.data == null) {
             return const Center(child: CircularProgressIndicator());
@@ -313,7 +320,7 @@ class LayarProfilPublik extends StatelessWidget {
           final stat = snap.data!['stat'] as Map<String, dynamic>;
           final semuaPost =
               (snap.data!['posts'] as List).cast<Map<String, dynamic>>();
-          final milikSaya = userId == (sb.auth.currentUser?.id ?? '');
+          final milikSaya = widget.userId == (sb.auth.currentUser?.id ?? '');
           final posts = milikSaya
               ? semuaPost
               : semuaPost
@@ -353,18 +360,22 @@ class LayarProfilPublik extends StatelessWidget {
               ],
             ),
           );
-          return ListView(
+          return RefreshIndicator(
+onRefresh: () async {
+              setState(() => _fProfil = _muat());
+              await _fProfil;
+            },
+child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
               Center(
-                child: CircleAvatar(
+                child: AvatarPengguna(
+                  nama: nama,
+                  foto: foto,
                   radius: 44,
-                  backgroundImage: foto.isNotEmpty ? NetworkImage(foto) : null,
-                  child: foto.isEmpty
-                      ? Text(
-                          nama.isNotEmpty ? nama[0].toUpperCase() : '?',
-                          style: const TextStyle(fontSize: 34),
-                        )
+                  onTap: foto.isNotEmpty
+                      ? () => lihatFotoBesar(context, foto)
                       : null,
                 ),
               ),
@@ -423,7 +434,7 @@ class LayarProfilPublik extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              BarisBadge(userId: userId),
+              BarisBadge(userId: widget.userId),
               const SizedBox(height: 16),
               Align(
                 alignment: Alignment.centerLeft,
@@ -437,9 +448,15 @@ class LayarProfilPublik extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (posts.isEmpty)
-                Text(
-                  tr('Belum ada postingan.'),
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Center(
+                    child: Text(
+                      tr('Belum ada postingan.'),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.grey, fontSize: 13),
+                    ),
+                  ),
                 ),
               for (final x in posts)
                 Card(
@@ -515,7 +532,8 @@ class LayarProfilPublik extends StatelessWidget {
                   ),
                 ),
             ],
-          );
+          )
+);
         },
       ),
     );

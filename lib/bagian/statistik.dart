@@ -4,8 +4,15 @@ part of '../main.dart';
 // Layar statistik (admin)
 // ===========================================================================
 
-class LayarStatistik extends StatelessWidget {
+class LayarStatistik extends StatefulWidget {
   const LayarStatistik({super.key});
+
+  @override
+  State<LayarStatistik> createState() => _LayarStatistikState();
+}
+
+class _LayarStatistikState extends State<LayarStatistik> {
+  late Future<Map<String, dynamic>> _fData = _hitung();
 
   Future<Map<String, dynamic>> _hitung() async {
     final posts = List<Map<String, dynamic>>.from(
@@ -36,7 +43,7 @@ class LayarStatistik extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(tr('Statistik'))),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: _hitung(),
+        future: _fData,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
@@ -202,7 +209,13 @@ class LayarStatistik extends StatelessWidget {
             );
           }
 
-          return ListView(
+          return RefreshIndicator(
+onRefresh: () async {
+              setState(() => _fData = _hitung());
+              await _fData;
+            },
+child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             children: [
               Card(
@@ -560,7 +573,8 @@ class LayarStatistik extends StatelessWidget {
                   ),
                 ),
             ],
-          );
+          )
+);
         },
       ),
     );
