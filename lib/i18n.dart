@@ -64,6 +64,8 @@ const Map<String, String> _idKeEn = {
   'Lihat Statistik >': 'See Statistics >',
   'Nemu Barang di Kampus?': 'Found Something on Campus?',
   'Posting di KutemuKan, biar cepat balik ke pemiliknya. Cepat, aman, terverifikasi.': 'Post it on KutemuKan so it gets back to its owner fast. Quick, safe, verified.',
+  'Kehilangan Barang di Kampus?': 'Lost Something on Campus?',
+  'Posting di KutemuKan, biar yang menemukan bisa langsung menghubungimu. Cepat, aman, terverifikasi.': 'Post it on KutemuKan so whoever finds it can contact you right away. Quick, safe, verified.',
   'Papan Postingan': 'Post Board',
   'postingan': 'posts',
   'Profil Lengkap': 'Full Profile',
