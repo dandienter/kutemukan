@@ -98,10 +98,19 @@ class LayarInfo extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  tr('Yang hilang dicariin, yang nemu dibalikin.'),
+                  style: const TextStyle(
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w600,
+                    color: kBiru,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(
-                    tr('Versi 1.7.3'),
+                    tr('Versi 1.8.0'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   visualDensity: VisualDensity.compact,

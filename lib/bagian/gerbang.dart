@@ -75,6 +75,22 @@ class _GerbangState extends State<Gerbang> {
 
   Future<Map<String, dynamic>?> _ambilProfil(String id) async {
     final rows = await sb.from('lf_profiles').select().eq('id', id);
+    if (rows.isNotEmpty &&
+        ((rows.first['foto_url'] ?? '').toString().isEmpty)) {
+      // Profil belum punya foto: pakai foto akun Google bila ada, supaya
+      // avatar tidak tampil inisial terus di semua tab.
+      final meta = sb.auth.currentUser?.userMetadata ?? {};
+      final fotoMeta = (meta['avatar_url'] ?? meta['picture'])?.toString();
+      if (fotoMeta != null && fotoMeta.isNotEmpty) {
+        rows.first['foto_url'] = fotoMeta;
+        try {
+          await sb
+              .from('lf_profiles')
+              .update({'foto_url': fotoMeta})
+              .eq('id', id);
+        } catch (_) {}
+      }
+    }
     if (rows.isEmpty) return null;
     return rows.first;
   }

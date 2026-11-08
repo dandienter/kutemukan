@@ -363,23 +363,11 @@ class LayarStatistik extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (peringkat.isEmpty) Text(tr('Belum ada aktivitas.')),
-              for (final e in peringkat)
+              for (final e in peringkat.take(8))
                 Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage:
-                          ((fotoUser[e.key] ?? '').isNotEmpty)
-                          ? NetworkImage(fotoUser[e.key]!)
-                          : null,
-                      child: ((fotoUser[e.key] ?? '').isEmpty)
-                          ? Text(
-                              (namaUser[e.key] ?? '?').isNotEmpty
-                                  ? (namaUser[e.key] ?? '?')[0].toUpperCase()
-                                  : '?',
-                            )
-                          : null,
-                    ),
+                    leading: AvatarPengguna(nama: namaUser[e.key] ?? 'Pengguna', foto: fotoUser[e.key]),
                     title: Text(namaUser[e.key] ?? 'Pengguna'),
                     subtitle: Text(
                       kBahasa.value == 'en'
@@ -388,6 +376,32 @@ class LayarStatistik extends StatelessWidget {
                     ),
                   ),
                 ),
+              if (peringkat.length > 8) ...[
+                const SizedBox(height: 4),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LayarPeringkatPengguna(
+                        baris: [
+                          for (final e in peringkat)
+                            <String, dynamic>{
+                              'nama': namaUser[e.key] ?? 'Pengguna',
+                              'foto': fotoUser[e.key],
+                              'posting': e.value['posting'],
+                              'kembali': e.value['kembali'],
+                              'klaim_ok': e.value['klaim_ok'],
+                              'klaim_no': e.value['klaim_no'],
+                            },
+                        ],
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.list_alt_outlined, size: 18),
+                  label: Text(
+                    '${tr('Lihat Semua')} (${peringkat.length})',
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               Card(
                 child: ListTile(
@@ -429,6 +443,78 @@ class LayarStatistik extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Halaman penuh peringkat pengguna untuk admin: seluruh pengguna
+/// beserta hitungan aktivitasnya, bisa dicari berdasarkan nama.
+class LayarPeringkatPengguna extends StatefulWidget {
+  final List<Map<String, dynamic>> baris;
+  const LayarPeringkatPengguna({super.key, required this.baris});
+
+  @override
+  State<LayarPeringkatPengguna> createState() =>
+      _LayarPeringkatPenggunaState();
+}
+
+class _LayarPeringkatPenggunaState extends State<LayarPeringkatPengguna> {
+  String _cari = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final tampil = widget.baris
+        .where(
+          (b) => (b['nama'] ?? '')
+              .toString()
+              .toLowerCase()
+              .contains(_cari.toLowerCase()),
+        )
+        .toList();
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('Peringkat Pengguna'))),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: TextField(
+              onChanged: (v) => setState(() => _cari = v),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: tr('Cari nama pengguna'),
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
+            ),
+          ),
+          Expanded(
+            child: tampil.isEmpty
+                ? Center(child: Text(tr('Tidak ada pengguna yang cocok.')))
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: tampil.length,
+                    itemBuilder: (_, i) {
+                      final b = tampil[i];
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: ListTile(
+                          leading: AvatarPengguna(
+                            nama: (b['nama'] ?? 'Pengguna').toString(),
+                            foto: b['foto']?.toString(),
+                          ),
+                          title: Text((b['nama'] ?? 'Pengguna').toString()),
+                          subtitle: Text(
+                            kBahasa.value == 'en'
+                                ? '${b['posting']} posts - ${b['kembali']} returned - claims approved ${b['klaim_ok']} - claims rejected ${b['klaim_no']}'
+                                : '${b['posting']} postingan - ${b['kembali']} kembali - klaim disetujui ${b['klaim_ok']} - klaim ditolak ${b['klaim_no']}',
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }

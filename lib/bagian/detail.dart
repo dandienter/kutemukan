@@ -618,22 +618,6 @@ class _LayarDetailState extends State<LayarDetail> {
             children: [
               Chip(
                 label: Text(
-                  hilang ? 'HILANG' : 'TEMUAN',
-                  style: const TextStyle(fontSize: 11, color: Colors.white),
-                ),
-                backgroundColor: hilang ? Colors.red : Colors.green,
-                visualDensity: VisualDensity.compact,
-              ),
-              Chip(
-                label: Text(
-                  labelStatus(_post['status'] ?? ''),
-                  style: const TextStyle(fontSize: 11, color: Colors.white),
-                ),
-                backgroundColor: warnaStatus(_post['status'] ?? ''),
-                visualDensity: VisualDensity.compact,
-              ),
-              Chip(
-                label: Text(
                   (_post['kategori'] ?? '').toString(),
                   style: const TextStyle(fontSize: 11),
                 ),
@@ -833,14 +817,15 @@ class _LayarDetailState extends State<LayarDetail> {
             );
           } else {
             final p = korpusPerId[pid];
-            if (p != null && skorAi >= 0.45) {
+            if (p != null && skorAi >= 0.50) {
               perId[pid] = HasilCocok(p, skorAi * 0.95, dariAi: true);
             }
           }
         }
-        final gabung = perId.values.toList()
-          ..sort((a, b) => b.skor.compareTo(a.skor));
-        return gabung.take(8).toList();
+        final gabung =
+            perId.values.where((h) => h.skor >= 0.40).toList()
+              ..sort((a, b) => b.skor.compareTo(a.skor));
+        return gabung.take(5).toList();
       } catch (_) {
         return dasar;
       }
@@ -997,22 +982,7 @@ class _LayarDetailState extends State<LayarDetail> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundImage:
-                    ((k['foto_pemilik'] ?? '').toString().isNotEmpty)
-                    ? NetworkImage((k['foto_pemilik']).toString())
-                    : null,
-                child: ((k['foto_pemilik'] ?? '').toString().isEmpty)
-                    ? Text(
-                        ((k['nama_pemilik'] ?? '?').toString().isNotEmpty
-                                ? (k['nama_pemilik'] ?? '?').toString()[0]
-                                : '?')
-                            .toUpperCase(),
-                        style: const TextStyle(fontSize: 13),
-                      )
-                    : null,
-              ),
+              AvatarPengguna(nama: (k['nama_pemilik'] ?? '?').toString(), foto: (k['foto_pemilik'] ?? '').toString(), radius: 16),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -1163,19 +1133,7 @@ class _LayarDetailState extends State<LayarDetail> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage:
-                      ((k['foto_pemilik'] ?? '').toString().isNotEmpty)
-                      ? NetworkImage((k['foto_pemilik']).toString())
-                      : null,
-                  child: ((k['foto_pemilik'] ?? '').toString().isEmpty)
-                      ? Text(
-                          nama.isNotEmpty ? nama[0].toUpperCase() : '?',
-                          style: const TextStyle(fontSize: 13),
-                        )
-                      : null,
-                ),
+                AvatarPengguna(nama: nama, foto: (k['foto_pemilik'] ?? '').toString(), radius: 16),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
@@ -1263,6 +1221,22 @@ class _LayarDetailState extends State<LayarDetail> {
   List<Widget> _bagianPengunjung() {
     if (_post['status'] != 'tampil') return [];
     final k = _klaimSaya;
+    if (k == null && _post['diklaim'] == true) {
+      return [
+        Card(
+          color: Colors.amber.shade100,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Text(
+              tr(
+                'Barang ini sudah diklaim pengguna lain dan sedang proses serah terima, jadi klaim baru ditutup dulu ya.',
+              ),
+              style: const TextStyle(color: Colors.black87),
+            ),
+          ),
+        ),
+      ];
+    }
     if (k == null) {
       return [
         Card(

@@ -62,15 +62,7 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                     );
                     if (berubah == true) await widget.onProfilDiubah?.call();
                   },
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundImage: (foto != null && foto.isNotEmpty)
-                        ? NetworkImage(foto)
-                        : null,
-                    child: (foto == null || foto.isEmpty)
-                        ? const Icon(Icons.person, size: 30)
-                        : null,
-                  ),
+                  child: AvatarPengguna(nama: (profil['nama'] ?? '').toString(), foto: foto, radius: 30),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -416,13 +408,49 @@ class LayarAkun extends StatelessWidget {
 }
 
 /// Unduh semua data milik pengguna (profil, postingan, klaim,
-/// notifikasi) sebagai satu berkas JSON yang dibagikan ke aplikasi lain.
+/// notifikasi). Pengguna memilih format berkas dulu (JSON, TXT, atau
+/// PDF), lalu memilih sendiri tempat menyimpannya lewat dialog simpan
+/// sistem. Bila dialog simpan tidak tersedia, berkas dibagikan ke
+/// aplikasi lain sebagai cadangan.
 Future<void> unduhDataSaya(
   BuildContext context,
   Map<String, dynamic> profil,
 ) async {
   final id = sb.auth.currentUser?.id;
   if (id == null) return;
+  final format = await showDialog<String>(
+    context: context,
+    builder: (ctx) => SimpleDialog(
+      title: Text(tr('Pilih Format Berkas')),
+      children: [
+        SimpleDialogOption(
+          onPressed: () => Navigator.of(ctx).pop('json'),
+          child: ListTile(
+            leading: const Icon(Icons.data_object, color: kBiru),
+            title: const Text('JSON'),
+            subtitle: Text(tr('Data lengkap mentah, cocok untuk dipindahkan.')),
+          ),
+        ),
+        SimpleDialogOption(
+          onPressed: () => Navigator.of(ctx).pop('txt'),
+          child: ListTile(
+            leading: const Icon(Icons.article_outlined, color: kBiru),
+            title: const Text('TXT'),
+            subtitle: Text(tr('Teks ringkas yang enak dibaca.')),
+          ),
+        ),
+        SimpleDialogOption(
+          onPressed: () => Navigator.of(ctx).pop('pdf'),
+          child: ListTile(
+            leading: const Icon(Icons.picture_as_pdf_outlined, color: kBiru),
+            title: const Text('PDF'),
+            subtitle: Text(tr('Dokumen rapi siap dicetak atau diarsipkan.')),
+          ),
+        ),
+      ],
+    ),
+  );
+  if (format == null) return;
   try {
     final postingan = await sb
         .from('lf_posts')
@@ -442,7 +470,7 @@ Future<void> unduhDataSaya(
         .eq('user_id', id)
         .order('created_at', ascending: false)
         .limit(500);
-    final data = {
+    final data = <String, dynamic>{
       'aplikasi': 'KutemuKan',
       'diunduh_pada': DateTime.now().toUtc().toIso8601String(),
       'profil': profil,
@@ -450,10 +478,41 @@ Future<void> unduhDataSaya(
       'klaim': klaim,
       'notifikasi': notif,
     };
-    await Share.share(
-      const JsonEncoder.withIndent('  ').convert(data),
-      subject: 'Data KutemuKan saya',
-    );
+    final Uint8List isi;
+    if (format == 'txt') {
+      isi = Uint8List.fromList(utf8.encode(_dataKeTeks(data)));
+    } else if (format == 'pdf') {
+      isi = await _dataKePdf(data);
+    } else {
+      isi = Uint8List.fromList(
+        utf8.encode(const JsonEncoder.withIndent('  ').convert(data)),
+      );
+    }
+    final now = DateTime.now();
+    final tgl =
+        '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}';
+    final namaBerkas = 'kutemukan-data-$tgl.$format';
+    String? tersimpan;
+    try {
+      tersimpan = await FilePicker.platform.saveFile(
+        fileName: namaBerkas,
+        bytes: isi,
+      );
+    } catch (_) {
+      tersimpan = null;
+    }
+    if (!context.mounted) return;
+    if (tersimpan != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${tr('Data tersimpan')}: $namaBerkas')),
+      );
+      return;
+    }
+    // Cadangan: bagikan berkas ke aplikasi lain.
+    final dir = await getTemporaryDirectory();
+    final berkas = File('${dir.path}/$namaBerkas');
+    await berkas.writeAsBytes(isi);
+    await Share.shareXFiles([XFile(berkas.path)], subject: 'Data KutemuKan saya');
   } catch (e) {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -461,6 +520,109 @@ Future<void> unduhDataSaya(
       );
     }
   }
+}
+
+/// Susun data unduhan menjadi teks yang enak dibaca manusia.
+String _dataKeTeks(Map<String, dynamic> data) {
+  final b = StringBuffer();
+  b.writeln('DATA SAYA DI KUTEMUKAN');
+  b.writeln('Diunduh pada: ${data['diunduh_pada']}');
+  b.writeln('');
+  final profil = Map<String, dynamic>.from(data['profil'] as Map);
+  b.writeln('PROFIL');
+  for (final k in [
+    'nama',
+    'nama_tampilan',
+    'npm',
+    'prodi',
+    'fakultas',
+    'kelas',
+    'wa',
+    'peran',
+  ]) {
+    final v = (profil[k] ?? '').toString();
+    if (v.isNotEmpty) b.writeln('$k: $v');
+  }
+  b.writeln('');
+  void daftar(String judul, String kunci, List<String> kolom) {
+    final rows = List<Map<String, dynamic>>.from(data[kunci] as List);
+    b.writeln('$judul (${rows.length})');
+    for (final r in rows) {
+      final isi = kolom
+          .map((k) => (r[k] ?? '').toString())
+          .where((v) => v.isNotEmpty)
+          .join(' | ');
+      b.writeln('- $isi');
+    }
+    b.writeln('');
+  }
+
+  daftar('POSTINGAN', 'postingan', ['jenis', 'judul', 'kategori', 'status', 'lokasi', 'created_at']);
+  daftar('KLAIM', 'klaim', ['status', 'pesan', 'created_at']);
+  daftar('NOTIFIKASI', 'notifikasi', ['judul', 'isi', 'created_at']);
+  return b.toString();
+}
+
+/// Susun data unduhan menjadi PDF sederhana yang rapi.
+Future<Uint8List> _dataKePdf(Map<String, dynamic> data) async {
+  final doc = pw.Document();
+  final profil = Map<String, dynamic>.from(data['profil'] as Map);
+  pw.Widget bagian(String judul, List<List<String>> baris) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.SizedBox(height: 14),
+        pw.Text(
+          judul,
+          style: pw.TextStyle(fontSize: 13, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 6),
+        if (baris.isEmpty)
+          pw.Text('Tidak ada data.', style: const pw.TextStyle(fontSize: 10))
+        else
+          pw.TableHelper.fromTextArray(
+            headers: null,
+            data: baris,
+            cellStyle: const pw.TextStyle(fontSize: 9),
+            cellAlignment: pw.Alignment.topLeft,
+          ),
+      ],
+    );
+  }
+
+  List<List<String>> ambil(String kunci, List<String> kolom) {
+    return [
+      for (final r in List<Map<String, dynamic>>.from(data[kunci] as List))
+        [for (final k in kolom) (r[k] ?? '').toString()],
+    ];
+  }
+
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(36),
+      build: (_) => [
+        pw.Text(
+          'Data Saya di KutemuKan',
+          style: pw.TextStyle(fontSize: 19, fontWeight: pw.FontWeight.bold),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          'Diunduh pada ${data['diunduh_pada']}',
+          style: const pw.TextStyle(fontSize: 10),
+        ),
+        bagian('Profil', [
+          for (final k in ['nama', 'nama_tampilan', 'npm', 'prodi', 'fakultas', 'kelas', 'wa', 'peran'])
+            if ((profil[k] ?? '').toString().isNotEmpty)
+              [k, (profil[k]).toString()],
+        ]),
+        bagian('Postingan', ambil('postingan', ['jenis', 'judul', 'kategori', 'status', 'lokasi'])),
+        bagian('Klaim', ambil('klaim', ['status', 'pesan', 'created_at'])),
+        bagian('Notifikasi', ambil('notifikasi', ['judul', 'isi', 'created_at'])),
+      ],
+    ),
+  );
+  return doc.save();
 }
 
 /// Hapus akun mandiri: konfirmasi ketat (ketik HAPUS), permintaan

@@ -184,14 +184,7 @@ class _LayarDaftarChatState extends State<LayarDaftarChat> {
                     final belum = (c['belum_dibaca'] as num?)?.toInt() ?? 0;
                     final ditutup = c['status'] == 'ditutup';
                     return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: foto.isNotEmpty
-                            ? NetworkImage(foto)
-                            : null,
-                        child: foto.isEmpty
-                            ? Text(nama.isNotEmpty ? nama[0].toUpperCase() : '?')
-                            : null,
-                      ),
+                      leading: AvatarPengguna(nama: nama, foto: foto),
                       title: Row(
                         children: [
                           Expanded(
@@ -755,13 +748,7 @@ class _LayarChatState extends State<LayarChat> {
         titleSpacing: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 17,
-              backgroundImage: foto.isNotEmpty ? NetworkImage(foto) : null,
-              child: foto.isEmpty
-                  ? Text(nama.isNotEmpty ? nama[0].toUpperCase() : '?')
-                  : null,
-            ),
+            AvatarPengguna(nama: nama, foto: foto, radius: 17),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

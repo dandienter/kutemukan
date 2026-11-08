@@ -23,16 +23,7 @@ class LayarPahlawan extends StatelessWidget {
   Widget _avatar(Map<String, dynamic> r, double radius) {
     final foto = (r['foto_pemilik'] ?? '').toString();
     final nama = (r['nama_pemilik'] ?? 'P').toString();
-    return CircleAvatar(
-      radius: radius,
-      backgroundImage: foto.isNotEmpty ? NetworkImage(foto) : null,
-      child: foto.isEmpty
-          ? Text(
-              nama.isNotEmpty ? nama[0].toUpperCase() : 'P',
-              style: TextStyle(fontSize: radius * 0.8),
-            )
-          : null,
-    );
+    return AvatarPengguna(nama: nama, foto: foto, radius: radius);
   }
 
   Widget _kolomPodium(Map<String, dynamic> r, int peringkat, double tinggi) {

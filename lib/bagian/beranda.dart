@@ -41,7 +41,6 @@ String labelStatus(String s) {
 class KartuPostingan extends StatelessWidget {
   final Map<String, dynamic> post;
   final VoidCallback? onTap;
-  final bool tampilStatus;
   final void Function(String aksi)? onAksi;
   final VoidCallback? onUp;
   final bool sudahUp;
@@ -49,7 +48,6 @@ class KartuPostingan extends StatelessWidget {
     super.key,
     required this.post,
     this.onTap,
-    this.tampilStatus = false,
     this.onAksi,
     this.onUp,
     this.sudahUp = false,
@@ -96,28 +94,7 @@ class KartuPostingan extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
-                        radius: 17,
-                        backgroundImage:
-                            ((post['foto_pemilik'] ?? '')
-                                .toString()
-                                .isNotEmpty)
-                            ? NetworkImage(
-                                (post['foto_pemilik']).toString(),
-                              )
-                            : null,
-                        child:
-                            ((post['foto_pemilik'] ?? '')
-                                .toString()
-                                .isEmpty)
-                            ? Text(
-                                nama.isNotEmpty
-                                    ? nama[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(fontSize: 14),
-                              )
-                            : null,
-                      ),
+                      AvatarPengguna(nama: nama, foto: (post['foto_pemilik'] ?? '').toString(), radius: 17),
                       const SizedBox(width: 9),
                       Flexible(
                         child: Text(
@@ -138,15 +115,6 @@ class KartuPostingan extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (tampilStatus)
-                  Text(
-                    labelStatus(post['status'] ?? ''),
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w700,
-                      color: warnaStatus(post['status'] ?? ''),
-                    ),
-                  ),
                 if (onAksi != null)
                   PopupMenuButton<String>(
                     onSelected: onAksi,
@@ -636,7 +604,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
       final rows = await sb
           .from('lf_posts')
           .select()
-          .eq('status', 'tampil')
+          .inFilter('status', ['tampil', 'kembali'])
           .order('created_at', ascending: false)
           .limit(100);
       final data = List<Map<String, dynamic>>.from(rows);
@@ -739,7 +707,11 @@ class _LayarBerandaState extends State<LayarBeranda> {
   }
 
   bool _lolos(Map<String, dynamic> p) {
-    if (_jenis != 'semua' && p['jenis'] != _jenis) return false;
+    if (_jenis == 'kembali') {
+      if (p['status'] != 'kembali') return false;
+    } else if (_jenis == 'hilang' || _jenis == 'temuan') {
+      if (p['status'] != 'tampil' || p['jenis'] != _jenis) return false;
+    }
     if (_cari.isNotEmpty &&
         !(p['judul'] ?? '').toString().toLowerCase().contains(_cari)) {
       return false;
@@ -930,29 +902,65 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                   }
                                   int angka(String k) =>
                                       (s[k] as num?)?.toInt() ?? 0;
-                                  Widget sel(String label, int nilai) =>
-                                      Expanded(
+                                  Widget sel(
+                                    String label,
+                                    int nilai,
+                                    String saring,
+                                  ) => Expanded(
+                                    child: InkWell(
+                                      onTap: () =>
+                                          setState(() => _jenis = saring),
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 4,
+                                        ),
                                         child: Column(
                                           children: [
-                                            Text(
-                                              '$nilai',
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.white,
+                                            TweenAnimationBuilder<int>(
+                                              tween: IntTween(
+                                                begin: 0,
+                                                end: nilai,
+                                              ),
+                                              duration: const Duration(
+                                                milliseconds: 800,
+                                              ),
+                                              curve: Curves.easeOutCubic,
+                                              builder: (_, v, __) => Text(
+                                                '$v',
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                ),
                                               ),
                                             ),
                                             Text(
                                               label,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 10.5,
-                                                color: Colors.white70,
+                                                fontWeight: _jenis == saring
+                                                    ? FontWeight.w800
+                                                    : FontWeight.w400,
+                                                color: _jenis == saring
+                                                    ? Colors.white
+                                                    : Colors.white70,
+                                                decoration: _jenis == saring
+                                                    ? TextDecoration.underline
+                                                    : null,
                                               ),
                                               textAlign: TextAlign.center,
                                             ),
                                           ],
                                         ),
-                                      );
+                                      ),
+                                    ),
+                                  );
+                                  final totalS = angka('total');
+                                  final kembaliS = angka('kembali');
+                                  final rasioS = totalS == 0
+                                      ? 0.0
+                                      : kembaliS / totalS;
                                   return Column(
                                     children: [
                                       const Padding(
@@ -966,18 +974,80 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                       ),
                                       Row(
                                         children: [
-                                          sel(tr('Total Barang'), angka('total')),
-                                          sel(tr('Hilang'), angka('hilang')),
+                                          sel(
+                                            tr('Total Barang'),
+                                            totalS,
+                                            'semua',
+                                          ),
+                                          sel(
+                                            tr('Hilang'),
+                                            angka('hilang'),
+                                            'hilang',
+                                          ),
                                           sel(
                                             tr('Ditemukan'),
                                             angka('temuan'),
+                                            'temuan',
                                           ),
                                           sel(
                                             tr('Sudah kembali'),
-                                            angka('kembali'),
+                                            kembaliS,
+                                            'kembali',
                                           ),
                                         ],
                                       ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.verified_outlined,
+                                            size: 15,
+                                            color: Colors.white,
+                                          ),
+                                          const SizedBox(width: 5),
+                                          Text(
+                                            tr(
+                                              'Tingkat keberhasilan pengembalian',
+                                            ),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11.5,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          const Spacer(),
+                                          Text(
+                                            '${(rasioS * 100).toStringAsFixed(0)}%',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 5),
+                                      TweenAnimationBuilder<double>(
+                                        tween: Tween<double>(
+                                          begin: 0,
+                                          end: rasioS,
+                                        ),
+                                        duration: const Duration(
+                                          milliseconds: 900,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        builder: (_, v, __) => ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(99),
+                                          child: LinearProgressIndicator(
+                                            value: v,
+                                            minHeight: 6,
+                                            backgroundColor: Colors.white24,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
                                     ],
                                   );
                                 },
@@ -1031,25 +1101,42 @@ class _LayarBerandaState extends State<LayarBeranda> {
                           ),
                           child: Row(
                             children: [
-                              for (final j in ['semua', 'hilang', 'temuan'])
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 6),
-                                  child: ChoiceChip(
-                                    label: Text(
-                                      tr(
-                                        j == 'semua'
-                                            ? 'Semua'
-                                            : (j == 'hilang'
-                                                  ? 'Kehilangan'
-                                                  : 'Ditemukan'),
-                                      ),
-                                    ),
-                                    selected: _jenis == j,
-                                    onSelected: (_) =>
-                                        setState(() => _jenis = j),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: Row(
+                                    children: [
+                                      for (final j in [
+                                        'semua',
+                                        'hilang',
+                                        'temuan',
+                                        'kembali',
+                                      ])
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            right: 6,
+                                          ),
+                                          child: ChoiceChip(
+                                            label: Text(
+                                              tr(
+                                                j == 'semua'
+                                                    ? 'Semua'
+                                                    : (j == 'hilang'
+                                                          ? 'Kehilangan'
+                                                          : (j == 'temuan'
+                                                                ? 'Ditemukan'
+                                                                : 'Sudah Kembali')),
+                                              ),
+                                            ),
+                                            selected: _jenis == j,
+                                            onSelected: (_) =>
+                                                setState(() => _jenis = j),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                 ),
-                              const Spacer(),
+                              ),
                               PopupMenuButton<String>(
                                 tooltip: tr('Urutkan dan saring waktu'),
                                 icon: const Icon(
@@ -1190,7 +1277,6 @@ class _LayarBerandaState extends State<LayarBeranda> {
                           itemCount: daftar.length,
                           itemBuilder: (_, i) => KartuPostingan(
                             post: daftar[i],
-                            tampilStatus: saya,
                             onAksi: saya
                                 ? (a) => _aksiSaya(daftar[i], a)
                                 : null,

@@ -160,6 +160,17 @@ class _LayarLoginState extends State<LayarLogin> {
                     color: skema.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 6),
+                Text(
+                  tr('Yang hilang dicariin, yang nemu dibalikin.'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontStyle: FontStyle.italic,
+                    fontWeight: FontWeight.w600,
+                    color: kBiru,
+                  ),
+                ),
                 const SizedBox(height: 16),
                 _formSika ? _kartuSika(skema) : _kartuEmail(skema),
                 const SizedBox(height: 14),

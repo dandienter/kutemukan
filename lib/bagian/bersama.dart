@@ -105,14 +105,94 @@ class TransisiHalus extends PageTransitionsBuilder {
     Widget child,
   ) {
     final kurva = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+    final redup = CurvedAnimation(
+      parent: secondaryAnimation,
+      curve: Curves.easeOutCubic,
+    );
     return FadeTransition(
-      opacity: kurva,
-      child: SlideTransition(
+      opacity: Tween<double>(begin: 1, end: 0.55).animate(redup),
+      child: FadeTransition(
+        opacity: kurva,
+        child: SlideTransition(
         position: Tween<Offset>(
           begin: const Offset(0.05, 0),
           end: Offset.zero,
         ).animate(kurva),
-        child: child,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// Avatar pengguna terpadu untuk semua layar: foto dimuat lewat cache
+/// disk, selama memuat dan bila foto tidak ada atau gagal dimuat tampil
+/// inisial nama dengan warna latar yang konsisten per pengguna.
+class AvatarPengguna extends StatelessWidget {
+  final String nama;
+  final String? foto;
+  final double radius;
+  const AvatarPengguna({
+    super.key,
+    required this.nama,
+    this.foto,
+    this.radius = 20,
+  });
+
+  String get _inisial {
+    final kata = nama
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((k) => k.isNotEmpty)
+        .toList();
+    if (kata.isEmpty) return '?';
+    if (kata.length == 1) return kata[0][0].toUpperCase();
+    return (kata[0][0] + kata[1][0]).toUpperCase();
+  }
+
+  Color get _warna {
+    const palet = [
+      Color(0xFF0061C9),
+      Color(0xFF1E7A34),
+      Color(0xFFB3540E),
+      Color(0xFF7A3E9D),
+      Color(0xFF0E7C86),
+      Color(0xFFB02A4A),
+      Color(0xFF5B6ABF),
+      Color(0xFF8A6D1D),
+    ];
+    var h = 0;
+    for (final c in nama.codeUnits) {
+      h = (h * 31 + c) % 9973;
+    }
+    return palet[h % palet.length];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final url = (foto ?? '').trim();
+    final cadangan = CircleAvatar(
+      radius: radius,
+      backgroundColor: _warna.withOpacity(0.16),
+      child: Text(
+        _inisial,
+        style: TextStyle(
+          color: _warna,
+          fontWeight: FontWeight.w700,
+          fontSize: radius * 0.78,
+        ),
+      ),
+    );
+    if (url.isEmpty) return cadangan;
+    final d = radius * 2;
+    return ClipOval(
+      child: CachedNetworkImage(
+        imageUrl: url,
+        width: d,
+        height: d,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => SizedBox(width: d, height: d, child: cadangan),
+        errorWidget: (_, __, ___) => cadangan,
       ),
     );
   }
