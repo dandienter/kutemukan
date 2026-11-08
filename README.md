@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.8.0** (Android, arm64)
+Versi saat ini: **1.8.1** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.8.1**: garis bawah pada sel statistik Beranda yang aktif dihapus (penanda aktif cukup huruf tebal dan warna penuh), redaksi tagline diluruskan menjadi "Yang Hilang Dicariin, Yang Ketemu Dibalikin" di aplikasi, web, dan proposal, dan halaman masuk dipadatkan (logo dan jarak dirampingkan, halaman tidak bisa digulir lagi).
 - **1.8.0**: teks status di sebelah nama dan chip status/jenis di rincian dihapus, statistik publik Beranda jadi interaktif (angka count-up, ketuk untuk menyaring, Tingkat Keberhasilan Pengembalian dengan bilah animasi), papan ikut menampilkan postingan sudah kembali dengan saringan "Sudah Kembali", barang yang sudah diklaim terkunci dari klaim baru (aplikasi + SQL 21), Kemungkinan Cocok diketatkan (ambang 0,42, gerbang kategori/kata, penalti konflik warna, stopwords kampus, ambang AI 0,50), avatar disatukan lewat widget AvatarPengguna bercache dan foto Google tersalin otomatis ke profil kosong, tagline resmi tampil di halaman masuk, Tentang, dan web, peringkat pengguna di statistik admin dibatasi 8 teratas dengan halaman Lihat Semua yang bisa dicari, Unduh Data Saya bisa memilih format (JSON, TXT, PDF) dan tempat menyimpan, serta transisi halaman diperhalus dengan redup kedalaman.
 - **1.7.9**: stempel SUDAH KEMBALI ala cap karet untuk postingan yang barangnya sudah kembali (foto diredupkan, tampil di kartu, rincian, dan kartu bagikan), badge Hilang/Temuan di kepala kartu dihapus dan status di Postinganku menjadi teks berwarna polos, dan serah terima yang selesai kini memberi getar sedang sebagai penanda.
 - **1.7.8**: lencana angka posisi foto pada kartu diganti titik penanda halus di bawah foto, semua foto papan dan rincian dimuat lewat cache di perangkat supaya tidak mengunduh ulang saat digulir, form pendaftaran email kini meminta nama lengkap sejak awal, dan tampilan status kosong dirapikan (teks kini rata tengah dengan ruang tepi yang layak).
