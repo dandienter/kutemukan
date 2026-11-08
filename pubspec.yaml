@@ -65,3 +65,9 @@ flutter_native_splash:
   color: "#0061C9"
   android_12:
     color: "#0061C9"
+
+dependency_overrides:
+  # file_picker 8.1.7 terkompilasi dengan Android SDK 34, sedangkan
+  # flutter_plugin_android_lifecycle terbaru menuntut SDK 36 dan membuat
+  # pemeriksaan metadata AAR Gradle gagal. Kunci di 2.0.22 (SDK 34).
+  flutter_plugin_android_lifecycle: 2.0.22
