@@ -5,7 +5,10 @@ part of '../main.dart';
 // ===========================================================================
 
 class LayarStatistik extends StatefulWidget {
-  const LayarStatistik({super.key});
+  /// Statistik publik hanya berisi angka gabungan postingan.
+  /// Daftar pengguna, kritik & saran, dan laporan hanya untuk admin.
+  final bool admin;
+  const LayarStatistik({super.key, this.admin = false});
 
   @override
   State<LayarStatistik> createState() => _LayarStatistikState();
@@ -22,19 +25,23 @@ class _LayarStatistikState extends State<LayarStatistik> {
             'user_id, jenis, status, up_count, views_count, kategori, created_at',
           ),
     );
-    final users = List<Map<String, dynamic>>.from(
-      await sb.from('lf_profiles').select('id, nama, foto_url'),
-    );
+    final users = widget.admin
+        ? List<Map<String, dynamic>>.from(
+            await sb.from('lf_profiles').select('id, nama, foto_url'),
+          )
+        : <Map<String, dynamic>>[];
     final klaim = List<Map<String, dynamic>>.from(
       await sb.from('lf_claims').select('user_id, status, created_at'),
     );
-    final ulasan = List<Map<String, dynamic>>.from(
-      await sb
-          .from('lf_feedback')
-          .select('user_id, bintang, isi, created_at')
-          .order('created_at', ascending: false)
-          .limit(30),
-    );
+    final ulasan = widget.admin
+        ? List<Map<String, dynamic>>.from(
+            await sb
+                .from('lf_feedback')
+                .select('user_id, bintang, isi, created_at')
+                .order('created_at', ascending: false)
+                .limit(30),
+          )
+        : <Map<String, dynamic>>[];
     return {'posts': posts, 'users': users, 'klaim': klaim, 'ulasan': ulasan};
   }
 
@@ -311,13 +318,14 @@ child: ListView(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  kartu('${users.length}', 'Pengguna', Icons.people_outline),
+                  if (widget.admin) kartu('${users.length}', 'Pengguna', Icons.people_outline),
                   kartu('$tampil', 'Tampil di Papan', Icons.dashboard_outlined),
-                  kartu(
-                    '$menunggu',
-                    'Menunggu Moderasi',
-                    Icons.hourglass_empty,
-                  ),
+                  if (widget.admin)
+                    kartu(
+                      '$menunggu',
+                      'Menunggu Moderasi',
+                      Icons.hourglass_empty,
+                    ),
                   kartu('$kembali', 'Sudah Kembali', Icons.verified_outlined),
                   kartu('$hilangAktif', 'Hilang Aktif', Icons.search_off),
                   kartu(
@@ -335,16 +343,18 @@ child: ListView(
                     'Total Dilihat',
                     Icons.visibility_outlined,
                   ),
-                  kartu(
-                    rataBintang == 0 ? '-' : rataBintang.toStringAsFixed(1),
-                    'Rata-rata Bintang',
-                    Icons.star_outline,
-                  ),
-                  kartu(
-                    '$klaimDitolak',
-                    'Klaim Ditolak',
-                    Icons.block_outlined,
-                  ),
+                  if (widget.admin)
+                    kartu(
+                      rataBintang == 0 ? '-' : rataBintang.toStringAsFixed(1),
+                      'Rata-rata Bintang',
+                      Icons.star_outline,
+                    ),
+                  if (widget.admin)
+                    kartu(
+                      '$klaimDitolak',
+                      'Klaim Ditolak',
+                      Icons.block_outlined,
+                    ),
                   kartu(
                     rataHariKembali == 0
                         ? '-'
@@ -468,6 +478,7 @@ child: ListView(
                     ],
                   ),
                 ),
+              if (widget.admin) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -572,6 +583,7 @@ child: ListView(
                     ),
                   ),
                 ),
+              ],
             ],
           )
 );

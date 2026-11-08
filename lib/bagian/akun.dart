@@ -624,7 +624,7 @@ child: ListView(
                 subtitle: Text(tr('Pengguna, keberhasilan, dan aktivitas klaim')),
                 trailing: const Icon(Icons.chevron_right, size: 19),
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LayarStatistik()),
+                  MaterialPageRoute(builder: (_) => const LayarStatistik(admin: true)),
                 ),
               ),
               ListTile(

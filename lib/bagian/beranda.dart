@@ -667,7 +667,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                             'semua',
                             tr('Lihat Statistik >'),
                             aksiBawah: () => Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const LayarStatistik()),
+                              MaterialPageRoute(builder: (_) => LayarStatistik(admin: widget.profil['peran'] == 'admin')),
                             ),
                           ),
                           VerticalDivider(color: Colors.grey.shade300, width: 24),
