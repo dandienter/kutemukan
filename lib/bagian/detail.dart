@@ -499,8 +499,11 @@ class _LayarDetailState extends State<LayarDetail> {
     final dilihat = (_post['views_count'] as num?)?.toInt() ?? 0;
     final ups = (_post['up_count'] as num?)?.toInt() ?? 0;
     return Scaffold(
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(16, MediaQuery.of(context).padding.top + 12, 16, 16),
+      body: SafeArea(
+        top: true,
+        bottom: false,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
         children: [
           _kepalaDetail(context, foto),
           if ((_post['penitipan'] ?? '').toString().isNotEmpty) ...[
@@ -598,7 +601,8 @@ class _LayarDetailState extends State<LayarDetail> {
             ..._bagianPengunjung(),
           const Divider(height: 32),
           ..._bagianKomentar(),
-        ],
+          ],
+        ),
       ),
       bottomNavigationBar: _ctaBawah(),
     );
@@ -784,91 +788,88 @@ class _LayarDetailState extends State<LayarDetail> {
     );
 
     if (foto.isEmpty) return kartu;
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 30),
-          child: Stack(
-            children: [
-              if (kembali)
-                ColorFiltered(
-                  colorFilter: kFilterFotoRedup,
-                  child: _pagerHero(foto),
-                )
-              else
-                _pagerHero(foto),
-              if (kembali)
-                const Positioned.fill(
-                  child: IgnorePointer(child: Center(child: StempelKembali(ukuran: 21))),
-                )
-              else
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Center(
-                      child: StempelJenis(
-                        jenis: (_post['jenis'] ?? 'hilang').toString(),
-                        ukuran: 21,
-                      ),
+        Stack(
+          children: [
+            if (kembali)
+              ColorFiltered(
+                colorFilter: kFilterFotoRedup,
+                child: _pagerHero(foto),
+              )
+            else
+              _pagerHero(foto),
+            if (kembali)
+              const Positioned.fill(
+                child: IgnorePointer(child: Center(child: StempelKembali(ukuran: 21))),
+              )
+            else
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Center(
+                    child: StempelJenis(
+                      jenis: (_post['jenis'] ?? 'hilang').toString(),
+                      ukuran: 21,
                     ),
                   ),
                 ),
-              Positioned(
-                top: 10,
-                left: 10,
-                child: tombolFoto(
-                  Icons.arrow_back,
-                  tr('Kembali'),
-                  () => Navigator.of(context).pop(),
-                ),
               ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Row(
-                  children: [
-                    tombolFoto(
-                      Icons.share_outlined,
-                      tr('Bagikan'),
-                      () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => LayarBagikan(post: _post)),
-                      ),
+            Positioned(
+              top: 10,
+              left: 10,
+              child: tombolFoto(
+                Icons.arrow_back,
+                tr('Kembali'),
+                () => Navigator.of(context).pop(),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Row(
+                children: [
+                  tombolFoto(
+                    Icons.share_outlined,
+                    tr('Bagikan'),
+                    () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LayarBagikan(post: _post)),
                     ),
-                    if (_punyaSaya && _post['status'] != 'kembali') ...[
-                      const SizedBox(width: 8),
-                      tombolFoto(Icons.edit_outlined, tr('Ubah'), _ubahPost),
-                    ],
-                    if (!_punyaSaya) ...[
-                      const SizedBox(width: 8),
-                      tombolFoto(Icons.flag_outlined, tr('Laporkan'), _laporkan),
-                    ],
+                  ),
+                  if (_punyaSaya && _post['status'] != 'kembali') ...[
+                    const SizedBox(width: 8),
+                    tombolFoto(Icons.edit_outlined, tr('Ubah'), _ubahPost),
                   ],
-                ),
+                  if (!_punyaSaya) ...[
+                    const SizedBox(width: 8),
+                    tombolFoto(Icons.flag_outlined, tr('Laporkan'), _laporkan),
+                  ],
+                ],
               ),
-              if (foto.length > 1)
-                Positioned(
-                  right: 12,
-                  bottom: 10,
-                  child: Row(
-                    children: List.generate(
-                      foto.length,
-                      (i) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 2.5),
-                        width: 6.5,
-                        height: 6.5,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _fotoKe == i ? Colors.white : Colors.white.withOpacity(0.5),
-                          boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 3)],
-                        ),
+            ),
+            if (foto.length > 1)
+              Positioned(
+                right: 12,
+                bottom: 10,
+                child: Row(
+                  children: List.generate(
+                    foto.length,
+                    (i) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 2.5),
+                      width: 6.5,
+                      height: 6.5,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _fotoKe == i ? Colors.white : Colors.white.withOpacity(0.5),
+                        boxShadow: const [BoxShadow(color: Colors.black38, blurRadius: 3)],
                       ),
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
-        Positioned(left: 2, right: 2, bottom: 0, child: kartu),
+        const SizedBox(height: 10),
+        kartu,
       ],
     );
   }

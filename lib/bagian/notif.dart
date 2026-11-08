@@ -241,7 +241,7 @@ class _LayarNotifState extends State<LayarNotif> {
     if (_modePilih) {
       return Row(
         children: [
-          IconButton(
+          IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
             icon: const Icon(Icons.close),
             onPressed: _keluarModePilih,
           ),
@@ -252,12 +252,12 @@ class _LayarNotifState extends State<LayarNotif> {
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           const Spacer(),
-          IconButton(
+          IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
             icon: const Icon(Icons.select_all),
             tooltip: tr('Pilih semua'),
             onPressed: _pilihSemua,
           ),
-          IconButton(
+          IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
             icon: const Icon(Icons.delete_outline),
             tooltip: tr('Hapus'),
             onPressed: _dipilih.isEmpty ? null : _hapusTerpilih,
@@ -268,13 +268,13 @@ class _LayarNotifState extends State<LayarNotif> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        IconButton(
+        IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
           key: kunciPanduanNotif,
           icon: const Icon(Icons.done_all),
           tooltip: tr('Tandai semua dibaca'),
           onPressed: _tandaiSemuaDibaca,
         ),
-        IconButton(
+        IconButton(visualDensity: VisualDensity.compact, iconSize: 21,
           icon: const Icon(Icons.checklist),
           tooltip: tr('Pilih'),
           onPressed: () => _masukModePilih(null),
@@ -347,6 +347,7 @@ class _LayarNotifState extends State<LayarNotif> {
             },
             child: ListView.builder(
               physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(top: 2, bottom: 10),
               itemCount: data.length,
               itemBuilder: (_, i) {
                 final n = data[i];
@@ -362,6 +363,7 @@ class _LayarNotifState extends State<LayarNotif> {
                   ),
                   onDismissed: (_) => _hapus(n),
                   child: ListTile(
+                    visualDensity: const VisualDensity(vertical: -1),
                     leading: _modePilih
                         ? Checkbox(
                             value: _dipilih.contains(

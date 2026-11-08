@@ -254,13 +254,14 @@ class _LayarPengumumanState extends State<LayarPengumuman> {
             return Center(child: Text(tr('Belum ada pengumuman baru nih.')));
           }
           return ListView.builder(
+            padding: EdgeInsets.only(top: widget.sematkan ? 6 : 0, bottom: 12),
             itemCount: data.length,
             itemBuilder: (_, i) {
               final p = data[i];
               return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                margin: EdgeInsets.symmetric(horizontal: 12, vertical: widget.sematkan ? 4 : 5),
                 child: Padding(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

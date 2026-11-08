@@ -574,14 +574,6 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     ),
                   ),
                   tombolCepat(
-                    Icons.forum_outlined,
-                    tr('Chat'),
-                    () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LayarDaftarChat()),
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  tombolCepat(
                     Icons.notifications_outlined,
                     tr('Notifikasi'),
                     () => Navigator.of(context).push(
@@ -616,27 +608,36 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     int angka(String k) => (s[k] as num?)?.toInt() ?? 0;
                     Widget sel(String label, int nilai, String saring, String bawah, {VoidCallback? aksiBawah}) {
                       return Expanded(
-                        child: InkWell(
-                          onTap: () => setState(() => _jenis = saring),
-                          borderRadius: BorderRadius.circular(10),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                label,
-                                style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            InkWell(
+                              onTap: () => setState(() => _jenis = saring),
+                              borderRadius: BorderRadius.circular(8),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    label,
+                                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w600),
+                                  ),
+                                  TweenAnimationBuilder<int>(
+                                    tween: IntTween(begin: 0, end: nilai),
+                                    duration: const Duration(milliseconds: 800),
+                                    curve: Curves.easeOutCubic,
+                                    builder: (_, v, __) => Text(
+                                      '$v',
+                                      style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              TweenAnimationBuilder<int>(
-                                tween: IntTween(begin: 0, end: nilai),
-                                duration: const Duration(milliseconds: 800),
-                                curve: Curves.easeOutCubic,
-                                builder: (_, v, __) => Text(
-                                  '$v',
-                                  style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w800),
-                                ),
-                              ),
-                              InkWell(
-                                onTap: aksiBawah,
+                            ),
+                            InkWell(
+                              onTap: aksiBawah ?? () => setState(() => _jenis = saring),
+                              borderRadius: BorderRadius.circular(6),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 3),
                                 child: Text(
                                   bawah,
                                   style: TextStyle(
@@ -646,8 +647,8 @@ class _LayarBerandaState extends State<LayarBeranda> {
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       );
                     }
@@ -1068,18 +1069,21 @@ class _LayarBerandaState extends State<LayarBeranda> {
             final namaSapaan = namaRapi(
               (widget.profil['nama'] ?? '').toString(),
             );
-            return Stack(
+            return Column(
               children: [
-                RefreshIndicator(
-                  onRefresh: () async {
-                    _segarkan();
-                    await (saya ? _fSaya : _fSemua);
-                  },
-                  child: CustomScrollView(
+                _kepalaBeranda(context, namaSapaan),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      RefreshIndicator(
+                        onRefresh: () async {
+                          _segarkan();
+                          await (saya ? _fSaya : _fSemua);
+                        },
+                        child: CustomScrollView(
                     controller: _gulir,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      SliverToBoxAdapter(child: _kepalaBeranda(context, namaSapaan)),
                       if (!saya) SliverToBoxAdapter(child: _bannerPengumuman()),
                       if (!saya) SliverToBoxAdapter(child: _bannerMaskot(context)),
                       SliverToBoxAdapter(
@@ -1389,6 +1393,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                       ),
                     ),
                   ),
+                    ],
+                  ),
+                ),
               ],
             );
           },

@@ -31,6 +31,7 @@ class _LayarBuatState extends State<LayarBuat> {
   // Lapor Cepat: satu kalimat cerita diuraikan menjadi isian formulir.
   final _cepat = TextEditingController();
   HasilLaporCepat? _hasilCepat;
+  bool _cepatTerbuka = false;
   List<HasilCocok> _kandidatCepat = [];
   bool _sibukCepat = false;
 
@@ -240,7 +241,7 @@ class _LayarBuatState extends State<LayarBuat> {
                 if (!_modeUbah) ...[
                   Card(
                     key: kunciPanduanCepat,
-                    color: kBiru.withOpacity(0.07),
+                    color: Theme.of(context).colorScheme.surface,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                       side: BorderSide(color: kBiru.withOpacity(0.35)),
@@ -250,23 +251,36 @@ class _LayarBuatState extends State<LayarBuat> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.bolt,
-                                size: 19,
-                                color: kBiru,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                tr('Lapor Cepat'),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 15.5,
+                          InkWell(
+                            onTap: () =>
+                                setState(() => _cepatTerbuka = !_cepatTerbuka),
+                            borderRadius: BorderRadius.circular(8),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.bolt,
+                                  size: 19,
+                                  color: kBiru,
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  tr('Lapor Cepat'),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.5,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  _cepatTerbuka
+                                      ? Icons.expand_less
+                                      : Icons.expand_more,
+                                  color: kBiru,
+                                ),
+                              ],
+                            ),
                           ),
+                          if (_cepatTerbuka) ...[
                           const SizedBox(height: 4),
                           Text(
                             tr(
@@ -420,6 +434,7 @@ class _LayarBuatState extends State<LayarBuat> {
                                   ),
                                 ),
                               ),
+                          ],
                           ],
                         ],
                       ),
@@ -655,7 +670,7 @@ class _LayarBuatState extends State<LayarBuat> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(flex: 3, child:
+                    Expanded(flex: 5, child:
                 DropdownButtonFormField<String>(
                   value: _kategori,
                   items: kKategori
@@ -665,7 +680,7 @@ class _LayarBuatState extends State<LayarBuat> {
                   decoration: _rapat(tr('Kategori')),
                 ),),
                     const SizedBox(width: 10),
-                    Expanded(flex: 2, child:
+                    Expanded(flex: 4, child:
                 InkWell(
                   onTap: () async {
                     final tgl = await showDatePicker(
@@ -697,7 +712,14 @@ class _LayarBuatState extends State<LayarBuat> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(fmtTanggal(_waktu.toIso8601String())),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              fmtTanggal(_waktu.toIso8601String()),
+                              maxLines: 1,
+                            ),
+                          ),
                         ),
                         const Icon(
                           Icons.edit_calendar_outlined,

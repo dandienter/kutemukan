@@ -182,6 +182,20 @@ class _LayarLoginState extends State<LayarLogin> {
                   ],
                 ),
                 const SizedBox(height: 10),
+                if (!_formSika) ...[
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () => setState(() => _formSika = true),
+                    icon: const Icon(Icons.school, size: 22, color: kBiru),
+                    label: Text(tr('Masuk dengan SIKA')),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
@@ -197,20 +211,6 @@ class _LayarLoginState extends State<LayarLogin> {
                   ),
                   label: Text(tr('Masuk dengan Google')),
                 ),
-                if (!_formSika) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    onPressed: () => setState(() => _formSika = true),
-                    icon: const Icon(Icons.school, size: 22, color: kBiru),
-                    label: Text(tr('Masuk dengan SIKA')),
-                  ),
-                ],
                 const SizedBox(height: 14),
                 Text(
                   '© 2026 KutemuKan',

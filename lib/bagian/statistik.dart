@@ -164,19 +164,33 @@ class LayarStatistik extends StatelessWidget {
 
           Widget kartu(String angka, String label, IconData ikon) {
             return Card(
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: Colors.grey.shade200),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.fromLTRB(8, 12, 8, 10),
                 child: Column(
                   children: [
-                    Icon(ikon, color: kBiru),
-                    const SizedBox(height: 6),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: kBiruUtama.withOpacity(0.10),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(ikon, color: kBiruUtama, size: 18),
+                    ),
+                    const SizedBox(height: 7),
                     Text(
                       angka,
                       style: const TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       tr(label),
                       textAlign: TextAlign.center,
@@ -192,34 +206,16 @@ class LayarStatistik extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: [
               Card(
-                color: kBiru,
-                child: Padding(
+                clipBehavior: Clip.antiAlias,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Container(
+                  decoration: const BoxDecoration(gradient: kGradasiKepala),
                   padding: const EdgeInsets.all(18),
-                  child: Column(
+                  child: Row(
                     children: [
-                      Text(
-                        '$persen%',
-                        style: const TextStyle(
-                          fontSize: 40,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      Text(
-                        tr('Tingkat Keberhasilan'),
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                      Text(
-                        kBahasa.value == 'en'
-                            ? '$kembali of $diproses fully processed posts ended up back with their owners'
-                            : '$kembali dari $diproses postingan yang selesai diproses berakhir kembali ke pemiliknya',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
                       TweenAnimationBuilder<double>(
                         tween: Tween<double>(
                           begin: 0,
@@ -227,14 +223,66 @@ class LayarStatistik extends StatelessWidget {
                         ),
                         duration: const Duration(milliseconds: 900),
                         curve: Curves.easeOutCubic,
-                        builder: (_, v, __) => ClipRRect(
-                          borderRadius: BorderRadius.circular(99),
-                          child: LinearProgressIndicator(
-                            value: v,
-                            minHeight: 7,
-                            backgroundColor: Colors.white24,
-                            color: Colors.white,
-                          ),
+                        builder: (_, v, __) => Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 84,
+                              height: 84,
+                              child: CircularProgressIndicator(
+                                value: v,
+                                strokeWidth: 8,
+                                strokeCap: StrokeCap.round,
+                                backgroundColor: Colors.white24,
+                                color: Colors.white,
+                              ),
+                            ),
+                            Text(
+                              '$persen%',
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.verified_outlined,
+                                  size: 16,
+                                  color: Colors.white70,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  tr('Tingkat Keberhasilan'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              kBahasa.value == 'en'
+                                  ? '$kembali of $diproses fully processed posts ended up back with their owners'
+                                  : '$kembali dari $diproses postingan yang selesai diproses berakhir kembali ke pemiliknya',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12.5,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
@@ -244,6 +292,9 @@ class LayarStatistik extends StatelessWidget {
               const SizedBox(height: 10),
               GridView.count(
                 crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.92,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
@@ -298,13 +349,29 @@ class LayarStatistik extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Text(
-                tr('7 Hari Terakhir'),
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: kBiruUtama,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    tr('7 Hari Terakhir'),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               GridView.count(
                 crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+                childAspectRatio: 0.92,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
@@ -322,9 +389,22 @@ class LayarStatistik extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              Text(
-                tr('Kategori Terbanyak'),
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: kBiruUtama,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    tr('Kategori Terbanyak'),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               if (kategoriUrut.isEmpty) Text(tr('Belum ada aktivitas.')),
@@ -344,12 +424,20 @@ class LayarStatistik extends StatelessWidget {
                       ),
                       Expanded(
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: LinearProgressIndicator(
-                            value: e.value / maksKategori,
-                            minHeight: 12,
-                            color: kBiru,
-                            backgroundColor: kBiru.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(99),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween<double>(
+                              begin: 0,
+                              end: e.value / maksKategori,
+                            ),
+                            duration: const Duration(milliseconds: 700),
+                            curve: Curves.easeOutCubic,
+                            builder: (_, v, __) => LinearProgressIndicator(
+                              value: v,
+                              minHeight: 10,
+                              color: kBiruUtama,
+                              backgroundColor: kBiruUtama.withOpacity(0.12),
+                            ),
                           ),
                         ),
                       ),
@@ -368,9 +456,22 @@ class LayarStatistik extends StatelessWidget {
                   ),
                 ),
               const SizedBox(height: 16),
-              Text(
-                tr('Aktivitas Pengguna'),
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: kBiruUtama,
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    tr('Aktivitas Pengguna'),
+                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               Text(

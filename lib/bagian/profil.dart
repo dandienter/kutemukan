@@ -277,14 +277,16 @@ class LayarProfilPublik extends StatelessWidget {
   Future<Map<String, dynamic>> _muat() async {
     final peta = await ambilProfilPublik([userId]);
     final pub = peta[userId] ?? <String, dynamic>{};
-    int aktif = 0;
+    var posts = <Map<String, dynamic>>[];
     try {
       final rows = await sb
           .from('lf_posts')
-          .select('id')
+          .select(
+            'id, jenis, judul, status, foto_url, foto_urls, kategori, lokasi, waktu_kejadian, created_at, deskripsi, penitipan, up_count, views_count, user_id',
+          )
           .eq('user_id', userId)
-          .eq('status', 'tampil');
-      aktif = rows.length;
+          .order('created_at', ascending: false);
+      posts = List<Map<String, dynamic>>.from(rows);
     } catch (_) {}
     Map<String, dynamic> stat = {};
     try {
@@ -294,7 +296,7 @@ class LayarProfilPublik extends StatelessWidget {
           .eq('user_id', userId);
       if (rows.isNotEmpty) stat = Map<String, dynamic>.from(rows.first);
     } catch (_) {}
-    return {'pub': pub, 'aktif': aktif, 'stat': stat};
+    return {'pub': pub, 'posts': posts, 'stat': stat};
   }
 
   @override
@@ -309,7 +311,20 @@ class LayarProfilPublik extends StatelessWidget {
           }
           final pub = snap.data!['pub'] as Map<String, dynamic>;
           final stat = snap.data!['stat'] as Map<String, dynamic>;
-          final aktif = snap.data!['aktif'] as int;
+          final semuaPost =
+              (snap.data!['posts'] as List).cast<Map<String, dynamic>>();
+          final milikSaya = userId == (sb.auth.currentUser?.id ?? '');
+          final posts = milikSaya
+              ? semuaPost
+              : semuaPost
+                    .where(
+                      (x) =>
+                          x['status'] == 'tampil' || x['status'] == 'kembali',
+                    )
+                    .toList();
+          final totalPost = posts.length;
+          final totalKembali =
+              posts.where((x) => x['status'] == 'kembali').length;
           final tampilan = (pub['nama_tampilan'] ?? '').toString().trim();
           final nama = tampilan.isNotEmpty
               ? tampilan
@@ -400,8 +415,8 @@ class LayarProfilPublik extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   child: Row(
                     children: [
-                      sel(tr('Postingan aktif'), aktif),
-                      sel(tr('Barang Kembali'), angka('temuan_kembali')),
+                      sel(tr('Total Postingan'), totalPost),
+                      sel(tr('Sudah Kembali'), totalKembali),
                       sel(tr('Klaim Disetujui'), angka('klaim_ok')),
                     ],
                   ),
@@ -409,6 +424,96 @@ class LayarProfilPublik extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               BarisBadge(userId: userId),
+              const SizedBox(height: 16),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  tr('Postingan'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              if (posts.isEmpty)
+                Text(
+                  tr('Belum ada postingan.'),
+                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                ),
+              for (final x in posts)
+                Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: daftarFoto(x).isEmpty
+                          ? Container(
+                              width: 48,
+                              height: 48,
+                              color: Colors.grey.shade200,
+                              child: Icon(
+                                x['jenis'] == 'hilang'
+                                    ? Icons.search
+                                    : Icons.inventory_2_outlined,
+                                color: Colors.grey,
+                              ),
+                            )
+                          : CachedNetworkImage(
+                              imageUrl: daftarFoto(x).first,
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) => Container(
+                                width: 48,
+                                height: 48,
+                                color: Colors.grey.shade200,
+                                child: const Icon(
+                                  Icons.image_not_supported_outlined,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ),
+                    ),
+                    title: Text(
+                      (x['judul'] ?? '').toString(),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${x['kategori'] ?? ''} - ${x['lokasi'] ?? ''}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: warnaStatus(
+                          (x['status'] ?? '').toString(),
+                        ).withOpacity(0.13),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        labelStatus((x['status'] ?? '').toString()),
+                        style: TextStyle(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: warnaStatus((x['status'] ?? '').toString()),
+                        ),
+                      ),
+                    ),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => LayarDetail(post: x)),
+                    ),
+                  ),
+                ),
             ],
           );
         },

@@ -110,7 +110,7 @@ class LayarInfo extends StatelessWidget {
                 const SizedBox(height: 8),
                 Chip(
                   label: Text(
-                    tr('Versi 1.9.0'),
+                    tr('Versi 1.9.1'),
                     style: const TextStyle(fontSize: 11),
                   ),
                   visualDensity: VisualDensity.compact,
@@ -226,9 +226,9 @@ class LayarInfo extends StatelessWidget {
                       const SizedBox(width: 18),
                       _tombolSosial(
                         context,
-                        'assets/icons/github.png',
-                        'https://github.com/dandienter',
-                        'GitHub',
+                        'assets/icons/linkedin.png',
+                        'https://www.linkedin.com/in/dandisubhani',
+                        'LinkedIn',
                       ),
                     ],
                   ),

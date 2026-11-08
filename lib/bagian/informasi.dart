@@ -29,7 +29,6 @@ class _LayarInformasiState extends State<LayarInformasi>
           tr('Informasi Terkini'),
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        actions: const [TombolAkun()],
         bottom: TabBar(
           controller: _tab,
           indicatorColor: kEmas,
@@ -51,9 +50,9 @@ class _LayarInformasiState extends State<LayarInformasi>
       body: TabBarView(
         controller: _tab,
         children: const [
-          LayarNotif(sematkan: true),
-          LayarPengumuman(sematkan: true),
-          TabPanduan(),
+          _TetapHidup(child: LayarNotif(sematkan: true)),
+          _TetapHidup(child: LayarPengumuman(sematkan: true)),
+          _TetapHidup(child: TabPanduan()),
         ],
       ),
     );
@@ -195,5 +194,28 @@ class TabPanduan extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Pembungkus penahan state: PageView di balik TabBarView membuang
+/// state anak yang keluar layar bila tidak ditahan seperti ini,
+/// akibatnya notifikasi dan pengumuman dimuat ulang tiap ganti tab.
+class _TetapHidup extends StatefulWidget {
+  final Widget child;
+  const _TetapHidup({required this.child});
+
+  @override
+  State<_TetapHidup> createState() => _TetapHidupState();
+}
+
+class _TetapHidupState extends State<_TetapHidup>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

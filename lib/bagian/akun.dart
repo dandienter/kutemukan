@@ -195,7 +195,6 @@ class _KepalaAkunState extends State<_KepalaAkun> {
   Widget build(BuildContext context) {
     final profil = widget.profil;
     final foto = profil['foto_url'] as String?;
-    final admin = profil['peran'] == 'admin';
     final prodi = (profil['prodi'] ?? '').toString();
     final email = sb.auth.currentUser?.email ?? '';
     final terverifikasi = profil['terverifikasi'] == true;
@@ -273,10 +272,6 @@ class _KepalaAkunState extends State<_KepalaAkun> {
                                     ),
                                     const SizedBox(width: 5),
                                     LencanaEmas(terverifikasi: terverifikasi),
-                                    if (admin) ...[
-                                      const SizedBox(width: 5),
-                                      const Icon(Icons.shield, size: 15, color: Colors.white70),
-                                    ],
                                   ],
                                 ),
                                 Text(

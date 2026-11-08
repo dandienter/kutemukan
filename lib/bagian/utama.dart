@@ -307,20 +307,10 @@ class _LayarUtamaState extends State<LayarUtama> {
     ];
     if (_tab >= halaman.length) _tab = 0;
     return Scaffold(
-      body: TweenAnimationBuilder<double>(
-        key: ValueKey(_tab),
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
-        builder: (context, t, child) => Opacity(
-          opacity: 0.55 + 0.45 * t,
-          child: Transform.translate(
-            offset: Offset(0, 8 * (1 - t)),
-            child: child,
-          ),
-        ),
-        child: IndexedStack(index: _tab, children: halaman),
-      ),
+      // Tanpa animasi pembungkus berkunci per tab: kunci yang berubah
+      // tiap pindah tab dulu menghancurkan state semua halaman,
+      // sehingga semua data dimuat ulang setiap berpindah.
+      body: IndexedStack(index: _tab, children: halaman),
       bottomNavigationBar: Container(
         key: kunciPanduanNav,
         decoration: BoxDecoration(
