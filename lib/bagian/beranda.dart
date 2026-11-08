@@ -524,36 +524,30 @@ class _LayarBerandaState extends State<LayarBeranda> {
       );
     }
 
-    // Kepala menyusut saat digulir (ala WeKios): t = 1 terbuka penuh,
-    // t = 0 tinggal bilah ramping berisi sapaan; kartu statistik
-    // memudar lalu tersembunyi dan lengkung biru menghilang.
-    return FlexibleSpaceBar(
-      collapseMode: CollapseMode.none,
-      background: LayoutBuilder(
-        builder: (context, batas) {
-          final t = ((batas.maxHeight - atas - 56) / 132).clamp(0.0, 1.0);
-          return Stack(
-            children: [
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                height: atas + 56 + 72 * t,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: kGradasiKepala,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(28 * t),
-                      bottomRight: Radius.circular(28 * t),
-                    ),
-                  ),
+    // Kepala biru tetap di lapisan paling depan, hanya berisi
+    // sapaan. Kartu statistik bukan bagian kepala: ia isi daftar
+    // gulir (_kartuStatistikBeranda) sehingga saat digulir ia
+    // menyelip ke belakang kepala ini.
+    return SizedBox(
+      height: atas + 78,
+      child: Stack(
+        children: [
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: kGradasiKepala,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
                 ),
               ),
-              Positioned(
-                top: atas + 5 + 9 * t,
-                left: 0,
-                right: 0,
-                child:             Padding(
+            ),
+          ),
+          Positioned(
+            top: atas + 14,
+            left: 0,
+            right: 0,
+            child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
                 children: [
@@ -600,17 +594,17 @@ class _LayarBerandaState extends State<LayarBeranda> {
                 ],
               ),
             ),
-              ),
-              Positioned(
-                top: atas + 82,
-                left: 0,
-                right: 0,
-                child: Opacity(
-                  opacity: t,
-                  child: IgnorePointer(
-                    ignoring: t < 0.85,
-                    child:             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Kartu statistik Beranda sebagai isi pertama daftar gulir:
+  /// ikut bergulir dan menyelip ke belakang kepala biru.
+  Widget _kartuStatistikBeranda(BuildContext context) {
+    return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                 decoration: BoxDecoration(
@@ -696,15 +690,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
                   },
                 ),
               ),
-            ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+            );
   }
 
   /// Banner maskot di bawah kartu statistik: ajakan mengumumkan
@@ -1095,10 +1081,11 @@ class _LayarBerandaState extends State<LayarBeranda> {
             final namaSapaan = namaRapi(
               (widget.profil['nama'] ?? '').toString(),
             );
+            final tinggiKepala = MediaQuery.of(context).padding.top + 78;
             return Stack(
               children: [
                 RefreshIndicator(
-                  displacement: 56,
+                  displacement: tinggiKepala + 16,
                   onRefresh: () async {
                     _segarkan();
                     await (saya ? _fSaya : _fSemua);
@@ -1107,16 +1094,9 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     controller: _gulir,
                     physics: const AlwaysScrollableScrollPhysics(),
                     slivers: [
-                      SliverAppBar(
-                        pinned: true,
-                        expandedHeight: 188,
-                        toolbarHeight: 56,
-                        automaticallyImplyLeading: false,
-                        backgroundColor: Colors.transparent,
-                        surfaceTintColor: Colors.transparent,
-                        elevation: 0,
-                        scrolledUnderElevation: 0,
-                        flexibleSpace: _kepalaBeranda(context, namaSapaan),
+                      SliverToBoxAdapter(child: SizedBox(height: tinggiKepala)),
+                      SliverToBoxAdapter(
+                        child: _kartuStatistikBeranda(context),
                       ),
                       if (!saya) SliverToBoxAdapter(child: _bannerPengumuman()),
                       if (!saya) SliverToBoxAdapter(child: _bannerMaskot(context)),
@@ -1404,9 +1384,15 @@ class _LayarBerandaState extends State<LayarBeranda> {
                     ],
                   ),
                 ),
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _kepalaBeranda(context, namaSapaan),
+                ),
                 if (_baru > 0 && !saya)
                   Positioned(
-                    top: MediaQuery.of(context).padding.top + 64,
+                    top: tinggiKepala + 8,
                     left: 0,
                     right: 0,
                     child: Center(
