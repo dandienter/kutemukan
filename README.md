@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.8.3** (Android, arm64)
+Versi saat ini: **1.9.0** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.9.0**: redesign antarmuka menyeluruh mengikuti mockup yang disetujui. Navigasi bawah baru lima tab (Beranda, Info, Lapor dengan tombol biru besar menonjol di tengah, Chat, Akun); tab Informasi menggabungkan Notifikasi, Pengumuman, dan Panduan dalam tiga tab. Beranda berkepala biru melengkung dengan sapaan sesuai jam, kartu statistik melayang berisi jumlah barang saja (Total Postingan dan Sudah Kembali, tingkat keberhasilan pindah ke layar Statistik), strip pengumuman ramping, banner maskot, saringan segmented rata Semua / Hilang / Temuan / Kembali, dan pil urutan Terbaru / Terlama. Akun berkepala biru dengan lencana centang emas kecil saja untuk pengguna terverifikasi SIKA (tanpa tulisan), ketuk nama membuka lembar Profil Lengkap, statistik tiga kolom (Postinganku, Klaim, Bantu UP), menu berkelompok Aktivitas / Pengaturan termasuk layar Klaimku yang baru. Rincian barang: foto hero dengan tombol melayang dan kartu info melayang, kartu pelapor berlencana emas, dan bilah aksi lengket Bantu UP + Klaim Barang. Pengumuman kini bisa diberi reaksi bintang, api, dan suka (SQL 23). Splash bergradasi biru tanpa nama kampus, login dirapikan (Google lalu SIKA), formulir laporan disusun ulang (foto di atas, kategori dan waktu berdampingan, segmen jenis berwarna, Lapor Cepat berganti nama Ubah Jadi Laporan dan tetap mengisi formulir yang sama di tempat), ruang chat mendapat kartu barang mini dan gelembung berekor, dan statistik keberhasilan mendapat bilah kemajuan animasi. Tur interaktif disesuaikan dengan susunan tab baru.
 - **1.8.3**: status akhir postingan Dimusnahkan / Dihibahkan (nilai status baru musnah_hibah, SQL 22) untuk barang yang sudah melewati batas waktu, sesuai dokumen fitur Modul Admin. Layar Moderasi kini memuat seksi Arsip Lewat Batas Waktu: admin bisa menampilkan lagi postingan arsip atau menutupnya sebagai dimusnahkan/dihibahkan dengan konfirmasi; pemilik menerima notifikasi penutupan. Label status baru juga tampil di web.
 - **1.8.2**: stempel jenis kini ikut tampil di atas foto: HILANG (merah) dan DITEMUKAN (biru) ala cap karet seperti SUDAH KEMBALI, berlaku di kartu Beranda, foto rincian, kartu bagikan, dan web. Stempel hanya lapisan tampilan luar; penampil foto besar tetap bersih tanpa stempel.
 - **1.8.1**: garis bawah pada sel statistik Beranda yang aktif dihapus (penanda aktif cukup huruf tebal dan warna penuh), redaksi tagline diluruskan menjadi "Yang Hilang Dicariin, Yang Ketemu Dibalikin" di aplikasi, web, dan proposal, dan halaman masuk dipadatkan (logo dan jarak dirampingkan, halaman tidak bisa digulir lagi).
