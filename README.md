@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.9.9** (Android, arm64)
+Versi saat ini: **1.9.10** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.9.10**: perbaikan tur panduan (tur selalu mulai dari Beranda posisi atas dan sorotan menggulir ke target yang sedang di luar layar) dan ketuk ulang tab Beranda yang sedang aktif kini menyegarkan halaman (gulir ke atas + muat ulang).
 - **1.9.9**: fitur admin lengkap - Manajemen Pengguna: daftar pengguna yang bisa dicari dan disaring, rincian pengguna berisi statistik dan postingannya, ubah verifikasi dan peran, nonaktifkan/aktifkan akun (akun nonaktif tertahan di layar penahan, postingannya disembunyikan, dan server memblokir posting/klaim/komentar/chat), serta proses permintaan hapus akun langsung dari aplikasi.
 - **1.9.8**: animasi splash diperbaiki dan dipercantik: masuk memudar dan membesar memakai TweenAnimationBuilder, maskot melayang halus dengan lingkaran halo berdenyut di belakangnya, tiga titik penanda memantul bergelombang terus-menerus, lingkaran dekoratif samar di latar, dan splash tampil 2,1 detik. Sekalian perbaikan bug tur interaktif: tur yang dibuka dari halaman tumpukan (mis. Panduan dari Akun) kini menutup dulu halaman di atas rangka utama agar sorotannya tidak digambar di halaman yang salah.
 - **1.9.7**: empat koreksi uji pengguna: halaman Akun tidak lagi tembus ke status bar (perisai gradasi kepala diam di lapisan depan di atas daftar gulir); teks sekunder kartu statistik Beranda dan Akun mengikuti tema sehingga terbaca di mode gelap; kotak info klaim di Rincian berwarna sepasang dengan tema (hijau muda di terang, hijau gelap di gelap); banner Beranda kini bergantian tiap 4 detik antara ajakan menemukan dan kehilangan barang.
