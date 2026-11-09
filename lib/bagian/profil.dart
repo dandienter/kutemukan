@@ -289,7 +289,7 @@ class _LayarProfilPublikState extends State<LayarProfilPublik> {
       final rows = await sb
           .from('lf_posts')
           .select(
-            'id, jenis, judul, status, foto_url, foto_urls, kategori, lokasi, waktu_kejadian, created_at, deskripsi, penitipan, up_count, views_count, user_id',
+            'id, jenis, judul, status, foto_url, foto_urls, kategori, lokasi, waktu_kejadian, created_at, deskripsi, penitipan, up_count, views_count, user_id, kembali_pada',
           )
           .eq('user_id', widget.userId)
           .order('created_at', ascending: false);

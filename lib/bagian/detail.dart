@@ -765,6 +765,13 @@ child: ListView(
             fmtTanggal(_post['waktu_kejadian']),
             sub: fmtRelatif(_post['waktu_kejadian']),
           ),
+          if (_post['status'] == 'kembali' && _post['kembali_pada'] != null)
+            _barisInfo(
+              Icons.verified_outlined,
+              tr('Sudah kembali'),
+              fmtTanggal(_post['kembali_pada']),
+              sub: fmtRelatif(_post['kembali_pada']),
+            ),
           if (terverifikasi)
             Padding(
               padding: const EdgeInsets.only(top: 2, bottom: 6),

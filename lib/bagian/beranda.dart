@@ -282,6 +282,28 @@ class KartuPostingan extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (post['status'] == 'kembali' && post['kembali_pada'] != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.verified_outlined,
+                          size: 14,
+                          color: Color(0xFF1E7A34),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${tr('Sudah kembali')}: ${fmtRelatif(post['kembali_pada'])}',
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: Color(0xFF1E7A34),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 if ((post['deskripsi'] ?? '').toString().isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(14, 0, 14, 4),
