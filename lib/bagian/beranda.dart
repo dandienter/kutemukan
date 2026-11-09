@@ -808,6 +808,16 @@ class _LayarBerandaState extends State<LayarBeranda> {
     _fStat = _ambilStat();
     _fPengumuman = _ambilPengumuman();
     _muatUpHariIni();
+    pemicuSegarBeranda = () {
+      if (_gulir.hasClients) {
+        _gulir.animateTo(
+          0,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOut,
+        );
+      }
+      _segarkan();
+    };
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) cekUpdate(context);
     });
@@ -868,6 +878,7 @@ class _LayarBerandaState extends State<LayarBeranda> {
   void dispose() {
     _tundaSegar?.cancel();
     _timerBanner?.cancel();
+    pemicuSegarBeranda = null;
     if (_kanal != null) sb.removeChannel(_kanal!);
     _gulir.dispose();
     _cariCtrl.dispose();

@@ -127,6 +127,10 @@ final kunciPanduanNav = GlobalKey();
 /// menu Akun bisa memulai tur dari halaman mana pun.
 VoidCallback? pemicuPanduan;
 
+/// Dipasang LayarBeranda: gulir ke atas + muat ulang. Dipakai ketukan
+/// ulang tab Beranda dan persiapan awal tur panduan.
+VoidCallback? pemicuSegarBeranda;
+
 /// Transisi halaman halus untuk semua layar: memudar masuk sambil
 /// bergeser ringan dari kanan, kurva lembut 260 ms.
 class TransisiHalus extends PageTransitionsBuilder {

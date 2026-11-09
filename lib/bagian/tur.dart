@@ -63,13 +63,30 @@ class _LayarTurState extends State<LayarTur> {
     // Beri waktu tab berganti dan transisinya selesai sebelum mengukur.
     await Future<void>.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
-    Rect? r;
-    final ctx = langkah.kunci?.currentContext;
-    if (ctx != null) {
+    Rect? ukur() {
+      final ctx = langkah.kunci?.currentContext;
+      if (ctx == null) return null;
       final box = ctx.findRenderObject() as RenderBox?;
-      if (box != null && box.hasSize) {
-        final pos = box.localToGlobal(Offset.zero);
-        r = (pos & box.size).inflate(6);
+      if (box == null || !box.hasSize) return null;
+      final pos = box.localToGlobal(Offset.zero);
+      return (pos & box.size).inflate(6);
+    }
+
+    Rect? r = ukur();
+    final ctxTur = langkah.kunci?.currentContext;
+    if (ctxTur != null) {
+      // Target bisa sedang tergulir keluar layar (mis. Beranda digulir
+      // ke bawah): gulir dulu sampai terlihat, baru ukur ulang.
+      final layar = MediaQuery.of(ctxTur).size;
+      if (r == null || r.bottom < 0 || r.top > layar.height) {
+        await Scrollable.ensureVisible(
+          ctxTur,
+          duration: const Duration(milliseconds: 300),
+          alignment: 0.22,
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 350));
+        if (!mounted) return;
+        r = ukur();
       }
     }
     setState(() {

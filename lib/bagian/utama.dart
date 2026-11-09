@@ -45,6 +45,10 @@ class _LayarUtamaState extends State<LayarUtama> {
     // yang sedang menumpuk di atasnya (mis. Panduan yang dibuka dari
     // Akun) agar sorotan tidak digambar di halaman yang salah.
     Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+    // Mulai selalu dari tab Beranda dengan posisi gulir di atas, agar
+    // sorotan langkah pertama tidak meleset saat Beranda sedang tergulir.
+    if (mounted) setState(() => _tab = 0);
+    pemicuSegarBeranda?.call();
     Future.delayed(const Duration(milliseconds: 350), () {
       if (!mounted) return;
       mulaiTurPanduan(
@@ -213,6 +217,12 @@ class _LayarUtamaState extends State<LayarUtama> {
   }
 
   void _pilihTab(int i) {
+    if (i == _tab && i == 0) {
+      // Ketukan ulang tab Beranda yang sedang aktif = segarkan:
+      // gulir kembali ke atas dan muat ulang datanya.
+      pemicuSegarBeranda?.call();
+      return;
+    }
     setState(() => _tab = i);
     if (i == 4) _segarkanProfil();
     if (i == 1) {
