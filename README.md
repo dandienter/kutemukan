@@ -16,7 +16,14 @@ APK Android terbaru selalu tersedia di halaman rilis:
 
 Di dalam aplikasi juga ada tombol Cek Update di tab Akun yang akan memberi tahu bila ada versi baru.
 
-Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sama dan bisa dicoba di [demo KutemuKan Web](https://demo.43-130-228-96.sslip.io/kutemukan-web/). Tautan postingan yang dibagikan dari aplikasi membuka halaman web-nya, dan dari web ada tombol Buka di Aplikasi yang melompat langsung ke postingan yang sama di aplikasi Android (deep link `kutemukan://post/<id>`).
+Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sama dan bisa dipakai di [KutemuKan Web](https://kutemukan.43-130-228-96.sslip.io/). Tautan postingan yang dibagikan dari aplikasi membuka halaman web-nya, dan dari web ada tombol Buka di Aplikasi yang melompat langsung ke postingan yang sama di aplikasi Android (deep link `kutemukan://post/<id>`).
+
+## Platform lain
+
+Satu akun dan satu data yang sama di tiga platform, semua memakai backend Supabase yang sama:
+
+- **Web (Next.js)**: landing page di https://kutemukan.43-130-228-96.sslip.io/ dan papan aplikasi di https://kutemukan.43-130-228-96.sslip.io/beranda - semua fitur utama aplikasi tersedia: papan, klaim dan kode serah terima, chat realtime, informasi, akun, statistik, dan panel admin lengkap. Sumbernya di repo terpisah `dandienter/kutemukan-web`.
+- **Desktop Windows (Java Swing)**: aplikasi desktop untuk petugas dan admin kampus dengan fitur yang sama. Installer `KutemuKan-Setup-1.0.0.exe` bisa diunduh dari seksi Platform di halaman landing web, atau langsung di https://temubalik.43-130-228-96.sslip.io/KutemuKan-Setup.exe.
 
 ## Fitur utama
 
@@ -41,7 +48,7 @@ Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sa
 
 - **Pencocokan teks TF-IDF** dengan cosine similarity. Setiap postingan dibandingkan dengan postingan lawan jenis memakai skor gabungan kemiripan teks (0,55), kategori (0,20), lokasi (0,15), dan kedekatan waktu (0,10).
 - **Pencocokan AI semantik**: judul dan deskripsi setiap postingan diubah menjadi vektor embedding oleh worker server (model Nemotron Embed lewat NVIDIA NIM) dan disimpan di Postgres dengan pgvector. Fungsi `lf_cocok_ai` mencari kandidat berdasarkan kemiripan makna, bukan sekadar kata yang sama, jadi "dompet kulit warna cokelat" bisa bertemu "dompet pria coklat". Hasil gabungan TF-IDF dan AI tampil di seksi Kemungkinan Cocok pada rincian postingan, kandidat dari AI diberi lencana khusus, dan pasangan kuat memicu notifikasi ke kedua pemilik.
-- Skor visual berbasis kemiripan foto sudah disiapkan strukturnya (kolom embedding visual dan bobotnya di fungsi pencocokan) dan aktif otomatis bila embedding foto tersedia.
+- **Pencocokan visual CLIP**: foto setiap postingan diubah menjadi embedding visual 512 dimensi oleh model CLIP ViT-B/32 (ONNX, berjalan sendiri di server) dan ikut dihitung dalam skor gabungan `lf_cocok_ai`, jadi temuan yang fotonya mirip barang yang hilang naik peringkatnya walau judul dan deskripsinya berbeda kata.
 
 ### Klaim dan serah terima
 
@@ -62,7 +69,7 @@ Versi web (papan publik, klaim, dan panel admin) berjalan dengan backend yang sa
 - **Ringan dan responsif**: animasi transisi antar halaman yang halus, rangka shimmer saat beranda dimuat, getaran sentuh (haptic) pada aksi penting seperti menerbitkan postingan dan mengirim klaim, serta ikon bilah status yang menyesuaikan terang gelap halaman supaya selalu terbaca.
 - **Mode gelap dan terang** mengikuti sistem atau dipilih manual, serta **dwibahasa Indonesia dan Inggris** di seluruh aplikasi, dengan pilihan sapaan dan teks yang ramah mahasiswa.
 - **Gamifikasi ringan**: badge otomatis berdasarkan aktivitas (termasuk Kontributor Tepercaya) dan Papan Pahlawan bulanan untuk penemu paling berjasa.
-- **Panel admin**: moderasi postingan, laporan pengguna, statistik kampus, pengelolaan pengguna, dan ekspor Laporan Barang dalam PDF.
+- **Panel admin lengkap**: Moderasi (antrean postingan, sengketa klaim, arsip lewat batas waktu), Manajemen Pengguna (daftar dan pencarian pengguna, rincian statistik per pengguna, ubah verifikasi dan peran, aktif/nonaktifkan akun, proses permintaan hapus akun), Pengumuman, Laporan pengguna, statistik kampus (angka gabungan dari fungsi `lf_stat_lengkap`), dan ekspor Laporan Barang dalam PDF. Kemampuan admin sama di Android, web, dan desktop.
 
 ### Kendali data pengguna
 
