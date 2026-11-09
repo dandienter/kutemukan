@@ -102,6 +102,36 @@ class _LayarLaporanBarangState extends State<LayarLaporanBarang> {
     }
   }
 
+  Widget _kotakStat(String angka, String label) {
+    return Expanded(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 3),
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        decoration: BoxDecoration(
+          color: kBiruUtama.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Text(
+              angka,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w800,
+                color: kBiruUtama,
+              ),
+            ),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 10.5, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _tanggal(dynamic v) {
     final d = DateTime.tryParse((v ?? '').toString());
     if (d == null) return '-';
@@ -372,15 +402,13 @@ class _LayarLaporanBarangState extends State<LayarLaporanBarang> {
                         ],
                       ),
                       const SizedBox(height: 10),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '${hasil.length} ${tr('barang sesuai saringan')} ($hilang ${tr('Kehilangan')}, ${hasil.length - hilang} ${tr('Temuan')}, $kembali ${tr('Sudah Kembali')})',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
+                      Row(
+                        children: [
+                          _kotakStat('${hasil.length}', tr('Total')),
+                          _kotakStat('$hilang', tr('Kehilangan')),
+                          _kotakStat('${hasil.length - hilang}', tr('Temuan')),
+                          _kotakStat('$kembali', tr('Sudah Kembali')),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       SizedBox(

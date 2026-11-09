@@ -7,7 +7,13 @@ part of '../main.dart';
 class LayarBuat extends StatefulWidget {
   final Map<String, dynamic> profil;
   final Map<String, dynamic>? post;
-  const LayarBuat({super.key, required this.profil, this.post});
+  final bool olehAdmin;
+  const LayarBuat({
+    super.key,
+    required this.profil,
+    this.post,
+    this.olehAdmin = false,
+  });
   @override
   State<LayarBuat> createState() => _LayarBuatState();
 }
@@ -168,7 +174,8 @@ class _LayarBuatState extends State<LayarBuat> {
       };
       if (_modeUbah) {
         final statusLama = (widget.post!['status'] ?? '').toString();
-        if (statusLama == 'tampil' || statusLama == 'ditolak') {
+        if (!widget.olehAdmin &&
+            (statusLama == 'tampil' || statusLama == 'ditolak')) {
           isi['status'] = 'menunggu';
         }
         isi['updated_at'] = DateTime.now().toUtc().toIso8601String();
@@ -178,7 +185,9 @@ class _LayarBuatState extends State<LayarBuat> {
             SnackBar(
               content: Text(
                 tr(
-                  'Perubahan tersimpan! Tunggu moderasi admin sebentar ya.',
+                  widget.olehAdmin
+                    ? 'Perubahan tersimpan.'
+                    : 'Perubahan tersimpan! Tunggu moderasi admin sebentar ya.',
                 ),
               ),
             ),
