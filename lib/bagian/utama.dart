@@ -23,11 +23,20 @@ class _LayarUtamaState extends State<LayarUtama> {
   /// Tautan dalam kutemukan://post/<id> membuka detail postingan itu,
   /// misalnya dari tombol Buka di Aplikasi di versi web.
   Future<void> _tanganiTautan(Uri uri) async {
-    if (uri.scheme != 'kutemukan' || uri.host != 'post') return;
-    final id = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : '';
-    if (id.isEmpty) return;
+    // Dua bentuk tautan: skema khusus kutemukan://post/<uuid> dan tautan web
+    // https://<domain>/post/<kode-6-karakter atau uuid> (Android App Links).
+    String segmen = '';
+    if (uri.scheme == 'kutemukan' && uri.host == 'post') {
+      segmen = uri.pathSegments.isNotEmpty ? uri.pathSegments.first : '';
+    } else if (uri.scheme == 'https' &&
+        uri.pathSegments.length >= 2 &&
+        uri.pathSegments.first == 'post') {
+      segmen = uri.pathSegments[1];
+    }
+    if (segmen.isEmpty) return;
+    final kolom = segmen.contains('-') ? 'id' : 'kode';
     try {
-      final rows = await sb.from('lf_posts').select().eq('id', id).limit(1);
+      final rows = await sb.from('lf_posts').select().eq(kolom, segmen).limit(1);
       if (rows.isEmpty || !mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
