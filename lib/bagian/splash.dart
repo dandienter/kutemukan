@@ -13,23 +13,15 @@ class LayarSplash extends StatefulWidget {
 class _LayarSplashState extends State<LayarSplash>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _pudar;
-  late final Animation<double> _skala;
 
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _pudar = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _skala = Tween<double>(
-      begin: 0.82,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutBack));
-    _ctrl.forward();
-    Future.delayed(const Duration(milliseconds: 1500), () {
+      duration: const Duration(milliseconds: 1100),
+    )..repeat();
+    Future.delayed(const Duration(milliseconds: 2100), () {
       if (mounted) {
         Navigator.of(
           context,
@@ -44,17 +36,41 @@ class _LayarSplashState extends State<LayarSplash>
     super.dispose();
   }
 
+  /// Satu titik penanda memuat: membesar dan menyala bergantian
+  /// mengikuti putaran pengendali animasi.
+  Widget _titik(int i) {
+    final fase = (_ctrl.value + i * 0.22) % 1.0;
+    final gelombang = fase < 0.5 ? fase * 2 : (1 - fase) * 2;
+    final uk = 7 + 4 * gelombang;
+    return Container(
+      width: uk,
+      height: uk,
+      margin: const EdgeInsets.symmetric(horizontal: 3.5),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withOpacity(0.35 + 0.65 * gelombang),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: kGradasiKepala),
         child: Center(
-          child: FadeTransition(
-            opacity: _pudar,
-            child: ScaleTransition(
-              scale: _skala,
-              child: Column(
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: 1),
+            duration: const Duration(milliseconds: 900),
+            curve: Curves.easeOut,
+            builder: (context, v, child) => Opacity(
+              opacity: v,
+              child: Transform.scale(
+                scale: 0.82 + 0.18 * Curves.easeOutBack.transform(v),
+                child: child,
+              ),
+            ),
+            child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ClipRRect(
@@ -77,24 +93,19 @@ class _LayarSplashState extends State<LayarSplash>
                     style: const TextStyle(fontSize: 13.5, color: Colors.white70),
                   ),
                   const SizedBox(height: 26),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      for (final a in [1.0, 0.55, 0.3])
-                        Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 3.5),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(a),
-                          ),
-                        ),
-                    ],
+                  AnimatedBuilder(
+                    animation: _ctrl,
+                    builder: (context, _) {
+                      return Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < 3; i++) _titik(i),
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
-            ),
           ),
         ),
       ),
