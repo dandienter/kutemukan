@@ -603,6 +603,15 @@ child: ListView(
             _judulSeksi(tr('Admin')),
             _grupMenu([
               ListTile(
+                leading: _ikonMenu(Icons.people_alt_outlined),
+                title: Text(tr('Manajemen Pengguna')),
+                subtitle: Text(tr('Verifikasi, peran, dan status akun pengguna')),
+                trailing: const Icon(Icons.chevron_right, size: 19),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const LayarPenggunaAdmin()),
+                ),
+              ),
+              ListTile(
                 leading: _ikonMenu(Icons.shield_outlined),
                 title: Text(tr('Moderasi Postingan')),
                 subtitle: Text(tr('Setujui atau tolak postingan yang menunggu')),

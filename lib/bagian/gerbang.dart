@@ -68,6 +68,10 @@ class _GerbangState extends State<Gerbang> {
         if ((profil['wa'] ?? '').toString().isEmpty) {
           return LayarProfil(profilAwal: profil);
         }
+        // Akun yang dinonaktifkan admin ditahan di layar penahan.
+        if (profil['aktif'] == false) {
+          return const LayarAkunNonaktif();
+        }
         return LayarUtama(profil: profil);
       },
     );
