@@ -6,7 +6,7 @@
 
 Aplikasi ini karya komunitas mahasiswa dan bukan aplikasi resmi universitas.
 
-Versi saat ini: **1.9.7** (Android, arm64)
+Versi saat ini: **1.9.8** (Android, arm64)
 
 ## Unduh
 
@@ -114,6 +114,7 @@ Berkas `google-services.json` tidak disimpan di repo. Untuk build lokal, letakka
 
 ## Riwayat versi
 
+- **1.9.8**: animasi splash diperbaiki: animasi masuk memudar dan membesar kini memakai TweenAnimationBuilder, tiga titik penanda memantul bergelombang terus-menerus dari pengendali animasi yang berputar (sebelumnya titiknya statis dan animasi sekali jalan mudah terlewat), dan splash tampil 2,1 detik agar animasinya sempat terlihat.
 - **1.9.7**: empat koreksi uji pengguna: halaman Akun tidak lagi tembus ke status bar (perisai gradasi kepala diam di lapisan depan di atas daftar gulir); teks sekunder kartu statistik Beranda dan Akun mengikuti tema sehingga terbaca di mode gelap; kotak info klaim di Rincian berwarna sepasang dengan tema (hijau muda di terang, hijau gelap di gelap); banner Beranda kini bergantian tiap 4 detik antara ajakan menemukan dan kehilangan barang.
 - **1.9.6**: navigasi bawah kini tampil rounded melayang dengan bayangan lembut di atas latar halaman yang buram, dan kepala Beranda diberi alas buram warna latar halaman sehingga isi yang bergulir tidak lagi tembus terlihat di sudut lengkung kepala. Audit lapisan semua halaman: AppBar bertema biru buram, kepala Akun statis dalam alur, tidak ada halaman dengan badan tembus pandang.
 - **1.9.5**: perilaku gulir kepala Beranda disesuaikan dengan arahan pengguna: kartu statistik sekarang menjadi isi pertama daftar gulir sehingga saat digulir ia menyelip ke belakang kepala biru, sedangkan kepala biru berisi sapaan dan nama tetap diam di lapisan paling depan. Sebelumnya kartu memudar di tempat sebagai bagian bilah yang menyusut.
