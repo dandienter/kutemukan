@@ -68,6 +68,7 @@ part 'bagian/pahlawan.dart';
 part 'bagian/statistik.dart';
 part 'bagian/laporan.dart';
 part 'bagian/moderasi.dart';
+part 'bagian/pengguna_admin.dart';
 part 'bagian/laporanpdf.dart';
 part 'bagian/info.dart';
 
