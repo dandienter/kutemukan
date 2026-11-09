@@ -166,7 +166,7 @@ class _KepalaAkunState extends State<_KepalaAkun> {
               _barisLembar(
                 Icons.shield_outlined,
                 tr('Status Verifikasi'),
-                terverifikasi ? tr('Terverifikasi SIKA UNINDRA') : tr('Belum terverifikasi'),
+                terverifikasi ? tr('Mahasiswa Terverifikasi') : tr('Belum terverifikasi'),
               ),
               const SizedBox(height: 12),
               SizedBox(
@@ -659,24 +659,6 @@ child: ListView(
               onTap: () async {
                 final berubah = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => LayarProfil(profilAwal: profil)),
-                );
-                if (berubah == true) await onProfilDiubah?.call();
-              },
-            ),
-            ListTile(
-              leading: _ikonMenu(Icons.school_outlined),
-              title: Text(tr('Verifikasi Mahasiswa')),
-              subtitle: Text(
-                terverifikasi
-                    ? 'NPM ${profil['npm']} · ${profil['prodi'] ?? ''}'
-                    : tr('Hubungkan akun SIKA untuk badge terverifikasi'),
-              ),
-              trailing: terverifikasi
-                  ? const LencanaEmas(terverifikasi: true, ukuran: 20)
-                  : const Icon(Icons.chevron_right, size: 19),
-              onTap: () async {
-                final berubah = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => LayarVerifikasiSika(profil: profil)),
                 );
                 if (berubah == true) await onProfilDiubah?.call();
               },

@@ -678,9 +678,7 @@ class BarisBadge extends StatelessWidget {
                     color: _warna(data[i]['tingkat'] ?? ''),
                   ),
                   label: Text(
-                    (data[i]['tingkat'] ?? '').isEmpty
-                        ? tr((data[i]['nama'] ?? '').toString())
-                        : '${tr((data[i]['nama'] ?? '').toString())} ${data[i]['tingkat']}',
+                    tr((data[i]['nama'] ?? '').toString()),
                     style: const TextStyle(fontSize: 10.5),
                   ),
                   visualDensity: VisualDensity.compact,

@@ -773,7 +773,7 @@ child: ListView(
                   const Icon(Icons.verified, size: 15, color: Color(0xFF1E7A34)),
                   const SizedBox(width: 5),
                   Text(
-                    tr('Pelapor terverifikasi SIKA'),
+                    tr('Pelapor terverifikasi'),
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: Color(0xFF1E7A34),
