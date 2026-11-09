@@ -41,8 +41,14 @@ class _LayarUtamaState extends State<LayarUtama> {
   /// Tur panduan interaktif: keliling lima tab dengan sorotan di
   /// tombol aslinya, ditemani maskot.
   void _mulaiTur() {
-    mulaiTurPanduan(
-      context,
+    // Tur harus berjalan di atas rangka utama: tutup dulu halaman
+    // yang sedang menumpuk di atasnya (mis. Panduan yang dibuka dari
+    // Akun) agar sorotan tidak digambar di halaman yang salah.
+    Navigator.of(context, rootNavigator: true).popUntil((r) => r.isFirst);
+    Future.delayed(const Duration(milliseconds: 350), () {
+      if (!mounted) return;
+      mulaiTurPanduan(
+        context,
       [
         LangkahTur(
           kunci: kunciPanduanCari,
@@ -98,7 +104,8 @@ class _LayarUtamaState extends State<LayarUtama> {
         final p = await SharedPreferences.getInstance();
         await p.setBool('panduan_v190_selesai', true);
       },
-    );
+      );
+    });
   }
 
   @override

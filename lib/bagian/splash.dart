@@ -58,8 +58,34 @@ class _LayarSplashState extends State<LayarSplash>
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: kGradasiKepala),
-        child: Center(
-          child: TweenAnimationBuilder<double>(
+        child: Stack(
+          children: [
+            Positioned(
+              top: -70,
+              right: -50,
+              child: Container(
+                width: 210,
+                height: 210,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: -90,
+              left: -60,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.05),
+                ),
+              ),
+            ),
+            Center(
+              child: TweenAnimationBuilder<double>(
             tween: Tween<double>(begin: 0, end: 1),
             duration: const Duration(milliseconds: 900),
             curve: Curves.easeOut,
@@ -73,9 +99,40 @@ class _LayarSplashState extends State<LayarSplash>
             child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: Image.asset('assets/icon.png', height: 108),
+                  AnimatedBuilder(
+                    animation: _ctrl,
+                    builder: (context, _) {
+                      final fase = _ctrl.value;
+                      final gelombang = fase < 0.5 ? fase * 2 : (1 - fase) * 2;
+                      return SizedBox(
+                        width: 168,
+                        height: 168,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            for (final geser in [0.0, 0.5])
+                              Opacity(
+                                opacity: 0.26 * (1 - ((fase + geser) % 1.0)),
+                                child: Container(
+                                  width: 108 + 54 * ((fase + geser) % 1.0),
+                                  height: 108 + 54 * ((fase + geser) % 1.0),
+                                  decoration: const BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            Transform.translate(
+                              offset: Offset(0, (gelombang - 0.5) * 6),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(28),
+                                child: Image.asset('assets/icon.png', height: 108),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   const SizedBox(height: 18),
                   const Text(
@@ -107,6 +164,8 @@ class _LayarSplashState extends State<LayarSplash>
                 ],
               ),
           ),
+            ),
+          ],
         ),
       ),
     );
