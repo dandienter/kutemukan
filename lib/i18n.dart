@@ -70,7 +70,8 @@ const Map<String, String> _idKeEn = {
   'postingan': 'posts',
   'Profil Lengkap': 'Full Profile',
   'Status Verifikasi': 'Verification Status',
-  'Terverifikasi SIKA UNINDRA': 'Verified via SIKA UNINDRA',
+  'Mahasiswa Terverifikasi': 'Verified Student',
+  'Pelapor terverifikasi': 'Verified reporter',
   'Belum terverifikasi': 'Not verified yet',
   'Klaimku': 'My Claims',
   'Klaim yang kamu ajukan dan terima': 'Claims you filed and received',
@@ -280,7 +281,6 @@ const Map<String, String> _idKeEn = {
   'Verifikasi Mahasiswa': 'Student Verification',
   'Hubungkan akun SIKA untuk badge terverifikasi':
       'Link your SIKA account for a verified badge',
-  'Mahasiswa Terverifikasi': 'Verified Student',
   'Ketuk untuk melihat kontak': 'Tap to view contact',
   'Nomor WhatsApp belum diisi': 'WhatsApp number not set yet',
   'Berhasil terverifikasi sebagai mahasiswa.':
