@@ -70,6 +70,8 @@ part 'bagian/laporan.dart';
 part 'bagian/moderasi.dart';
 part 'bagian/pengguna_admin.dart';
 part 'bagian/laporanpdf.dart';
+part 'bagian/menu_admin.dart';
+part 'bagian/semua_barang.dart';
 part 'bagian/info.dart';
 
 Future<void> _fcmLatar(RemoteMessage pesan) async {
