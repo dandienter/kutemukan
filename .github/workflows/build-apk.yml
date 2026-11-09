@@ -73,6 +73,18 @@ jobs:
               '''
               s = s.replace('</activity>', filt2 + '</activity>', 1)
               open(p, 'w').write(s)
+          if 'autoVerify' not in s:
+              filt3 = '''<intent-filter android:autoVerify="true">
+                  <action android:name="android.intent.action.VIEW" />
+                  <category android:name="android.intent.category.DEFAULT" />
+                  <category android:name="android.intent.category.BROWSABLE" />
+                  <data android:scheme="https" android:host="kutemukan.vercel.app" android:pathPrefix="/post" />
+                  <data android:scheme="https" android:host="kutemukan.my.id" android:pathPrefix="/post" />
+                  <data android:scheme="https" android:host="kutemukan.43-130-228-96.sslip.io" android:pathPrefix="/post" />
+              </intent-filter>
+              '''
+              s = s.replace('</activity>', filt3 + '</activity>', 1)
+              open(p, 'w').write(s)
           print(open(p).read())
           PYEOF
 
